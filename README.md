@@ -1,8 +1,9 @@
-# Dro-Mini
+# MiniThread
 ## Presentation
-A Digital readout (DRO) display for lathe or milling machine with :
+A Digital readout (DRO) display for lathe with threading :
 - A STM32F103CBT6 microcontroler
 - 3 quadrature encoder input
+- 2 stepper motor output
 - A Oled SSD1306 128 x 64 screen with hardware I2C communication
 - 6 push buttons for interaction with the User. 
 - Use the Arduino ide (STM32duino)
