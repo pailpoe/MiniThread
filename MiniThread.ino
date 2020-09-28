@@ -358,6 +358,7 @@ void Dispatch_Config(sConfigDro *pConf)
   Quad_X.SetResolution(pConf->Reso_X);
   Quad_Y.SetResolution(pConf->Reso_Y);
   Quad_Z.SetResolution(pConf->Reso_Z);
+  Motor1.ChangeParameter((unsigned int)((long)(  pConf->Reso_M1*100/pConf->thread_M1)) , pConf->Inverted_M1);
 }
 
 void PrintInformationOnScreen( char* str)

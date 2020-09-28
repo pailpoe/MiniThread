@@ -32,6 +32,8 @@ public:
  
 	boolean AreYouAtMaxPos();
 	boolean AreYouAtMinPos();
+  
+  void ChangeParameter(unsigned int  Resolution , boolean Sens);
 	/**
 	 *  \fn void ChangeMaxSpeed (unsigned int MaxSpeed); 
 	 *  \brief Change the max speed
