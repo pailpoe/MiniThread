@@ -15,9 +15,10 @@ Revision        :
 #include "src/GEM/GEM_u8g2.h"
 #include "src/QuadDecoder/QuadDecoder.h"
 #include "src/Keypad/Keypad.h"
+#include "src/StepperMotor/StepperMotor.h"
 #include <EEPROM.h>
 
-//#define USE_KEYPAD_KEYBOARD
+#define USE_KEYPAD_KEYBOARD
 
 U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);
 
@@ -105,6 +106,27 @@ void IT_Timer1_Overflow(){Quad_X.IT_OverflowHardwareTimer();}
 void IT_Timer2_Overflow(){Quad_Z.IT_OverflowHardwareTimer();}
 void IT_Timer3_Overflow(){Quad_Y.IT_OverflowHardwareTimer();}
 
+//Hardware timer 4 for motor control
+HardwareTimer MotorControl(4); 
+//Motor Class
+#define PIN_MOT1_STEP  PA10
+#define PIN_MOT1_DIR   PB15
+#define PIN_MOT1_EN    PA15
+#define PIN_MOT2_STEP  PB13
+#define PIN_MOT2_DIR   PB12
+#define PIN_MOT2_EN    PB14
+StepperMotor Motor1(800,false,PIN_MOT1_STEP,PIN_MOT1_DIR,PIN_MOT1_EN);
+//Timer 4 overflow for Step motor
+void handler_Timer4_overflow()
+{ 
+  Motor1.TimeToPrepareToMove(); 
+}
+//Timer 4 channel 3 compare interrupt (10µs after overflow)
+void handler_Timer4_compare3()
+{
+  Motor1.TimeToMove();
+}
+
 void setup() {
 
   // U8g2 library init. Pass pin numbers the buttons are connected to.
@@ -115,6 +137,23 @@ void setup() {
   #ifndef USE_KEYPAD_KEYBOARD
     u8g2.begin(/*Select/OK=*/ PB14, /*Right/Next=*/ PB1, /*Left/Prev=*/ PB0, /*Up=*/ PB15, /*Down=*/ PB12, /*Home/Cancel=*/ PB13);
   #endif
+  //Debug port...
+  afio_cfg_debug_ports(AFIO_DEBUG_SW_ONLY); //Only SWD
+  
+  //Timer 4 for motor control
+  MotorControl.pause(); //stop...
+  MotorControl.setCompare(TIMER_CH3, 720); //10µs (720) after
+  MotorControl.setChannel3Mode(TIMER_OUTPUT_COMPARE);
+  MotorControl.setPeriod(100); //Period 100µs --> 10Khz
+  MotorControl.attachCompare3Interrupt(handler_Timer4_compare3); //interrupt conmpare 3
+  MotorControl.attachInterrupt(0, handler_Timer4_overflow); //Overflow interrupt  
+  MotorControl.resume();
+
+  Motor1.ChangeStopPositionMinReal(0);
+  Motor1.ChangeMaxSpeed(2);
+  Motor1.ChangeStopPositionMaxReal(1000);
+
+ 
   //Restore config  
   Restore_Config();
   // Menu init, setup and draw
@@ -234,12 +273,23 @@ void DebugContextLoop() {
       u8g2.drawStr(2,10,buffer);
       sprintf(buffer,"pos Z:%d",Quad_Z.GetValuePos());
       u8g2.drawStr(2,19,buffer);
-  
+      sprintf(buffer,"Moteur1 pos:%ld",Motor1.GetPositionStep());
+      u8g2.drawStr(2,28,buffer);
+      sprintf(buffer,"Speed Moteur1 max:%d",Motor1.GetMaxSpeed());
+      u8g2.drawStr(2,37,buffer);    
   } while (u8g2.nextPage());
   if (key == GEM_KEY_CANCEL) 
   { 
     // Exit animation routine if GEM_KEY_CANCEL key was pressed
     menu.context.exit();
+  }
+  if (key == GEM_KEY_LEFT) 
+  { 
+    Motor1.ChangeTargetPositionReal(10); 
+  }
+  if (key == GEM_KEY_RIGHT) 
+  { 
+    Motor1.ChangeTargetPositionReal(0);
   }
 }
 void DebugContextExit() 
