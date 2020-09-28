@@ -58,11 +58,11 @@ sConfigDro ConfigDro;
 
 GEMItem menuItemDirX("X dir:", ConfigDro.Inverted_X);
 GEMItem menuItemDirY("Y dir:", ConfigDro.Inverted_Y);
-GEMItem menuItemDirZ("Z dir:", ConfigDro.Inverted_Z);
-GEMItem menuItemDiamY("Diameter Y", ConfigDro.Diameter_Mode_Y);
+GEMItem menuItemDirZ("C dir:", ConfigDro.Inverted_Z);
+GEMItem menuItemDiamY("Y diameter:", ConfigDro.Diameter_Mode_Y);
 GEMItem menuItemResoX("X step/mm:", ConfigDro.Reso_X);
 GEMItem menuItemResoY("Y step/mm:", ConfigDro.Reso_Y);
-GEMItem menuItemResoZ("Z step/mm:", ConfigDro.Reso_Z);
+GEMItem menuItemResoZ("C step/tr:", ConfigDro.Reso_Z);
 GEMItem menuItemDirM1("M1 dir:", ConfigDro.Inverted_M1);
 GEMItem menuItemResoM1("M1 step/tr:", ConfigDro.Reso_M1);
 GEMItem menuItemThreadM1("M1 thread:", ConfigDro.thread_M1);
@@ -123,6 +123,7 @@ HardwareTimer MotorControl(4);
 #define PIN_MOT2_DIR   PB12
 #define PIN_MOT2_EN    PB14
 StepperMotor Motor1(800,false,PIN_MOT1_STEP,PIN_MOT1_DIR,PIN_MOT1_EN);
+unsigned int Motor1Speed=2;
 //Timer 4 overflow for Step motor
 void handler_Timer4_overflow()
 { 
@@ -156,10 +157,6 @@ void setup() {
   MotorControl.attachInterrupt(0, handler_Timer4_overflow); //Overflow interrupt  
   MotorControl.resume();
 
-  Motor1.ChangeStopPositionMinReal(0);
-  Motor1.ChangeMaxSpeed(2);
-  Motor1.ChangeStopPositionMaxReal(1000);
-  Motor1.MotorChangePowerState(true);
 
  
   //Restore config  
@@ -264,6 +261,11 @@ void ActionDebug()
 void DebugContextEnter() {
   // Clear sreen
   u8g2.clear();
+
+  Motor1.ChangeStopPositionMinReal(0);
+  Motor1.ChangeMaxSpeed(Motor1Speed);
+  Motor1.ChangeStopPositionMaxReal(1000);
+  Motor1.MotorChangePowerState(true);
 }
 void DebugContextLoop() {
   // Detect key press manually using U8g2 library
@@ -296,15 +298,26 @@ void DebugContextLoop() {
   }
   if (key == GEM_KEY_LEFT) 
   { 
-    Motor1.ChangeTargetPositionReal(10); 
+    Motor1.ChangeTargetPositionReal(100); 
   }
   if (key == GEM_KEY_RIGHT) 
   { 
     Motor1.ChangeTargetPositionReal(0);
   }
+  if (key == GEM_KEY_UP) 
+  { 
+    Motor1Speed++;
+    Motor1.ChangeMaxSpeed(Motor1Speed);
+  }
+  if (key == GEM_KEY_DOWN) 
+  { 
+    if(Motor1Speed!=1)Motor1Speed--;
+    Motor1.ChangeMaxSpeed(Motor1Speed);
+  }
 }
 void DebugContextExit() 
 {
+  Motor1.MotorChangePowerState(false);
   menu.reInit();
   menu.drawMenu();
   menu.clearContext();
@@ -386,30 +399,32 @@ void ActionRestoreSettingsInFlash()
 }
 void DisplayDrawInformations()
 {
-  char buffer_x[16];
-  char buffer_y[16];
-  char buffer_z[16];
-  sprintf(buffer_x,"%+4.3f",Quad_X.GetValue());
-  sprintf(buffer_y,"%+4.3f",Quad_Y.GetValue());
-  sprintf(buffer_z,"%+4.3f",Quad_Z.GetValue());
-
+  char bufferChar[16];
   u8g2.firstPage();
   do {
   u8g2.setColorIndex(1);
   //u8g2.setFont(u8g2_font_t0_22_mr); // choose a suitable font
   u8g2.setFont(u8g2_font_profont22_tf); // choose a suitable font
   u8g2.drawStr(2,1,"X");
-  u8g2.setColorIndex(1);  
-  u8g2.drawStr(20,1,buffer_x);  // write something to the internal memory
+  u8g2.setColorIndex(1);
+  sprintf(bufferChar,"%+4.3f",Quad_X.GetValue());  
+  u8g2.drawStr(20,1,bufferChar);  // write something to the internal memory
   u8g2.drawRFrame(19,0,108,18,3); 
   u8g2.drawStr(2,19,"Y");
   u8g2.setColorIndex(1);
-  u8g2.drawStr(20,19,buffer_y);  // write something to the internal memory
+  sprintf(bufferChar,"%+4.3f",Quad_Y.GetValue());
+  u8g2.drawStr(20,19,bufferChar);  // write something to the internal memory
   u8g2.drawRFrame(19,18,108,18,3);
-  u8g2.drawStr(2,37,"Z");
+  u8g2.drawStr(2,37,"C");
   u8g2.setColorIndex(1);
-  u8g2.drawStr(20,37,buffer_z);  // write something to the internal memory
+  sprintf(bufferChar,"%+5.5d",Quad_Z.GiveMeTheSpeed());
+  u8g2.drawStr(20,37,bufferChar);  // write something to the internal memory
+  sprintf(bufferChar,"%5.5d",Quad_Z.GetValuePos());
+  u8g2.setFont(u8g2_font_profont10_mr); // choose a suitable font
+  u8g2.drawStr(95,37,bufferChar);  // write something to the internal memory
+  u8g2.drawStr(95,45,"tr/min");
   u8g2.drawRFrame(19,36,108,18,3);
+  
 
   u8g2.setFont(u8g2_font_profont10_mr); // choose a suitable font
   u8g2.drawStr(0,54,selectTool.getSelectedOptionName((byte*)&ToolChoose ));

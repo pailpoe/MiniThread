@@ -102,25 +102,29 @@ void StepperMotor::TimeToMove ()
 }
 void StepperMotor::PrepareToTurnPos()
 {
-    digitalWrite(_PinSTEP, HIGH);   
-    digitalWrite(_PinDIR, LOW);  
+    digitalWrite(_PinSTEP, HIGH);
+    if(_Sens == false) digitalWrite(_PinDIR, LOW); 
+    else digitalWrite(_PinDIR, HIGH);  
 }
 void StepperMotor::TurnPos()
 {
     _AbsoluteCounter++;  
-    digitalWrite(_PinSTEP, LOW);   
-    digitalWrite(_PinDIR, LOW);   
+    digitalWrite(_PinSTEP, LOW);
+    if(_Sens == false) digitalWrite(_PinDIR, LOW); 
+    else digitalWrite(_PinDIR, HIGH); 
 }
 void StepperMotor::PrepareToTurnNeg()
 {
     digitalWrite(_PinSTEP, HIGH);   
-    digitalWrite(_PinDIR, HIGH);   
+    if(_Sens == false) digitalWrite(_PinDIR, HIGH);
+    else  digitalWrite(_PinDIR, LOW);     
 }
 void StepperMotor::TurnNeg()
 {
     _AbsoluteCounter--; 
     digitalWrite(_PinSTEP, LOW);   
-    digitalWrite(_PinDIR, HIGH);    
+    if(_Sens == false) digitalWrite(_PinDIR, HIGH);
+    else  digitalWrite(_PinDIR, LOW);  
 }
 void StepperMotor::ChangeTargetPositionStep (long Target_Position)
 {
