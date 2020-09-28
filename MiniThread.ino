@@ -48,8 +48,11 @@ typedef struct
   int  Reso_X;
   int  Reso_Y;
   int  Reso_Z;
+  boolean Inverted_M1;
+  int  Reso_M1;
+  int  thread_M1;
 } sConfigDro;
-const sConfigDro csConfigDefault = {false,false,false,false,512,512,512};
+const sConfigDro csConfigDefault = {false,false,false,false,512,512,512,false,1600,200};
 // Variable
 sConfigDro ConfigDro;
 
@@ -60,6 +63,10 @@ GEMItem menuItemDiamY("Diameter Y", ConfigDro.Diameter_Mode_Y);
 GEMItem menuItemResoX("X step/mm:", ConfigDro.Reso_X);
 GEMItem menuItemResoY("Y step/mm:", ConfigDro.Reso_Y);
 GEMItem menuItemResoZ("Z step/mm:", ConfigDro.Reso_Z);
+GEMItem menuItemDirM1("M1 dir:", ConfigDro.Inverted_M1);
+GEMItem menuItemResoM1("M1 step/tr:", ConfigDro.Reso_M1);
+GEMItem menuItemThreadM1("M1 thread:", ConfigDro.thread_M1);
+
 void ActionRestoreSettingsInFlash(); // Forward declaration
 GEMItem menuItemButtonRestoreSettings("Restore settings", ActionRestoreSettingsInFlash);
 void ActionSaveSettingsInFlash(); // Forward declaration
@@ -179,6 +186,9 @@ void setupMenu() {
   menuPageSettings.addMenuItem(menuItemDirZ);
   menuPageSettings.addMenuItem(menuItemResoZ);
   menuPageSettings.addMenuItem(menuItemDiamY);
+  menuPageSettings.addMenuItem(menuItemDirM1);
+  menuPageSettings.addMenuItem(menuItemResoM1);
+  menuPageSettings.addMenuItem(menuItemThreadM1);
   menuPageSettings.addMenuItem(menuItemButtonRestoreSettings);
   menuPageSettings.addMenuItem(menuItemButtonSaveSettings);
   // Specify parent menu page for the Settings menu page
