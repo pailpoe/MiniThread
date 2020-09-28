@@ -159,6 +159,7 @@ void setup() {
   Motor1.ChangeStopPositionMinReal(0);
   Motor1.ChangeMaxSpeed(2);
   Motor1.ChangeStopPositionMaxReal(1000);
+  Motor1.MotorChangePowerState(true);
 
  
   //Restore config  
@@ -308,11 +309,6 @@ void DebugContextExit()
   menu.drawMenu();
   menu.clearContext();
 }
-
-
-
-
-
 
 void Restore_Config()
 {
