@@ -11,12 +11,12 @@ A Digital readout (DRO) display for lathe with threading :
 ## Input / Output
 ### Keyboard
 The system use 6 push buttons for the navigation (joystick configuration) : 
-- Up button ( pin PB15 )
-- Down button ( pin PB12 )
-- Left button ( pin PB0 ) 
-- Right button ( pin PB1 )
-- Ok button ( pin PB15 )
-- Cancel button ( pin PB13 )
+- Up button ( pin PB15 ) : Navigate up through the menu list, select next value of the digit/char of editable variable, or previous option in select.
+- Down button ( pin PB12 ) : Navigate down through the menu items list, select previous value of the digit/char of editable variable, or next option in select.
+- Left button ( pin PB0 ) : Navigate through the Back button to the previous menu page, select previous digit/char of editable variable
+- Right button ( pin PB1 ) : Navigate through the link to another (child) menu page, select next digit/char of editable variable, execute code associated with button
+- Ok button ( pin PB15 ) : Toggle boolean menu item, enter edit mode of the associated non-boolean variable, exit edit mode with saving the variable, execute code associated with button
+- Cancel button ( pin PB13 ) : Navigate to the previous (parent) menu page, exit edit mode without saving the variable, exit context loop if allowed within context's settings
 
 The GEM menu library is used : https://github.com/Spirik/GEM
 
