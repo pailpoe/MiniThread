@@ -103,7 +103,7 @@ GEMItem menuItemRelativeMode("Relative:", RelativeMode,UpdateRelAxe);
 
 
 // Create menu object of class GEM_u8g2. Supply its constructor with reference to u8g2 object we created earlier
-GEM_u8g2 menu(u8g2);
+GEM_u8g2 menu(u8g2,GEM_POINTER_ROW,5,10,10,75);
 
 //Quadrature decoder
 void IT_Timer1_Overflow(); // Forward declaration
