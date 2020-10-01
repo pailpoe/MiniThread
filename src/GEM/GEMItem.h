@@ -86,6 +86,7 @@ class GEMItem {
     GEMItem(char* title_, int& linkedVariable_, void (*saveAction_)());
     GEMItem(char* title_, char* linkedVariable_, void (*saveAction_)());
     GEMItem(char* title_, boolean& linkedVariable_, void (*saveAction_)());
+    GEMItem(char* title_, float& linkedVariable_, void (*saveAction_)());
     /* 
       Constructors for menu item that represents variable, w/o callback
       @param 'title_' - title of the menu item displayed on the screen
@@ -98,6 +99,7 @@ class GEMItem {
     GEMItem(char* title_, int& linkedVariable_, boolean readonly_ = false);
     GEMItem(char* title_, char* linkedVariable_, boolean readonly_ = false);
     GEMItem(char* title_, boolean& linkedVariable_, boolean readonly_ = false);
+    GEMItem(char* title_, float& linkedVariable_, boolean readonly_ = false);
     /* 
       Constructor for menu item that represents link to another menu page (via reference)
       @param 'title_' - title of the menu item displayed on the screen

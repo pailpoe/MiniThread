@@ -34,6 +34,7 @@
 #include "GEM_u8g2.h"
 #include <itoa.h>
 
+
 // Macro constants (aliases) for some of the ASCII character codes
 #define GEM_CHAR_CODE_9 57
 #define GEM_CHAR_CODE_0 48
@@ -323,6 +324,15 @@ void GEM_u8g2::printMenuItems() {
               itoa(*(byte*)menuItemTmp->linkedVariable, valueStringTmp, 10);
               printMenuItemValue(valueStringTmp);
             }
+          case GEM_VAL_FLOAT:
+            if (_editValueMode && menuItemTmp == _menuPageCurrent->getCurrentMenuItem()) {
+              printMenuItemValue(_valueString, 0, _editValueVirtualCursorPosition - _editValueCursorPosition);
+              drawEditValueCursor();
+            } else {
+              sprintf(valueStringTmp,"%.3f", *(float*)menuItemTmp->linkedVariable);
+              //ftoa(*(float*)menuItemTmp->linkedVariable, valueStringTmp, 3);
+              printMenuItemValue(valueStringTmp);
+            }
             break;
           case GEM_VAL_CHAR:
             if (_editValueMode && menuItemTmp == _menuPageCurrent->getCurrentMenuItem()) {
@@ -483,6 +493,11 @@ void GEM_u8g2::enterEditValueMode() {
       _editValueLength = 6;
       initEditValueCursor();
       break;
+    case GEM_VAL_FLOAT:
+      sprintf(_valueString,"%.3f", *(float*)menuItemTmp->linkedVariable);
+      _editValueLength = 12;
+      initEditValueCursor();
+      break;      
     case GEM_VAL_BYTE:
       itoa(*(byte*)menuItemTmp->linkedVariable, _valueString, 10);
       _editValueLength = 3;
@@ -567,27 +582,6 @@ void GEM_u8g2::nextEditValueDigit() {
       case GEM_CHAR_CODE_TILDA:
         code = GEM_CHAR_CODE_SPACE;
         break;
-      /*
-      // WIP for Cyrillic values support
-      case GEM_CHAR_CODE_TILDA:
-        code = _cyrillicEnabled ? GEM_CHAR_CODE_CYR_A : GEM_CHAR_CODE_SPACE;
-        break;
-      case GEM_CHAR_CODE_CYR_YA_SM:
-        code = GEM_CHAR_CODE_SPACE;
-        break;
-      case GEM_CHAR_CODE_CYR_E:
-        code = GEM_CHAR_CODE_CYR_YO;
-        break;
-      case GEM_CHAR_CODE_CYR_YO:
-        code = GEM_CHAR_CODE_CYR_E + 1;
-        break;
-      case GEM_CHAR_CODE_CYR_E_SM:
-        code = GEM_CHAR_CODE_CYR_YO_SM;
-        break;
-      case GEM_CHAR_CODE_CYR_YO_SM:
-        code = GEM_CHAR_CODE_CYR_E_SM + 1;
-        break;
-      */
       default:
         code++;
         break;
@@ -598,12 +592,15 @@ void GEM_u8g2::nextEditValueDigit() {
         code = GEM_CHAR_CODE_0;
         break;
       case GEM_CHAR_CODE_9:
-        code = (_editValueCursorPosition == 0 && _editValueType == GEM_VAL_INTEGER) ? GEM_CHAR_CODE_MINUS : GEM_CHAR_CODE_SPACE;
+        code = (_editValueCursorPosition == 0 && (_editValueType == GEM_VAL_INTEGER || _editValueType == GEM_VAL_FLOAT) ) ? GEM_CHAR_CODE_MINUS : GEM_CHAR_CODE_SPACE;
         break;
       case GEM_CHAR_CODE_MINUS:
         code = GEM_CHAR_CODE_SPACE;
         break;
       case GEM_CHAR_CODE_SPACE:
+        code = (_editValueCursorPosition != 0 && (_editValueType == GEM_VAL_FLOAT) ) ? GEM_CHAR_CODE_DOT : GEM_CHAR_CODE_0;
+        break;
+      case GEM_CHAR_CODE_DOT:
         code = GEM_CHAR_CODE_0;
         break;
       default:
@@ -625,30 +622,6 @@ void GEM_u8g2::prevEditValueDigit() {
       case GEM_CHAR_CODE_SPACE:
         code = GEM_CHAR_CODE_TILDA;
         break;
-      /*
-      // WIP for Cyrillic values support
-      case 0:
-        code = _cyrillicEnabled ? GEM_CHAR_CODE_CYR_YA_SM : GEM_CHAR_CODE_TILDA;
-        break;
-      case GEM_CHAR_CODE_SPACE:
-        code = _cyrillicEnabled ? GEM_CHAR_CODE_CYR_YA_SM : GEM_CHAR_CODE_TILDA;
-        break;
-      case GEM_CHAR_CODE_CYR_A:
-        code = GEM_CHAR_CODE_TILDA;
-        break;
-      case GEM_CHAR_CODE_CYR_E + 1:
-        code = GEM_CHAR_CODE_CYR_YO;
-        break;
-      case GEM_CHAR_CODE_CYR_YO:
-        code = GEM_CHAR_CODE_CYR_E;
-        break;
-      case GEM_CHAR_CODE_CYR_E_SM + 1:
-        code = GEM_CHAR_CODE_CYR_YO_SM;
-        break;
-      case GEM_CHAR_CODE_CYR_YO_SM:
-        code = GEM_CHAR_CODE_CYR_E_SM;
-        break;
-      */
       default:
         code--;
         break;
@@ -656,16 +629,19 @@ void GEM_u8g2::prevEditValueDigit() {
   } else {
     switch (code) {
       case 0:
-        code = (_editValueCursorPosition == 0 && _editValueType == GEM_VAL_INTEGER) ? GEM_CHAR_CODE_MINUS : GEM_CHAR_CODE_9;
+        code = (_editValueCursorPosition == 0 && (_editValueType == GEM_VAL_INTEGER || _editValueType == GEM_VAL_FLOAT)) ? GEM_CHAR_CODE_MINUS : GEM_CHAR_CODE_9;
         break;
       case GEM_CHAR_CODE_MINUS:
         code = GEM_CHAR_CODE_9;
         break;
       case GEM_CHAR_CODE_0:
-        code = GEM_CHAR_CODE_SPACE;
+        code = (_editValueCursorPosition != 0 && (_editValueType == GEM_VAL_FLOAT) ) ? GEM_CHAR_CODE_DOT : GEM_CHAR_CODE_SPACE;
         break;
       case GEM_CHAR_CODE_SPACE:
-        code = (_editValueCursorPosition == 0 && _editValueType == GEM_VAL_INTEGER) ? GEM_CHAR_CODE_MINUS : GEM_CHAR_CODE_9;
+        code = (_editValueCursorPosition == 0 && (_editValueType == GEM_VAL_INTEGER || _editValueType == GEM_VAL_FLOAT)) ? GEM_CHAR_CODE_MINUS : GEM_CHAR_CODE_9;
+        break;
+      case GEM_CHAR_CODE_DOT:
+        code = GEM_CHAR_CODE_SPACE;
         break;
       default:
         code--;
@@ -709,6 +685,9 @@ void GEM_u8g2::saveEditValue() {
     case GEM_VAL_BYTE:
       *(byte*)menuItemTmp->linkedVariable = atoi(_valueString);
       break;
+    case GEM_VAL_FLOAT:
+      *(float*)menuItemTmp->linkedVariable = atof(_valueString);
+      break;        
     case GEM_VAL_CHAR:
       strcpy((char*)menuItemTmp->linkedVariable, trimString(_valueString)); // Potential overflow if string length is not defined
       break;

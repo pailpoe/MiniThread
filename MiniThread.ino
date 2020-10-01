@@ -75,15 +75,18 @@ GEMItem menuItemButtonSaveSettings("Save settings", ActionSaveSettingsInFlash);
 void ActionDro(); // Forward declaration
 GEMItem menuItemButtonDro("DRO screen", ActionDro);
 
-void ActionDebug(); // Forward declaration
-GEMItem menuItemButtonDebug("Debug screen", ActionDebug);
-
 //Main Page Menu
 GEMPage menuPageMain("Dro Menu");
-
 //Settings Page Menu
 GEMPage menuPageSettings("Settings"); // Settings submenu
 GEMItem menuItemMainSettings("Settings", menuPageSettings);
+//Debug Page Menu
+GEMPage menuPageDebug("Debug tools"); // Debug submenu
+GEMItem menuItemDebug("Debug tools", menuPageDebug);
+void ActionDebug(); // Forward declaration
+GEMItem menuItemButtonDebug("Debug screen", ActionDebug);
+float TestFloat = 999.2;
+GEMItem menuItemTestFloat("Float:", TestFloat);
 
 //For tool selection
 byte ToolChoose = 0;
@@ -96,7 +99,7 @@ GEMItem menuItemTool("Tool:", ToolChoose, selectTool, applyTool);
 
 boolean RelativeMode = false;
 void UpdateRelAxe();
-GEMItem menuItemRelativeMode("Relative mode", RelativeMode,UpdateRelAxe);
+GEMItem menuItemRelativeMode("Relative:", RelativeMode,UpdateRelAxe);
 
 
 // Create menu object of class GEM_u8g2. Supply its constructor with reference to u8g2 object we created earlier
@@ -172,7 +175,6 @@ void setup() {
 void setupMenu() {
   // Add menu items to menu page
   menuPageMain.addMenuItem(menuItemButtonDro);
-  menuPageMain.addMenuItem(menuItemButtonDebug);
   menuPageMain.addMenuItem(menuItemTool);
   menuPageMain.addMenuItem(menuItemRelativeMode);
   //Add Sub menu Settings
@@ -191,6 +193,12 @@ void setupMenu() {
   menuPageSettings.addMenuItem(menuItemButtonSaveSettings);
   // Specify parent menu page for the Settings menu page
   menuPageSettings.setParentMenuPage(menuPageMain);
+  //Add Sub menu Debug
+  menuPageMain.addMenuItem(menuItemDebug);
+  menuPageDebug.addMenuItem(menuItemTestFloat);
+  menuPageDebug.addMenuItem(menuItemButtonDebug); 
+  // Specify parent menu page for the Debug menu page
+  menuPageDebug.setParentMenuPage(menuPageMain);
   // Add menu page to menu and set it as current
   menu.setMenuPageCurrent(menuPageMain);
 }

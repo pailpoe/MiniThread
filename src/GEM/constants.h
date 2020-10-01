@@ -47,3 +47,4 @@
 #define GEM_VAL_BOOLEAN 3  // Associated variable is of type boolean
 #define GEM_VAL_SELECT 4   // Associated variable is either of type int, byte or char[] with option select used to pick a predefined value from the list
                            // (note that char[] array should be big enough to hold select option with the longest value)
+#define GEM_VAL_FLOAT 5  // Associated variable is of type boolean

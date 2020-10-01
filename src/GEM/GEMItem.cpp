@@ -126,6 +126,14 @@ GEMItem::GEMItem(char* title_, boolean& linkedVariable_, void (*saveAction_)())
   , saveAction(saveAction_)
 { }
 
+GEMItem::GEMItem(char* title_, float& linkedVariable_, void (*saveAction_)())
+  : title(title_)
+  , linkedVariable(&linkedVariable_)
+  , linkedType(GEM_VAL_FLOAT)
+  , type(GEM_ITEM_VAL)
+  , saveAction(saveAction_)
+{ }
+
 //---
 
 GEMItem::GEMItem(char* title_, byte& linkedVariable_, boolean readonly_)
@@ -156,6 +164,14 @@ GEMItem::GEMItem(char* title_, boolean& linkedVariable_, boolean readonly_)
   : title(title_)
   , linkedVariable(&linkedVariable_)
   , linkedType(GEM_VAL_BOOLEAN)
+  , readonly(readonly_)
+  , type(GEM_ITEM_VAL)
+{ }
+
+GEMItem::GEMItem(char* title_, float& linkedVariable_, boolean readonly_)
+  : title(title_)
+  , linkedVariable(&linkedVariable_)
+  , linkedType(GEM_VAL_FLOAT)
   , readonly(readonly_)
   , type(GEM_ITEM_VAL)
 { }
