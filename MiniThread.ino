@@ -94,6 +94,10 @@ GEMItem menuItemMotor("Motor Functions", menuPageMotor);
 boolean bUseMotor = false;
 void ActionUseMotor(); // Forward declaration
 GEMItem menuItemUseMotor("Use motor:", bUseMotor,ActionUseMotor);
+
+#define MOTOR_MODE_NO_MODE 0
+#define MOTOR_MODE_MANUAL  1
+#define MOTOR_MODE_LEFT    2
 byte bMotorMode = 0;
 SelectOptionByte selectMotorModeOptions[] = {{"NoMode", 0}, {"Manual", 1}, {"Left", 2}};
 GEMSelect selectMotorMode(sizeof(selectMotorModeOptions)/sizeof(SelectOptionByte), selectMotorModeOptions);
@@ -102,7 +106,7 @@ GEMItem menuItemMotorMode("Motor mode:", bMotorMode, selectMotorMode, applyMotor
 float fMotorStopMin = 0;
 void ActionMotorStopMin(); // Forward declaration
 GEMItem menuItemMotorStopMin("Stop Min:", fMotorStopMin,ActionMotorStopMin);
-float fMotorStopMax = 100;
+float fMotorStopMax = 1000;
 void ActionMotorStopMax(); // Forward declaration
 GEMItem menuItemMotorStopMax("Stop Max:", fMotorStopMax,ActionMotorStopMax);
 float fMotorCurrentPos = 0;
@@ -283,8 +287,15 @@ void DroContextLoop() {
   } else 
   {
     if(key == GEM_KEY_UP)Quad_X.SetZeroActiveMode();
-    if(key == GEM_KEY_DOWN)Quad_Z.SetZeroActiveMode();
     if(key == GEM_KEY_OK)Quad_Y.SetZeroActiveMode();
+    if (key == GEM_KEY_LEFT && bMotorMode == MOTOR_MODE_MANUAL ) 
+    { 
+      Motor1.ChangeTheMode(StepperMotor::SpeedModeUp); 
+    }
+    if (key == GEM_KEY_RIGHT && bMotorMode == MOTOR_MODE_MANUAL) 
+    { 
+      Motor1.ChangeTheMode(StepperMotor::SpeedModeDown);
+    }    
     DisplayDrawInformations();
   }
 }
@@ -446,43 +457,90 @@ void ActionRestoreSettingsInFlash()
   SaveConfigInFlash((sConfigDro*)&csConfigDefault);
   Restore_Config();  
 }
+
+
+void Display_X_Informations(); //Forward declarations
+void Display_Y_Informations(); //Forward declarations
+void Display_C_Informations(); //Forward declarations
+void Display_M_Informations(); //Forward declarations
+void Display_Extra_Informations(); //Forward declarations
+void Display_UpdateRealTimeData(); //Forward declarations
 void DisplayDrawInformations()
 {
-  char bufferChar[16];
   u8g2.firstPage();
   do {
+  Display_UpdateRealTimeData();
+  Display_X_Informations();
+  Display_Y_Informations();
+  Display_M_Informations();
+  Display_Extra_Informations();
+  } while (u8g2.nextPage());
+}
+
+void Display_X_Informations()
+{
+  char bufferChar[16];
   u8g2.setColorIndex(1);
-  //u8g2.setFont(u8g2_font_t0_22_mr); // choose a suitable font
   u8g2.setFont(u8g2_font_profont22_tf); // choose a suitable font
-  u8g2.drawStr(2,1,"X");
+  u8g2.drawStr(0,1,"X");
   u8g2.setColorIndex(1);
   sprintf(bufferChar,"%+4.3f",Quad_X.GetValue());  
-  u8g2.drawStr(20,1,bufferChar);  // write something to the internal memory
-  u8g2.drawRFrame(19,0,108,18,3); 
-  u8g2.drawStr(2,19,"Y");
+  u8g2.drawStr(13,1,bufferChar);  // write something to the internal memory
+  u8g2.drawRFrame(11,0,116,18,3);  
+}
+void Display_Y_Informations()
+{
+  char bufferChar[16];
   u8g2.setColorIndex(1);
+  u8g2.setFont(u8g2_font_profont22_tf); // choose a suitable font
+  u8g2.drawStr(0,19,"Y");
   sprintf(bufferChar,"%+4.3f",Quad_Y.GetValue());
-  u8g2.drawStr(20,19,bufferChar);  // write something to the internal memory
-  u8g2.drawRFrame(19,18,108,18,3);
-  u8g2.drawStr(2,37,"C");
-  u8g2.setColorIndex(1);
+  u8g2.drawStr(13,19,bufferChar);  // write something to the internal memory
+  u8g2.drawRFrame(11,18,116,18,3);    
+}
+void Display_C_Informations()
+{
+  char bufferChar[16];
+  u8g2.setColorIndex(1); 
+  u8g2.setFont(u8g2_font_profont22_tf); // choose a suitable font 
+  u8g2.drawStr(0,37,"C");
   sprintf(bufferChar,"%+5.5d",Quad_Z.GiveMeTheSpeed());
-  u8g2.drawStr(20,37,bufferChar);  // write something to the internal memory
+  u8g2.drawStr(13,37,bufferChar);  // write something to the internal memory
   sprintf(bufferChar,"%5.5d",Quad_Z.GetValuePos());
   u8g2.setFont(u8g2_font_profont10_mr); // choose a suitable font
   u8g2.drawStr(95,37,bufferChar);  // write something to the internal memory
   u8g2.drawStr(95,45,"tr/min");
-  u8g2.drawRFrame(19,36,108,18,3);
+  u8g2.drawRFrame(11,36,116,18,3);    
+}
+void Display_M_Informations()
+{
+  char bufferChar[30];
+  u8g2.drawStr(0,37,"M");
+  u8g2.setColorIndex(1);
+  u8g2.setFont(u8g2_font_profont10_mr); // choose a suitable font
+  sprintf(bufferChar,"%+9.3f",fMotorCurrentPos);
+  u8g2.drawStr(13,37,bufferChar);  // write something to the internal memory
+  sprintf(bufferChar,"%+9.3f <> %+9.3f",fMotorStopMax,fMotorStopMin);
+  u8g2.drawStr(13,45,bufferChar);
   
-
+  u8g2.drawRFrame(11,36,116,18,3);    
+}
+void Display_Extra_Informations()
+{
   u8g2.setFont(u8g2_font_profont10_mr); // choose a suitable font
   u8g2.drawStr(0,54,selectTool.getSelectedOptionName((byte*)&ToolChoose ));
-
   if(RelativeMode==true)u8g2.drawStr(80,54,"Relative");
-  else u8g2.drawStr(80,54,"Absolute");
-  //u8g2.sendBuffer();          // transfer internal memory to the display 
-  } while (u8g2.nextPage());
+  else u8g2.drawStr(80,54,"Absolute");  
 }
+void Display_UpdateRealTimeData()
+{
+  fMotorCurrentPos = Motor1.GetPositionReal();    
+  
+}
+
+
+
+
 void UpdateRelAxe()
 {  
   if( RelativeMode == true )
@@ -505,7 +563,23 @@ void applyTool()
 }
 void ActionUseMotor()
 {
-    Motor1.MotorChangePowerState(bUseMotor);  
+  if( bUseMotor == true ) 
+  {
+    Motor1.ChangeTheMode(StepperMotor::NoMode);
+    bMotorMode = MOTOR_MODE_NO_MODE; 
+    ActionMotorStopMin();
+    ActionMotorStopMax(); 
+    ActionMotorCurrentPos();
+    ActionMotorMotorSpeed();
+    Motor1.UseEndLimit(true);
+    Motor1.MotorChangePowerState(true);
+  }
+  else
+  {
+    Motor1.ChangeTheMode(StepperMotor::NoMode);
+    bMotorMode = MOTOR_MODE_NO_MODE; 
+    Motor1.MotorChangePowerState(false);  
+  }     
 }
 void applyMotorMode()
 {
@@ -522,10 +596,9 @@ void ActionMotorStopMax()
 }
 void ActionMotorCurrentPos()
 {
-    
+  Motor1.ChangeCurrentPositionReal(fMotorCurrentPos);    
 }
-
 void ActionMotorMotorSpeed()
 {
-  
+  Motor1.ChangeMaxSpeed(iMotorSpeed);    
 }

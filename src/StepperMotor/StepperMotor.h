@@ -35,6 +35,11 @@ public:
   //Change the target position in "PositionMode"
 	void 		ChangeTargetPositionStep (long Target_Position);
   void    ChangeTargetPositionReal (float Target_Position);
+
+  //Change the Current motor position
+	void 		ChangeCurrentPositionStep (long Position);
+  void    ChangeCurrentPositionReal (float Position);
+
   
   
   //Electronic end limit min and max 

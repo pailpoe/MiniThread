@@ -165,6 +165,19 @@ void StepperMotor::ChangeTargetPositionReal (float Target_Position)
 {
   _TargetPosition = (long) (Target_Position * _Resolution);   
 }
+
+void 		StepperMotor::ChangeCurrentPositionStep (long Position)
+{
+  _AbsoluteCounter = Position; 
+  
+}
+void    StepperMotor::ChangeCurrentPositionReal (float Position)
+{
+  _AbsoluteCounter = (long) (Position * _Resolution);    
+}
+
+
+
 void StepperMotor::ChangeMaxSpeed (unsigned int MaxSpeed)
 {
   _MaxSpeed = MaxSpeed;  
