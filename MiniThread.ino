@@ -94,7 +94,6 @@ GEMItem menuItemMotor("Motor Functions", menuPageMotor);
 boolean bUseMotor = false;
 void ActionUseMotor(); // Forward declaration
 GEMItem menuItemUseMotor("Use motor:", bUseMotor,ActionUseMotor);
-
 #define MOTOR_MODE_NO_MODE 0
 #define MOTOR_MODE_MANUAL  1
 #define MOTOR_MODE_AUTO    2
@@ -110,6 +109,11 @@ GEMItem menuItemMotorStopMin("Stop Min:", fMotorStopMin,ActionMotorStopMin);
 float fMotorStopMax = 1000;
 void ActionMotorStopMax(); // Forward declaration
 GEMItem menuItemMotorStopMax("Stop Max:", fMotorStopMax,ActionMotorStopMax);
+boolean bUseMotorEndLimit = true;
+void ActionUseMotorEndLimit(); // Forward declaration
+GEMItem menuItemUseMotorEndLimit("Use limit:", bUseMotorEndLimit,ActionUseMotorEndLimit);
+
+
 float fMotorCurrentPos = 0;
 void ActionMotorCurrentPos(); // Forward declaration
 GEMItem menuItemMotorCurrentPos("CurrentPos:", fMotorCurrentPos,ActionMotorCurrentPos);
@@ -216,6 +220,7 @@ void setupMenu() {
   menuPageMotor.addMenuItem(menuItemMotorMode);
   menuPageMotor.addMenuItem(menuItemMotorStopMin);
   menuPageMotor.addMenuItem(menuItemMotorStopMax);
+  menuPageMotor.addMenuItem(menuItemUseMotorEndLimit);
   menuPageMotor.addMenuItem(menuItemMotorCurrentPos);
   menuPageMotor.addMenuItem(menuItemMotorSpeed);
   menuPageMotor.addMenuItem(menuItemButtonSetPosToMax);
@@ -557,10 +562,10 @@ void Display_M_Informations()
     break;   
   }
   sprintf(bufferChar,"|%d",iMotorSpeed);
-  u8g2.drawStr(100,37,bufferChar);
-     
+  u8g2.drawStr(100,37,bufferChar);    
   sprintf(bufferChar,"%+9.3f <> %+9.3f",fMotorStopMax,fMotorStopMin);
-  u8g2.drawStr(13,45,bufferChar); 
+  if(bUseMotorEndLimit)u8g2.drawStr(13,45,bufferChar);
+  else u8g2.drawStr(13,45," WARNING : No limit");  
   u8g2.drawRFrame(11,36,116,18,3);    
 }
 void Display_Extra_Informations()
@@ -609,7 +614,7 @@ void ActionUseMotor()
     ActionMotorStopMax(); 
     ActionMotorCurrentPos();
     ActionMotorMotorSpeed();
-    Motor1.UseEndLimit(true);
+    Motor1.UseEndLimit(bUseMotorEndLimit);
     Motor1.MotorChangePowerState(true);
   }
   else
@@ -618,6 +623,10 @@ void ActionUseMotor()
     bMotorMode = MOTOR_MODE_NO_MODE; 
     Motor1.MotorChangePowerState(false);  
   }     
+}
+void ActionUseMotorEndLimit()
+{
+  Motor1.UseEndLimit(bUseMotorEndLimit);  
 }
 void applyMotorMode()
 {
