@@ -116,6 +116,11 @@ GEMItem menuItemMotorCurrentPos("CurrentPos:", fMotorCurrentPos,ActionMotorCurre
 int iMotorSpeed = 2;
 void ActionMotorMotorSpeed(); // Forward declaration
 GEMItem menuItemMotorSpeed("Speed:", iMotorSpeed,ActionMotorMotorSpeed);
+void ActionSetCurrentToMax(); // Forward declaration
+GEMItem menuItemButtonSetPosToMax("Position to Max", ActionSetCurrentToMax);
+void ActionSetCurrentToMin(); // Forward declaration
+GEMItem menuItemButtonSetPosToMin("Position to Min", ActionSetCurrentToMin);
+
 
 //For tool selection
 byte ToolChoose = 0;
@@ -213,6 +218,8 @@ void setupMenu() {
   menuPageMotor.addMenuItem(menuItemMotorStopMax);
   menuPageMotor.addMenuItem(menuItemMotorCurrentPos);
   menuPageMotor.addMenuItem(menuItemMotorSpeed);
+  menuPageMotor.addMenuItem(menuItemButtonSetPosToMax);
+  menuPageMotor.addMenuItem(menuItemButtonSetPosToMin);
 
   // Specify parent menu page for the Motor menu page
   menuPageMotor.setParentMenuPage(menuPageMain);
@@ -534,9 +541,26 @@ void Display_M_Informations()
   u8g2.setFont(u8g2_font_profont10_mr); // choose a suitable font
   sprintf(bufferChar,"%+9.3f",fMotorCurrentPos);
   u8g2.drawStr(13,37,bufferChar);  // write something to the internal memory
+  switch ( bMotorMode )
+  {
+    case MOTOR_MODE_NO_MODE:
+      u8g2.drawStr(60,37,"|NoMode");
+    break;
+    case MOTOR_MODE_MANUAL:
+      u8g2.drawStr(60,37,"|Manual");
+    break;
+    case MOTOR_MODE_AUTO:
+      u8g2.drawStr(60,37,"|Auto");
+    break;
+    case MOTOR_MODE_LEFT:
+      u8g2.drawStr(60,37,"|Left"); 
+    break;   
+  }
+  sprintf(bufferChar,"|%d",iMotorSpeed);
+  u8g2.drawStr(100,37,bufferChar);
+     
   sprintf(bufferChar,"%+9.3f <> %+9.3f",fMotorStopMax,fMotorStopMin);
-  u8g2.drawStr(13,45,bufferChar);
-  
+  u8g2.drawStr(13,45,bufferChar); 
   u8g2.drawRFrame(11,36,116,18,3);    
 }
 void Display_Extra_Informations()
@@ -615,4 +639,16 @@ void ActionMotorCurrentPos()
 void ActionMotorMotorSpeed()
 {
   Motor1.ChangeMaxSpeed(iMotorSpeed);    
+}
+void ActionSetCurrentToMax()
+{
+  Display_UpdateRealTimeData();
+  fMotorStopMax = fMotorCurrentPos;
+  ActionMotorStopMax();    
+}
+void ActionSetCurrentToMin()
+{
+  Display_UpdateRealTimeData();
+  fMotorStopMin = fMotorCurrentPos;
+  ActionMotorStopMin();   
 }
