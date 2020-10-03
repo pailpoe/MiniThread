@@ -88,6 +88,30 @@ GEMItem menuItemButtonDebug("Debug screen", ActionDebug);
 float TestFloat = 999.2;
 GEMItem menuItemTestFloat("Float:", TestFloat);
 
+//Motor Functions ****************************************
+GEMPage menuPageMotor("Motor Functions"); // Motor submenu
+GEMItem menuItemMotor("Motor Functions", menuPageMotor);
+boolean bUseMotor = false;
+void ActionUseMotor(); // Forward declaration
+GEMItem menuItemUseMotor("Use motor:", bUseMotor,ActionUseMotor);
+byte bMotorMode = 0;
+SelectOptionByte selectMotorModeOptions[] = {{"NoMode", 0}, {"Manual", 1}, {"Left", 2}};
+GEMSelect selectMotorMode(sizeof(selectMotorModeOptions)/sizeof(SelectOptionByte), selectMotorModeOptions);
+void applyMotorMode(); // Forward declaration
+GEMItem menuItemMotorMode("Motor mode:", bMotorMode, selectMotorMode, applyMotorMode);
+float fMotorStopMin = 0;
+void ActionMotorStopMin(); // Forward declaration
+GEMItem menuItemMotorStopMin("Stop Min:", fMotorStopMin,ActionMotorStopMin);
+float fMotorStopMax = 100;
+void ActionMotorStopMax(); // Forward declaration
+GEMItem menuItemMotorStopMax("Stop Max:", fMotorStopMax,ActionMotorStopMax);
+float fMotorCurrentPos = 0;
+void ActionMotorCurrentPos(); // Forward declaration
+GEMItem menuItemMotorCurrentPos("CurrentPos:", fMotorCurrentPos,ActionMotorCurrentPos);
+int iMotorSpeed = 2;
+void ActionMotorMotorSpeed(); // Forward declaration
+GEMItem menuItemMotorSpeed("Speed:", iMotorSpeed,ActionMotorMotorSpeed);
+
 //For tool selection
 byte ToolChoose = 0;
 SelectOptionByte selectToolOptions[] = {{"Tool_0", 0}, {"Tool_1", 1}, {"Tool_2", 2}, {"Tool_3", 3}, {"Tool_4", 4}, {"Tool_5", 5}};
@@ -126,7 +150,7 @@ HardwareTimer MotorControl(4);
 #define PIN_MOT2_DIR   PB12
 #define PIN_MOT2_EN    PB14
 StepperMotor Motor1(800,false,PIN_MOT1_STEP,PIN_MOT1_DIR,PIN_MOT1_EN);
-unsigned int Motor1Speed=2;
+
 //Timer 4 overflow for Step motor
 void handler_Timer4_overflow()
 { 
@@ -175,6 +199,19 @@ void setup() {
 void setupMenu() {
   // Add menu items to menu page
   menuPageMain.addMenuItem(menuItemButtonDro);
+
+  //Add Sub menu Motor
+  menuPageMain.addMenuItem(menuItemMotor);
+  menuPageMotor.addMenuItem(menuItemUseMotor);
+  menuPageMotor.addMenuItem(menuItemMotorMode);
+  menuPageMotor.addMenuItem(menuItemMotorStopMin);
+  menuPageMotor.addMenuItem(menuItemMotorStopMax);
+  menuPageMotor.addMenuItem(menuItemMotorCurrentPos);
+  menuPageMotor.addMenuItem(menuItemMotorSpeed);
+
+  // Specify parent menu page for the Motor menu page
+  menuPageMotor.setParentMenuPage(menuPageMain);
+  
   menuPageMain.addMenuItem(menuItemTool);
   menuPageMain.addMenuItem(menuItemRelativeMode);
   //Add Sub menu Settings
@@ -193,12 +230,14 @@ void setupMenu() {
   menuPageSettings.addMenuItem(menuItemButtonSaveSettings);
   // Specify parent menu page for the Settings menu page
   menuPageSettings.setParentMenuPage(menuPageMain);
+
   //Add Sub menu Debug
   menuPageMain.addMenuItem(menuItemDebug);
   menuPageDebug.addMenuItem(menuItemTestFloat);
   menuPageDebug.addMenuItem(menuItemButtonDebug); 
   // Specify parent menu page for the Debug menu page
   menuPageDebug.setParentMenuPage(menuPageMain);
+
   // Add menu page to menu and set it as current
   menu.setMenuPageCurrent(menuPageMain);
 }
@@ -270,9 +309,11 @@ void DebugContextEnter() {
   // Clear sreen
   u8g2.clear();
 
-  Motor1.ChangeStopPositionMinReal(0);
-  Motor1.ChangeMaxSpeed(Motor1Speed);
-  Motor1.ChangeStopPositionMaxReal(1000);
+  Motor1.ChangeTheMode(StepperMotor::PositionMode);
+  Motor1.UseEndLimit(true);
+  Motor1.ChangeStopPositionMinReal(-10);
+  Motor1.ChangeMaxSpeed(iMotorSpeed);
+  Motor1.ChangeStopPositionMaxReal(20);
   Motor1.MotorChangePowerState(true);
 }
 void DebugContextLoop() {
@@ -306,21 +347,21 @@ void DebugContextLoop() {
   }
   if (key == GEM_KEY_LEFT) 
   { 
-    Motor1.ChangeTargetPositionReal(100); 
+    Motor1.ChangeTargetPositionReal(1000); 
   }
   if (key == GEM_KEY_RIGHT) 
   { 
-    Motor1.ChangeTargetPositionReal(0);
+    Motor1.ChangeTargetPositionReal(-1000);
   }
   if (key == GEM_KEY_UP) 
   { 
-    Motor1Speed++;
-    Motor1.ChangeMaxSpeed(Motor1Speed);
+    iMotorSpeed++;
+    Motor1.ChangeMaxSpeed(iMotorSpeed);
   }
   if (key == GEM_KEY_DOWN) 
   { 
-    if(Motor1Speed!=1)Motor1Speed--;
-    Motor1.ChangeMaxSpeed(Motor1Speed);
+    if(iMotorSpeed!=1)iMotorSpeed--;
+    Motor1.ChangeMaxSpeed(iMotorSpeed);
   }
 }
 void DebugContextExit() 
@@ -460,6 +501,31 @@ void UpdateRelAxe()
 
 void applyTool()
 {
+    
+}
+void ActionUseMotor()
+{
+    Motor1.MotorChangePowerState(bUseMotor);  
+}
+void applyMotorMode()
+{
   
+  
+}
+void ActionMotorStopMin()
+{
+  Motor1.ChangeStopPositionMinReal(fMotorStopMin);  
+}
+void ActionMotorStopMax()
+{
+    Motor1.ChangeStopPositionMaxReal(fMotorStopMax);  
+}
+void ActionMotorCurrentPos()
+{
+    
+}
+
+void ActionMotorMotorSpeed()
+{
   
 }

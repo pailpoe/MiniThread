@@ -18,12 +18,14 @@ StepperMotor::StepperMotor(unsigned int  Resolution , boolean Sens, char STEP_Pi
   pinMode(_PinDIR, OUTPUT);
   pinMode(_PinSTEP, OUTPUT);
   pinMode(_PinEN, OUTPUT); 
+  _eActualMode = NoMode;
+  _UseEndLimit = true;
 }
 void StepperMotor::TimeToPrepareToMove ()
 {
-    if(_AbsoluteCounter < _TargetPosition)
+    if((_AbsoluteCounter < _TargetPosition && _eActualMode == PositionMode) || _eActualMode == SpeedModeUp )
     {
-      if(_AbsoluteCounter < _StopPositionMax )
+      if(_AbsoluteCounter < _StopPositionMax || !_UseEndLimit )
       {
         eState = State_Rotation_Positive; 
         PrepareToTurnPos();
@@ -35,10 +37,10 @@ void StepperMotor::TimeToPrepareToMove ()
         PrepareToTurnPos();         
       }    
     }
-    else if (_AbsoluteCounter > _TargetPosition)
+    else if ((_AbsoluteCounter > _TargetPosition && _eActualMode == PositionMode) || _eActualMode == SpeedModeDown)
     {
       //Negatif
-      if(_AbsoluteCounter > _StopPositionMin )
+      if(_AbsoluteCounter > _StopPositionMin || !_UseEndLimit )
       {
         eState = State_Rotation_Negative;
         PrepareToTurnNeg(); 
@@ -58,6 +60,35 @@ void StepperMotor::TimeToPrepareToMove ()
       PrepareToTurnPos();     
     }   
 }
+
+void StepperMotor::ChangeTheMode(teMotorMode eMode)
+{
+  switch ( eMode )
+  {
+    case NoMode:
+      _eActualMode = NoMode;
+    break;
+    case SpeedModeUp:
+      _eActualMode = eMode; 
+    break;
+    case SpeedModeDown:
+      _eActualMode = eMode;     
+    break;
+    case PositionMode:
+      _TargetPosition = _AbsoluteCounter;
+      _eActualMode = eMode; 
+    break;
+    default:
+      _eActualMode = NoMode;
+    break;
+  }
+}
+
+void    StepperMotor::UseEndLimit ( boolean State )
+{
+    _UseEndLimit = State;
+}
+
 void    StepperMotor::MotorChangePowerState ( boolean State)
 {
   if(State == false)

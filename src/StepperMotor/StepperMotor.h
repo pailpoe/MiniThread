@@ -3,7 +3,7 @@
 #include <Arduino.h>
 /**
  *  \file StepperMotor.h
- *  \brief Classe de gestion du moteur pas à pas
+ *  \brief Stepper motor class
  *  \author G.pailleret
  *  \version 1.0
  *  \date 22/10/2019
@@ -13,41 +13,49 @@ class StepperMotor
 {
 public:
 	StepperMotor(unsigned int  Resolution , boolean Sens, char STEP_Pin, char DIR_Pin, char EN_Pin);
-	
+	//Change the motor parameter
+  void ChangeParameter(unsigned int  Resolution , boolean Sens);
+  
 	void 		TimeToPrepareToMove (); //Be call every 100µs 
 	void 		TimeToMove (); 					//Be call every 10µs after TimeToPrepareToMove() 
-	
-	/**
-	 *  \brief Change the target position
-	 *  \param [in] Target_Position Target position of the motor
-	 */
-	void 		ChangeTargetPositionStep (long Target_Position);
-	void 		ChangeStopPositionMaxStep (long Stop_Position);
-	void 		ChangeStopPositionMinStep (long Stop_Position);
-  void    ChangeTargetPositionReal (float Target_Position);
-  void    ChangeStopPositionMaxReal (float Stop_Position);
-  void    ChangeStopPositionMinReal (float Stop_Position);
 
-  void    MotorChangePowerState ( boolean State); 
- 
-	boolean AreYouAtMaxPos();
-	boolean AreYouAtMinPos();
+	enum teMotorMode 
+	{   
+      NoMode,
+      SpeedModeUp,
+      SpeedModeDown,
+      PositionMode
+  };
+
+  //Change the actual mode
+  void    ChangeTheMode(teMotorMode eMode);
+   //Change the On/off state  ( false = motor disabled no power)
+  void    MotorChangePowerState ( boolean State);  
+
+  //Change the target position in "PositionMode"
+	void 		ChangeTargetPositionStep (long Target_Position);
+  void    ChangeTargetPositionReal (float Target_Position);
   
-  void ChangeParameter(unsigned int  Resolution , boolean Sens);
-	/**
-	 *  \fn void ChangeMaxSpeed (unsigned int MaxSpeed); 
-	 *  \brief Change the max speed
-	 *  \param [in] MaxSpeed from 1 to x ( 1 = max speed)
-	 */
-	void 		ChangeMaxSpeed (unsigned int MaxSpeed);
+  
+  //Electronic end limit min and max 
+  void    UseEndLimit ( boolean State );
+	void 		ChangeStopPositionMaxStep (long Stop_Position);
+  void    ChangeStopPositionMaxReal (float Stop_Position);  
+	void 		ChangeStopPositionMinStep (long Stop_Position);  
+  void    ChangeStopPositionMinReal (float Stop_Position);
+	boolean AreYouAtMaxPos();
+	boolean AreYouAtMinPos();  
+
+  //Change the max speed
+	//MaxSpeed from 1 to x ( 1 = max speed)
+	void 		     ChangeMaxSpeed (unsigned int MaxSpeed);
   unsigned int GetMaxSpeed ();
-	/**
-	 *  \fn long GetPosition();
-	 *  \brief Return the absolute position of the motor
-	 *  \return absolute position of the motor
-	 */  
-	long 		GetPositionStep();
+
+  //Get the absolute position of the motor
+	long 		 GetPositionStep();
   float    GetPositionReal(); // mm,turn
+  
+  
 private:
 	enum eMS_Motor 
 	{   
@@ -59,6 +67,8 @@ private:
 	void 			TurnPos();
 	void 			PrepareToTurnNeg(); 
 	void 			TurnNeg(); 
+  boolean   _UseEndLimit;
+  teMotorMode _eActualMode;      //Motor mode
 	long 			_AbsoluteCounter; 	//Absolute position of the stepper motor
 	long 			_TargetPosition; 		//Target position
 	long 			_StopPositionMax; 	//Security Max position
@@ -70,7 +80,7 @@ private:
 	eMS_Motor eState; 						//Motor machine state
 	unsigned int _MaxSpeed; 			//Max speed ( 1= max 10Khz) 
 	unsigned int _LoopSpeedCount; //Counter for Max speed 
-	unsigned int _Resolution; 		//Resolution par tour
+	unsigned int _Resolution; 		//Resolution/tr or mm
 };
     
 #endif
