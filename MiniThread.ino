@@ -97,9 +97,10 @@ GEMItem menuItemUseMotor("Use motor:", bUseMotor,ActionUseMotor);
 
 #define MOTOR_MODE_NO_MODE 0
 #define MOTOR_MODE_MANUAL  1
-#define MOTOR_MODE_LEFT    2
+#define MOTOR_MODE_AUTO    2
+#define MOTOR_MODE_LEFT    3
 byte bMotorMode = 0;
-SelectOptionByte selectMotorModeOptions[] = {{"NoMode", 0}, {"Manual", 1}, {"Left", 2}};
+SelectOptionByte selectMotorModeOptions[] = {{"NoMode", 0}, {"Manual", 1},{"Auto", 2}, {"Left", 3}};
 GEMSelect selectMotorMode(sizeof(selectMotorModeOptions)/sizeof(SelectOptionByte), selectMotorModeOptions);
 void applyMotorMode(); // Forward declaration
 GEMItem menuItemMotorMode("Motor mode:", bMotorMode, selectMotorMode, applyMotorMode);
@@ -288,14 +289,26 @@ void DroContextLoop() {
   {
     if(key == GEM_KEY_UP)Quad_X.SetZeroActiveMode();
     if(key == GEM_KEY_OK)Quad_Y.SetZeroActiveMode();
-    if (key == GEM_KEY_LEFT && bMotorMode == MOTOR_MODE_MANUAL ) 
-    { 
-      Motor1.ChangeTheMode(StepperMotor::SpeedModeUp); 
+    if( bMotorMode == MOTOR_MODE_MANUAL)
+    {
+      if( customKeypad.isPressed(GEM_KEY_LEFT) || customKeypad.isPressed(GEM_KEY_RIGHT))
+      {
+        if( customKeypad.isPressed(GEM_KEY_LEFT))Motor1.ChangeTheMode(StepperMotor::SpeedModeUp);
+        if( customKeypad.isPressed(GEM_KEY_RIGHT))Motor1.ChangeTheMode(StepperMotor::SpeedModeDown);
+      }
+      else Motor1.ChangeTheMode(StepperMotor::NoMode);       
     }
-    if (key == GEM_KEY_RIGHT && bMotorMode == MOTOR_MODE_MANUAL) 
-    { 
-      Motor1.ChangeTheMode(StepperMotor::SpeedModeDown);
-    }    
+    if (bMotorMode == MOTOR_MODE_AUTO)
+    {
+      if (key == GEM_KEY_LEFT ) 
+      { 
+        Motor1.ChangeTheMode(StepperMotor::SpeedModeUp); 
+      }
+      if (key == GEM_KEY_RIGHT ) 
+      { 
+        Motor1.ChangeTheMode(StepperMotor::SpeedModeDown);
+      }    
+     } 
     DisplayDrawInformations();
   }
 }
@@ -472,7 +485,8 @@ void DisplayDrawInformations()
   Display_UpdateRealTimeData();
   Display_X_Informations();
   Display_Y_Informations();
-  Display_M_Informations();
+  if( bUseMotor == true ) Display_M_Informations();
+  else Display_C_Informations(); 
   Display_Extra_Informations();
   } while (u8g2.nextPage());
 }

@@ -179,7 +179,7 @@ void Keypad::nextKeyState(byte idx, boolean button) {
 bool Keypad::isPressed(char keyChar) {
 	for (byte i=0; i<LIST_MAX; i++) {
 		if ( key[i].kchar == keyChar ) {
-			if ( (key[i].kstate == PRESSED) && key[i].stateChanged )
+			if ( (key[i].kstate == PRESSED) || (key[i].kstate == HOLD ) ) //&& key[i].stateChanged
 				return true;
 		}
 	}
