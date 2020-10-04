@@ -313,12 +313,14 @@ void DroContextLoop() {
     if (bMotorMode == MOTOR_MODE_AUTO)
     {
       if (key == GEM_KEY_LEFT ) 
-      { 
-        Motor1.ChangeTheMode(StepperMotor::SpeedModeUp); 
-      }
+      {
+        if( Motor1.ReturnTheMode() == StepperMotor::NoMode ) Motor1.ChangeTheMode(StepperMotor::SpeedModeUp);
+        else Motor1.ChangeTheMode(StepperMotor::NoMode);      
+      }  
       if (key == GEM_KEY_RIGHT ) 
       { 
-        Motor1.ChangeTheMode(StepperMotor::SpeedModeDown);
+        if( Motor1.ReturnTheMode() == StepperMotor::NoMode ) Motor1.ChangeTheMode(StepperMotor::SpeedModeDown);
+        else Motor1.ChangeTheMode(StepperMotor::NoMode);  
       }    
      } 
     DisplayDrawInformations();
@@ -630,8 +632,26 @@ void ActionUseMotorEndLimit()
 }
 void applyMotorMode()
 {
-  
-  
+  switch (bMotorMode)
+  {
+    case MOTOR_MODE_LEFT :
+      //Left thread
+      if( bUseMotorEndLimit && Motor1.AreYouAtMinPos())
+      {
+        //Need to have end limit and position at min pos to start   
+      }
+      else
+      {
+        bMotorMode = MOTOR_MODE_NO_MODE;  
+      } 
+    break; 
+    case MOTOR_MODE_NO_MODE :
+    case MOTOR_MODE_MANUAL :
+    case MOTOR_MODE_AUTO :
+    default:
+      Motor1.ChangeTheMode(StepperMotor::NoMode);  
+    break;
+  }  
 }
 void ActionMotorStopMin()
 {

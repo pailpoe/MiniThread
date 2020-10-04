@@ -29,6 +29,9 @@ public:
 
   //Change the actual mode
   void    ChangeTheMode(teMotorMode eMode);
+  //Return the actual mode
+  teMotorMode ReturnTheMode();
+  
    //Change the On/off state  ( false = motor disabled no power)
   void    MotorChangePowerState ( boolean State);  
 

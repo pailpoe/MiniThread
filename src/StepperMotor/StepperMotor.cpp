@@ -83,7 +83,10 @@ void StepperMotor::ChangeTheMode(teMotorMode eMode)
     break;
   }
 }
-
+StepperMotor::teMotorMode StepperMotor::ReturnTheMode()
+{
+  return _eActualMode; 
+}
 void    StepperMotor::UseEndLimit ( boolean State )
 {
     _UseEndLimit = State;
