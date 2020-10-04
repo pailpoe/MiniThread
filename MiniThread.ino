@@ -73,7 +73,7 @@ void ActionSaveSettingsInFlash(); // Forward declaration
 GEMItem menuItemButtonSaveSettings("Save settings", ActionSaveSettingsInFlash);
 
 void ActionDro(); // Forward declaration
-GEMItem menuItemButtonDro("DRO screen", ActionDro);
+GEMItem menuItemButtonDro("Return to Screen", ActionDro);
 
 //Main Page Menu
 GEMPage menuPageMain("Dro Menu");
@@ -204,6 +204,8 @@ void handler_Timer4_compare3()
 {
   Motor1.TimeToMove();
 }
+long GCD_Function ( long n1, long n2); //Forward declaration
+void CalcMotorParameterForThread(); //Forward declaration
 
 void setup() {
 
@@ -226,9 +228,6 @@ void setup() {
   MotorControl.attachCompare3Interrupt(handler_Timer4_compare3); //interrupt conmpare 3
   MotorControl.attachInterrupt(0, handler_Timer4_overflow); //Overflow interrupt  
   MotorControl.resume();
-
-
- 
   //Restore config  
   Restore_Config();
   // Menu init, setup and draw
@@ -238,7 +237,6 @@ void setup() {
   ActionDro(); //Start with dro screen
   //ActionDebug(); //Start with dro screen
 }
-
 void setupMenu() {
   // Add menu items to menu page
   menuPageMain.addMenuItem(menuItemButtonDro);
@@ -283,7 +281,6 @@ void setupMenu() {
   // Add menu page to menu and set it as current
   menu.setMenuPageCurrent(menuPageMain);
 }
-
 void loop() {
   // If menu is ready to accept button press...
   if (menu.readyForKey()) {
@@ -297,7 +294,6 @@ void loop() {
     #endif    
   }
 }
-
 // ***************************************************************************************
 // ***************************************************************************************
 // *** DRO main context ******************************************************************
@@ -409,16 +405,10 @@ void ActionDebug()
   menu.context.allowExit = false; // Setting to false will require manual exit from the loop
   menu.context.enter();    
 }
-void DebugContextEnter() {
+void DebugContextEnter() 
+{
   // Clear sreen
   u8g2.clear();
-
-  Motor1.ChangeTheMode(StepperMotor::PositionMode);
-  Motor1.UseEndLimit(true);
-  Motor1.ChangeStopPositionMinReal(-10);
-  Motor1.ChangeMaxSpeed(iMotorSpeed);
-  Motor1.ChangeStopPositionMaxReal(20);
-  Motor1.MotorChangePowerState(true);
 }
 void DebugContextLoop() {
   // Detect key press manually using U8g2 library
@@ -432,40 +422,16 @@ void DebugContextLoop() {
   do {
       u8g2.setColorIndex(1);
       u8g2.setFont(u8g2_font_profont10_mr); // choose a suitable font
+      CalcMotorParameterForThread();
       char buffer[16];
-      sprintf(buffer,"Speed Z:%d",Quad_Z.GiveMeTheSpeed());
-      u8g2.drawStr(2,1,buffer);
-      sprintf(buffer,"millis():%ld",millis());
-      u8g2.drawStr(2,10,buffer);
-      sprintf(buffer,"pos Z:%d",Quad_Z.GetValuePos());
-      u8g2.drawStr(2,19,buffer);
-      sprintf(buffer,"Moteur1 pos:%ld",Motor1.GetPositionStep());
-      u8g2.drawStr(2,28,buffer);
-      sprintf(buffer,"Speed Moteur1 max:%d",Motor1.GetMaxSpeed());
-      u8g2.drawStr(2,37,buffer);    
+      sprintf(buffer,"Numerator:%u",sThreadCalc.Numerator);
+      u8g2.drawStr(0,0,buffer);
+      sprintf(buffer,"Denominator:%u",sThreadCalc.Denominator);
+      u8g2.drawStr(0,10,buffer);      
   } while (u8g2.nextPage());
   if (key == GEM_KEY_CANCEL) 
   { 
-    // Exit animation routine if GEM_KEY_CANCEL key was pressed
     menu.context.exit();
-  }
-  if (key == GEM_KEY_LEFT) 
-  { 
-    Motor1.ChangeTargetPositionReal(1000); 
-  }
-  if (key == GEM_KEY_RIGHT) 
-  { 
-    Motor1.ChangeTargetPositionReal(-1000);
-  }
-  if (key == GEM_KEY_UP) 
-  { 
-    iMotorSpeed++;
-    Motor1.ChangeMaxSpeed(iMotorSpeed);
-  }
-  if (key == GEM_KEY_DOWN) 
-  { 
-    if(iMotorSpeed!=1)iMotorSpeed--;
-    Motor1.ChangeMaxSpeed(iMotorSpeed);
   }
 }
 void DebugContextExit() 
@@ -699,13 +665,27 @@ void ActionUseMotorEndLimit()
 {
   Motor1.UseEndLimit(bUseMotorEndLimit);  
 }
-
+//Returns the greatest common divisor of two integers
+long GCD_Function ( long n1, long n2)
+{
+  long i,result;
+  for(i=1;i<=n1 && i<=n2;i++)
+  {
+    if(n1%i==0 && n2%i==0)result = i;  
+  }
+  return result;     
+}
 void CalcMotorParameterForThread()
 {
-  //(Quad_Z.GetValueLong()*16 * 200 ) / 2400
-sThreadCalc.Numerator = 16 * iMotorThread;  
-sThreadCalc.Denominator = 2400; 
-sThreadCalc.Offset = Motor1.GetStopPositionMinStep() ;  
+  long lnumber;
+  sThreadCalc.Numerator = ConfigDro.Reso_M1 * iMotorThread;  
+  sThreadCalc.Denominator = ConfigDro.thread_M1 * ConfigDro.Reso_Z ; 
+  lnumber = GCD_Function(sThreadCalc.Numerator,sThreadCalc.Denominator);
+  sThreadCalc.Numerator = sThreadCalc.Numerator / lnumber;
+  sThreadCalc.Denominator = sThreadCalc.Denominator / lnumber;   
+  //sThreadCalc.Numerator = 16 * iMotorThread;  
+  //sThreadCalc.Denominator = 2400; 
+  sThreadCalc.Offset = Motor1.GetStopPositionMinStep() ;  
 }
 void applyMotorMode()
 {
@@ -742,7 +722,7 @@ void ActionMotorStopMin()
 }
 void ActionMotorStopMax()
 {
-    Motor1.ChangeStopPositionMaxReal(fMotorStopMax);  
+  Motor1.ChangeStopPositionMaxReal(fMotorStopMax);  
 }
 void ActionMotorCurrentPos()
 {
