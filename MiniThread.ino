@@ -50,7 +50,7 @@ typedef struct
   int  Reso_M1;
   int  thread_M1;
 } sConfigDro;
-const sConfigDro csConfigDefault = {false,false,false,false,512,512,512,false,1600,200};
+const sConfigDro csConfigDefault = {false,false,false,true,512,512,512,false,1600,200};
 // Variable
 sConfigDro ConfigDro;
 
@@ -85,6 +85,24 @@ void ActionDebug(); // Forward declaration
 GEMItem menuItemButtonDebug("Debug screen", ActionDebug);
 float TestFloat = 999.2;
 GEMItem menuItemTestFloat("Float:", TestFloat);
+
+//Axe Functions ******************************************
+GEMPage menuPageAxe("Axe Functions"); // Axe submenu
+GEMItem menuItemAxe("Axe Functions", menuPageAxe);
+byte ToolChoose = 0;
+SelectOptionByte selectToolOptions[] = {{"Tool_0", 0}, {"Tool_1", 1}, {"Tool_2", 2}, {"Tool_3", 3}, {"Tool_4", 4}, {"Tool_5", 5}};
+GEMSelect selectTool(sizeof(selectToolOptions)/sizeof(SelectOptionByte), selectToolOptions);
+void applyTool(); // Forward declaration
+GEMItem menuItemTool("Tool:", ToolChoose, selectTool, applyTool);
+boolean RelativeMode = false;
+void ActionChangeRelaticeMode();
+GEMItem menuItemRelativeMode("Relative:", RelativeMode,ActionChangeRelaticeMode);
+float fAxeXPos = 0;
+void ActionAxeXPos(); // Forward declaration
+GEMItem menuItemAxeXPos("X Pos:", fAxeXPos,ActionAxeXPos);
+float fAxeYPos = 0;
+void ActionAxeYPos(); // Forward declaration
+GEMItem menuItemAxeYPos("Y Pos:", fAxeYPos,ActionAxeYPos);
 
 //Motor Functions ****************************************
 GEMPage menuPageMotor("Motor Functions"); // Motor submenu
@@ -125,18 +143,6 @@ void ActionSetCurrentToMin(); // Forward declaration
 GEMItem menuItemButtonSetPosToMin("CurrentPos -> Min", ActionSetCurrentToMin);
 void ActionResetCurrentPos(); // Forward declaration
 GEMItem menuItemButtonResetCurrentPos("Reset CurrentPos", ActionResetCurrentPos);
-
-
-//For tool selection
-byte ToolChoose = 0;
-SelectOptionByte selectToolOptions[] = {{"Tool_0", 0}, {"Tool_1", 1}, {"Tool_2", 2}, {"Tool_3", 3}, {"Tool_4", 4}, {"Tool_5", 5}};
-GEMSelect selectTool(sizeof(selectToolOptions)/sizeof(SelectOptionByte), selectToolOptions);
-void applyTool(); // Forward declaration
-GEMItem menuItemTool("Tool:", ToolChoose, selectTool, applyTool);
-
-boolean RelativeMode = false;
-void ActionChangeRelaticeMode();
-GEMItem menuItemRelativeMode("Relative:", RelativeMode,ActionChangeRelaticeMode);
 
 //Threading state
 typedef enum
@@ -206,6 +212,7 @@ void handler_Timer4_compare3()
 }
 long GCD_Function ( long n1, long n2); //Forward declaration
 void CalcMotorParameterForThread(); //Forward declaration
+void Display_UpdateRealTimeData(); //Forward declarations
 
 // ***************************************************************************************
 // ***************************************************************************************
@@ -236,6 +243,13 @@ void setup()
 void setupMenu() {
   // Add menu items to menu page
   menuPageMain.addMenuItem(menuItemButtonDro);
+  //Add Sub menu Axe
+  menuPageMain.addMenuItem(menuItemAxe);
+  menuPageAxe.addMenuItem(menuItemTool);
+  menuPageAxe.addMenuItem(menuItemRelativeMode);
+  menuPageAxe.addMenuItem(menuItemAxeXPos);
+  menuPageAxe.addMenuItem(menuItemAxeYPos);
+  menuPageAxe.setParentMenuPage(menuPageMain);
   //Add Sub menu Motor
   menuPageMain.addMenuItem(menuItemMotor);
   menuPageMotor.addMenuItem(menuItemUseMotor);
@@ -249,10 +263,7 @@ void setupMenu() {
   menuPageMotor.addMenuItem(menuItemButtonSetPosToMax);
   menuPageMotor.addMenuItem(menuItemButtonSetPosToMin);
   menuPageMotor.addMenuItem(menuItemButtonResetCurrentPos);
-  // Specify parent menu page for the Motor menu page
-  menuPageMotor.setParentMenuPage(menuPageMain);  
-  menuPageMain.addMenuItem(menuItemTool);
-  menuPageMain.addMenuItem(menuItemRelativeMode);
+  menuPageMotor.setParentMenuPage(menuPageMain);
   //Add Sub menu Settings
   menuPageMain.addMenuItem(menuItemMainSettings); 
   menuPageSettings.addMenuItem(menuItemDirX);
@@ -267,13 +278,11 @@ void setupMenu() {
   menuPageSettings.addMenuItem(menuItemThreadM1);
   menuPageSettings.addMenuItem(menuItemButtonRestoreSettings);
   menuPageSettings.addMenuItem(menuItemButtonSaveSettings);
-  // Specify parent menu page for the Settings menu page
   menuPageSettings.setParentMenuPage(menuPageMain);
   //Add Sub menu Debug
   menuPageMain.addMenuItem(menuItemDebug);
   menuPageDebug.addMenuItem(menuItemTestFloat);
   menuPageDebug.addMenuItem(menuItemButtonDebug); 
-  // Specify parent menu page for the Debug menu page
   menuPageDebug.setParentMenuPage(menuPageMain);
   // Add menu page to menu and set it as current
   menu.setMenuPageCurrent(menuPageMain);
@@ -282,6 +291,7 @@ void loop() {
   // If menu is ready to accept button press...
   if (menu.readyForKey()) 
   {
+    Display_UpdateRealTimeData();
     menu.registerKeyPress(customKeypad.getKey());
   }
 }
@@ -501,7 +511,6 @@ void Display_Y_Informations(); //Forward declarations
 void Display_C_Informations(); //Forward declarations
 void Display_M_Informations(); //Forward declarations
 void Display_Extra_Informations(); //Forward declarations
-void Display_UpdateRealTimeData(); //Forward declarations
 void DisplayDrawInformations()
 {
   u8g2.firstPage();
@@ -592,7 +601,9 @@ void Display_Extra_Informations()
 }
 void Display_UpdateRealTimeData()
 {
-  fMotorCurrentPos = Motor1.GetPositionReal();     
+  fMotorCurrentPos = Motor1.GetPositionReal(); 
+  fAxeXPos = Quad_X.GetValue();
+  fAxeYPos = Quad_Y.GetValue();     
 }
 
 
@@ -734,4 +745,12 @@ void ActionResetCurrentPos()
 {
   fMotorCurrentPos = 0;
   ActionMotorCurrentPos();  
+}
+void ActionAxeXPos()
+{
+  Quad_X.SetValue(fAxeXPos);    
+}
+void ActionAxeYPos()
+{
+  Quad_Y.SetValue(fAxeYPos);   
 }
