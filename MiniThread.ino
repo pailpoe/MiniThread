@@ -2,7 +2,7 @@
 Project Name    :   MiniThread
 Hard revision   :   V1.0
 Soft revision   :   /
-Description     :   Dro system for lathe machine with 3 quadrature decoder and threading funtion , Oled SSD1306 display and 6 push buttons for navigation
+Description     :   
 Chip            :   STM32F103CBT6
 freq uc         :   72Mhz (use 8Mhz external oscillator with PLL ) 
 Compiler        :   Arduino IDE 1.8.3
@@ -18,26 +18,24 @@ Revision        :
 #include "src/StepperMotor/StepperMotor.h"
 #include <EEPROM.h>
 
-#define USE_KEYPAD_KEYBOARD
+#define TEXT_MAIN_MENU_TITLE "MiniThread V1.0 G.Pailleret"
 
 U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);
 
+const byte ROWS = 4; //four rows
+const byte COLS = 4; //four columns
+char hexaKeys[ROWS][COLS] = {
+  {'Z'             ,'Z'           ,GEM_KEY_UP   ,'Z'            },
+  {GEM_KEY_CANCEL  ,GEM_KEY_LEFT  ,GEM_KEY_OK   ,GEM_KEY_RIGHT  },
+  {'Z'             ,'Z'           ,GEM_KEY_DOWN ,'Z'            },
+  {'Z'             ,'Z'           ,'Z'          ,'Z'            }
+};
+byte rowPins[ROWS] = {PA5, PA4, PA3, PA2}; //connect to the row pinouts of the keypad
+byte colPins[COLS] = {PB0, PB1, PB10, PB11}; //connect to the column pinouts of the keypad
+//initialize an instance of class NewKeypad
+Keypad customKeypad ( makeKeymap(hexaKeys), rowPins, colPins, ROWS, COLS);
+//customKeypad.getKey();
 
-#ifdef USE_KEYPAD_KEYBOARD
-  const byte ROWS = 4; //four rows
-  const byte COLS = 4; //four columns
-  char hexaKeys[ROWS][COLS] = {
-    {'Z'             ,'Z'           ,GEM_KEY_UP   ,'Z'            },
-    {GEM_KEY_CANCEL  ,GEM_KEY_LEFT  ,GEM_KEY_OK   ,GEM_KEY_RIGHT  },
-    {'Z'             ,'Z'           ,GEM_KEY_DOWN ,'Z'            },
-    {'Z'             ,'Z'           ,'Z'          ,'Z'            }
-  };
-  byte rowPins[ROWS] = {PA5, PA4, PA3, PA2}; //connect to the row pinouts of the keypad
-  byte colPins[COLS] = {PB0, PB1, PB10, PB11}; //connect to the column pinouts of the keypad
-  //initialize an instance of class NewKeypad
-  Keypad customKeypad ( makeKeymap(hexaKeys), rowPins, colPins, ROWS, COLS);
-  //customKeypad.getKey();
-#endif
 
 typedef struct
 {
@@ -76,7 +74,7 @@ void ActionDro(); // Forward declaration
 GEMItem menuItemButtonDro("Return to Screen", ActionDro);
 
 //Main Page Menu
-GEMPage menuPageMain("Dro Menu");
+GEMPage menuPageMain(TEXT_MAIN_MENU_TITLE);
 //Settings Page Menu
 GEMPage menuPageSettings("Settings"); // Settings submenu
 GEMItem menuItemMainSettings("Settings", menuPageSettings);
@@ -207,16 +205,12 @@ void handler_Timer4_compare3()
 long GCD_Function ( long n1, long n2); //Forward declaration
 void CalcMotorParameterForThread(); //Forward declaration
 
-void setup() {
-
-  // U8g2 library init. Pass pin numbers the buttons are connected to.
-  // The push-buttons should be wired with pullup resistors (so the LOW means that the button is pressed)
-  #ifdef USE_KEYPAD_KEYBOARD
-    u8g2.begin();
-  #endif
-  #ifndef USE_KEYPAD_KEYBOARD
-    u8g2.begin(/*Select/OK=*/ PB14, /*Right/Next=*/ PB1, /*Left/Prev=*/ PB0, /*Up=*/ PB15, /*Down=*/ PB12, /*Home/Cancel=*/ PB13);
-  #endif
+// ***************************************************************************************
+// ***************************************************************************************
+// *** setup, loop, ...  *****************************************************************
+void setup() 
+{
+  u8g2.begin();
   //Debug port...
   afio_cfg_debug_ports(AFIO_DEBUG_SW_ONLY); //Only SWD
   
@@ -235,7 +229,7 @@ void setup() {
   setupMenu();
   //menu.drawMenu(); //Start with menu screen
   ActionDro(); //Start with dro screen
-  //ActionDebug(); //Start with dro screen
+  //ActionDebug(); //Start with debug screen
 }
 void setupMenu() {
   // Add menu items to menu page
@@ -283,15 +277,9 @@ void setupMenu() {
 }
 void loop() {
   // If menu is ready to accept button press...
-  if (menu.readyForKey()) {
-    // ...detect key press using U8g2 library
-    // and pass pressed button to menu
-    #ifndef USE_KEYPAD_KEYBOARD
-    menu.registerKeyPress(u8g2.getMenuEvent());
-    #endif
-    #ifdef USE_KEYPAD_KEYBOARD
+  if (menu.readyForKey()) 
+  {
     menu.registerKeyPress(customKeypad.getKey());
-    #endif    
   }
 }
 // ***************************************************************************************
@@ -308,14 +296,9 @@ void DroContextEnter() {
   // Clear sreen
   u8g2.clear();
 }
-void DroContextLoop() {
-  // Detect key press manually using U8g2 library
-    #ifndef USE_KEYPAD_KEYBOARD
-      byte key = u8g2.getMenuEvent();
-    #endif
-    #ifdef USE_KEYPAD_KEYBOARD
-      byte key = customKeypad.getKey();
-    #endif  
+void DroContextLoop() 
+{
+  byte key = customKeypad.getKey();
   if (key == GEM_KEY_CANCEL) 
   { 
     // Exit animation routine if GEM_KEY_CANCEL key was pressed
@@ -410,14 +393,9 @@ void DebugContextEnter()
   // Clear sreen
   u8g2.clear();
 }
-void DebugContextLoop() {
-  // Detect key press manually using U8g2 library
-    #ifndef USE_KEYPAD_KEYBOARD
-      byte key = u8g2.getMenuEvent();
-    #endif
-    #ifdef USE_KEYPAD_KEYBOARD
-      byte key = customKeypad.getKey();
-    #endif  
+void DebugContextLoop() 
+{
+  byte key = customKeypad.getKey();
   u8g2.firstPage();
   do {
       u8g2.setColorIndex(1);
