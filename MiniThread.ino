@@ -112,8 +112,6 @@ GEMItem menuItemMotorStopMax("Stop Max:", fMotorStopMax,ActionMotorStopMax);
 boolean bUseMotorEndLimit = true;
 void ActionUseMotorEndLimit(); // Forward declaration
 GEMItem menuItemUseMotorEndLimit("Use limit:", bUseMotorEndLimit,ActionUseMotorEndLimit);
-
-
 float fMotorCurrentPos = 0;
 void ActionMotorCurrentPos(); // Forward declaration
 GEMItem menuItemMotorCurrentPos("CurrentPos:", fMotorCurrentPos,ActionMotorCurrentPos);
@@ -133,12 +131,21 @@ GEMSelect selectTool(sizeof(selectToolOptions)/sizeof(SelectOptionByte), selectT
 void applyTool(); // Forward declaration
 GEMItem menuItemTool("Tool:", ToolChoose, selectTool, applyTool);
 
-
-
 boolean RelativeMode = false;
 void UpdateRelAxe();
 GEMItem menuItemRelativeMode("Relative:", RelativeMode,UpdateRelAxe);
 
+//Threading state
+typedef enum
+{
+  MS_THREAD_IDLE, //Idle
+  MS_THREAD_WAIT_THE_START, //Wait the action to start
+  MS_THREAD_WAIT_THE_SPLINDLE_ZERO,
+  MS_THREAD_IN_THREAD,
+  MS_THREAD_END_THREAD,
+  MS_THREAD_IN_RETURN
+} teMS_ThreadingMode;
+teMS_ThreadingMode eMS_Thread = MS_THREAD_IDLE;
 
 // Create menu object of class GEM_u8g2. Supply its constructor with reference to u8g2 object we created earlier
 GEM_u8g2 menu(u8g2,GEM_POINTER_ROW,5,10,10,75);
@@ -151,9 +158,16 @@ QuadDecoder Quad_Y(3,QuadDecoder::LinearEncoder,512,false,false,IT_Timer3_Overfl
 QuadDecoder Quad_Z(2,QuadDecoder::RotaryEncoder,512,true,false,IT_Timer2_Overflow); //Timer 2
 QuadDecoder Quad_X(1,QuadDecoder::LinearEncoder,512,false,false,IT_Timer1_Overflow); //Timer 1
 void IT_Timer1_Overflow(){Quad_X.IT_OverflowHardwareTimer();}
-void IT_Timer2_Overflow(){Quad_Z.IT_OverflowHardwareTimer();}
 void IT_Timer3_Overflow(){Quad_Y.IT_OverflowHardwareTimer();}
-
+void IT_Timer2_Overflow()
+{
+  Quad_Z.IT_OverflowHardwareTimer();
+  if(eMS_Thread == MS_THREAD_WAIT_THE_SPLINDLE_ZERO)
+  {
+    Quad_Z.ResetAllTheCounter();
+    eMS_Thread = MS_THREAD_IN_THREAD;   
+  }  
+}
 //Hardware timer 4 for motor control
 HardwareTimer MotorControl(4); 
 //Motor Class
@@ -168,7 +182,11 @@ StepperMotor Motor1(800,false,PIN_MOT1_STEP,PIN_MOT1_DIR,PIN_MOT1_EN);
 //Timer 4 overflow for Step motor
 void handler_Timer4_overflow()
 { 
-  Motor1.TimeToPrepareToMove(); 
+  if(eMS_Thread == MS_THREAD_IN_THREAD)
+  {
+    Motor1.ChangeTargetPositionStep ((Quad_Z.GetValueLong()*16 * 200 ) / 2400);
+  }  
+  Motor1.TimeToPrepareToMove();  
 }
 //Timer 4 channel 3 compare interrupt (10µs after overflow)
 void handler_Timer4_compare3()
@@ -213,7 +231,6 @@ void setup() {
 void setupMenu() {
   // Add menu items to menu page
   menuPageMain.addMenuItem(menuItemButtonDro);
-
   //Add Sub menu Motor
   menuPageMain.addMenuItem(menuItemMotor);
   menuPageMotor.addMenuItem(menuItemUseMotor);
@@ -225,10 +242,8 @@ void setupMenu() {
   menuPageMotor.addMenuItem(menuItemMotorSpeed);
   menuPageMotor.addMenuItem(menuItemButtonSetPosToMax);
   menuPageMotor.addMenuItem(menuItemButtonSetPosToMin);
-
   // Specify parent menu page for the Motor menu page
-  menuPageMotor.setParentMenuPage(menuPageMain);
-  
+  menuPageMotor.setParentMenuPage(menuPageMain);  
   menuPageMain.addMenuItem(menuItemTool);
   menuPageMain.addMenuItem(menuItemRelativeMode);
   //Add Sub menu Settings
@@ -247,14 +262,12 @@ void setupMenu() {
   menuPageSettings.addMenuItem(menuItemButtonSaveSettings);
   // Specify parent menu page for the Settings menu page
   menuPageSettings.setParentMenuPage(menuPageMain);
-
   //Add Sub menu Debug
   menuPageMain.addMenuItem(menuItemDebug);
   menuPageDebug.addMenuItem(menuItemTestFloat);
   menuPageDebug.addMenuItem(menuItemButtonDebug); 
   // Specify parent menu page for the Debug menu page
   menuPageDebug.setParentMenuPage(menuPageMain);
-
   // Add menu page to menu and set it as current
   menu.setMenuPageCurrent(menuPageMain);
 }
@@ -301,6 +314,7 @@ void DroContextLoop() {
   {
     if(key == GEM_KEY_UP)Quad_X.SetZeroActiveMode();
     if(key == GEM_KEY_OK)Quad_Y.SetZeroActiveMode();
+    //**** Manual mode Key *****
     if( bMotorMode == MOTOR_MODE_MANUAL)
     {
       if( customKeypad.isPressed(GEM_KEY_LEFT) || customKeypad.isPressed(GEM_KEY_RIGHT))
@@ -310,6 +324,7 @@ void DroContextLoop() {
       }
       else Motor1.ChangeTheMode(StepperMotor::NoMode);       
     }
+    //**** Auto mode Key *****
     if (bMotorMode == MOTOR_MODE_AUTO)
     {
       if (key == GEM_KEY_LEFT ) 
@@ -323,6 +338,43 @@ void DroContextLoop() {
         else Motor1.ChangeTheMode(StepperMotor::NoMode);  
       }    
      } 
+     //**** Left threading mode Key *****
+    if (bMotorMode == MOTOR_MODE_LEFT)
+    {
+      switch(eMS_Thread)
+      {
+        case MS_THREAD_IDLE:
+          //No action here
+        break;
+        case MS_THREAD_WAIT_THE_START:
+          if (key == GEM_KEY_LEFT ) eMS_Thread = MS_THREAD_WAIT_THE_SPLINDLE_ZERO;   
+        break;
+        case MS_THREAD_WAIT_THE_SPLINDLE_ZERO:
+          //No action here
+        break;
+        case MS_THREAD_IN_THREAD:
+          if ( Motor1.AreYouAtMaxPos() )
+          {
+            eMS_Thread = MS_THREAD_END_THREAD;
+            Motor1.ChangeTheMode(StepperMotor::NoMode);    
+          }   
+        break;
+        case MS_THREAD_END_THREAD:
+          if (key == GEM_KEY_RIGHT )
+          {
+            eMS_Thread = MS_THREAD_IN_RETURN;
+            Motor1.ChangeTheMode(StepperMotor::SpeedModeDown);    
+          }
+        break;
+        case MS_THREAD_IN_RETURN:
+          if ( Motor1.AreYouAtMinPos() )
+          {
+            eMS_Thread = MS_THREAD_WAIT_THE_START;
+            Motor1.ChangeTheMode(StepperMotor::PositionMode);    
+          }          
+        break;   
+      }
+    }     
     DisplayDrawInformations();
   }
 }
@@ -572,8 +624,11 @@ void Display_M_Informations()
 }
 void Display_Extra_Informations()
 {
+  char bufferChar[10];
   u8g2.setFont(u8g2_font_profont10_mr); // choose a suitable font
   u8g2.drawStr(0,54,selectTool.getSelectedOptionName((byte*)&ToolChoose ));
+  sprintf(bufferChar,"%d",eMS_Thread);
+  u8g2.drawStr(50,54,bufferChar);
   if(RelativeMode==true)u8g2.drawStr(80,54,"Relative");
   else u8g2.drawStr(80,54,"Absolute");  
 }
@@ -618,12 +673,14 @@ void ActionUseMotor()
     ActionMotorMotorSpeed();
     Motor1.UseEndLimit(bUseMotorEndLimit);
     Motor1.MotorChangePowerState(true);
+    eMS_Thread = MS_THREAD_IDLE;
   }
   else
   {
     Motor1.ChangeTheMode(StepperMotor::NoMode);
     bMotorMode = MOTOR_MODE_NO_MODE; 
-    Motor1.MotorChangePowerState(false);  
+    Motor1.MotorChangePowerState(false);
+    eMS_Thread = MS_THREAD_IDLE;  
   }     
 }
 void ActionUseMotorEndLimit()
@@ -638,7 +695,9 @@ void applyMotorMode()
       //Left thread
       if( bUseMotorEndLimit && Motor1.AreYouAtMinPos())
       {
-        //Need to have end limit and position at min pos to start   
+        //Need to have end limit and position at min pos to start
+        eMS_Thread = MS_THREAD_WAIT_THE_START;
+        Motor1.ChangeTheMode(StepperMotor::PositionMode);    
       }
       else
       {
@@ -649,6 +708,7 @@ void applyMotorMode()
     case MOTOR_MODE_MANUAL :
     case MOTOR_MODE_AUTO :
     default:
+      eMS_Thread = MS_THREAD_IDLE;
       Motor1.ChangeTheMode(StepperMotor::NoMode);  
     break;
   }  
