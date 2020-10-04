@@ -291,7 +291,7 @@ void loop() {
   // If menu is ready to accept button press...
   if (menu.readyForKey()) 
   {
-    Display_UpdateRealTimeData();
+    Display_UpdateRealTimeData(); 
     menu.registerKeyPress(customKeypad.getKey());
   }
 }
@@ -531,7 +531,7 @@ void Display_X_Informations()
   u8g2.setFont(u8g2_font_profont22_tf); // choose a suitable font
   u8g2.drawStr(0,1,"X");
   u8g2.setColorIndex(1);
-  sprintf(bufferChar,"%+4.3f",Quad_X.GetValue());  
+  sprintf(bufferChar,"%+09.3f",Quad_X.GetValue());  
   u8g2.drawStr(13,1,bufferChar);  // write something to the internal memory
   u8g2.drawRFrame(11,0,116,18,3);  
 }
@@ -541,7 +541,7 @@ void Display_Y_Informations()
   u8g2.setColorIndex(1);
   u8g2.setFont(u8g2_font_profont22_tf); // choose a suitable font
   u8g2.drawStr(0,19,"Y");
-  sprintf(bufferChar,"%+4.3f",Quad_Y.GetValue());
+  sprintf(bufferChar,"%+09.3f",Quad_Y.GetValue());
   u8g2.drawStr(13,19,bufferChar);  // write something to the internal memory
   u8g2.drawRFrame(11,18,116,18,3);    
 }
@@ -565,7 +565,7 @@ void Display_M_Informations()
   u8g2.drawStr(0,37,"M");
   u8g2.setColorIndex(1);
   u8g2.setFont(u8g2_font_profont10_mr); // choose a suitable font
-  sprintf(bufferChar,"%+9.3f",fMotorCurrentPos);
+  sprintf(bufferChar,"%+09.3f",fMotorCurrentPos);
   u8g2.drawStr(13,37,bufferChar);  // write something to the internal memory
   switch ( bMotorMode )
   {
@@ -584,7 +584,7 @@ void Display_M_Informations()
   }
   sprintf(bufferChar,"|%d",iMotorSpeed);
   u8g2.drawStr(100,37,bufferChar);    
-  sprintf(bufferChar,"%+9.3f <> %+9.3f",fMotorStopMax,fMotorStopMin);
+  sprintf(bufferChar,"%+09.3f <> %+09.3f",fMotorStopMax,fMotorStopMin);
   if(bUseMotorEndLimit)u8g2.drawStr(13,45,bufferChar);
   else u8g2.drawStr(13,45," WARNING : No limit");  
   u8g2.drawRFrame(11,36,116,18,3);    
