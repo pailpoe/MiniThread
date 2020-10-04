@@ -205,7 +205,14 @@ void StepperMotor::ChangeStopPositionMinReal (float Stop_Position)
 {
   _StopPositionMin = (long) (Stop_Position*_Resolution);   
 }
-
+long    StepperMotor::GetStopPositionMinStep()
+{
+    return _StopPositionMin; 
+}
+long    StepperMotor::GetStopPositionMaxStep()
+{
+    return _StopPositionMax; 
+}
 
 long StepperMotor::GetPositionStep()
 {

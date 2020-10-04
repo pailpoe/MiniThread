@@ -1,8 +1,8 @@
 /*********************************************************************
-Project Name    :   Mini Dro 2
+Project Name    :   MiniThread
 Hard revision   :   V1.0
 Soft revision   :   /
-Description     :   Dro system for lathe or milling machine with 3 quadrature decoder, Oled SSD1306 display and 6 push buttons for navigation
+Description     :   Dro system for lathe machine with 3 quadrature decoder and threading funtion , Oled SSD1306 display and 6 push buttons for navigation
 Chip            :   STM32F103CBT6
 freq uc         :   72Mhz (use 8Mhz external oscillator with PLL ) 
 Compiler        :   Arduino IDE 1.8.3
@@ -118,6 +118,9 @@ GEMItem menuItemMotorCurrentPos("CurrentPos:", fMotorCurrentPos,ActionMotorCurre
 int iMotorSpeed = 2;
 void ActionMotorMotorSpeed(); // Forward declaration
 GEMItem menuItemMotorSpeed("Speed:", iMotorSpeed,ActionMotorMotorSpeed);
+int iMotorThread = 100;
+void ActionMotorChangeThread(); // Forward declaration
+GEMItem menuItemMotorThread("Thread:", iMotorThread,ActionMotorChangeThread);
 void ActionSetCurrentToMax(); // Forward declaration
 GEMItem menuItemButtonSetPosToMax("Position to Max", ActionSetCurrentToMax);
 void ActionSetCurrentToMin(); // Forward declaration
@@ -146,6 +149,14 @@ typedef enum
   MS_THREAD_IN_RETURN
 } teMS_ThreadingMode;
 teMS_ThreadingMode eMS_Thread = MS_THREAD_IDLE;
+typedef struct
+{
+  long Numerator;
+  long Denominator;
+  long Offset;  
+} tsThreadCalc;
+tsThreadCalc sThreadCalc; 
+
 
 // Create menu object of class GEM_u8g2. Supply its constructor with reference to u8g2 object we created earlier
 GEM_u8g2 menu(u8g2,GEM_POINTER_ROW,5,10,10,75);
@@ -184,7 +195,7 @@ void handler_Timer4_overflow()
 { 
   if(eMS_Thread == MS_THREAD_IN_THREAD)
   {
-    Motor1.ChangeTargetPositionStep ((Quad_Z.GetValueLong()*16 * 200 ) / 2400);
+    Motor1.ChangeTargetPositionStep ((Quad_Z.GetValueLong()*sThreadCalc.Numerator ) / sThreadCalc.Denominator + sThreadCalc.Offset );
   }  
   Motor1.TimeToPrepareToMove();  
 }
@@ -240,6 +251,7 @@ void setupMenu() {
   menuPageMotor.addMenuItem(menuItemUseMotorEndLimit);
   menuPageMotor.addMenuItem(menuItemMotorCurrentPos);
   menuPageMotor.addMenuItem(menuItemMotorSpeed);
+  menuPageMotor.addMenuItem(menuItemMotorThread);
   menuPageMotor.addMenuItem(menuItemButtonSetPosToMax);
   menuPageMotor.addMenuItem(menuItemButtonSetPosToMin);
   // Specify parent menu page for the Motor menu page
@@ -687,6 +699,14 @@ void ActionUseMotorEndLimit()
 {
   Motor1.UseEndLimit(bUseMotorEndLimit);  
 }
+
+void CalcMotorParameterForThread()
+{
+  //(Quad_Z.GetValueLong()*16 * 200 ) / 2400
+sThreadCalc.Numerator = 16 * iMotorThread;  
+sThreadCalc.Denominator = 2400; 
+sThreadCalc.Offset = Motor1.GetStopPositionMinStep() ;  
+}
 void applyMotorMode()
 {
   switch (bMotorMode)
@@ -697,6 +717,9 @@ void applyMotorMode()
       {
         //Need to have end limit and position at min pos to start
         eMS_Thread = MS_THREAD_WAIT_THE_START;
+        //Calcul the motor parameter for Thread
+        CalcMotorParameterForThread();
+        //Motor in position mode
         Motor1.ChangeTheMode(StepperMotor::PositionMode);    
       }
       else
@@ -728,6 +751,10 @@ void ActionMotorCurrentPos()
 void ActionMotorMotorSpeed()
 {
   Motor1.ChangeMaxSpeed(iMotorSpeed);    
+}
+void ActionMotorChangeThread()
+{
+  if(iMotorThread<=0)iMotorThread = 100;  
 }
 void ActionSetCurrentToMax()
 {

@@ -52,7 +52,9 @@ public:
 	void 		ChangeStopPositionMinStep (long Stop_Position);  
   void    ChangeStopPositionMinReal (float Stop_Position);
 	boolean AreYouAtMaxPos();
-	boolean AreYouAtMinPos();  
+	boolean AreYouAtMinPos(); 
+  long    GetStopPositionMinStep();
+  long    GetStopPositionMaxStep();
 
   //Change the max speed
 	//MaxSpeed from 1 to x ( 1 = max speed)
