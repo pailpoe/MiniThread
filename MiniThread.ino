@@ -711,6 +711,7 @@ void ActionMotorCurrentPos()
 }
 void ActionMotorMotorSpeed()
 {
+  if(iMotorSpeed<1)iMotorSpeed=1;
   Motor1.ChangeMaxSpeed(iMotorSpeed);    
 }
 void ActionMotorChangeThread()
