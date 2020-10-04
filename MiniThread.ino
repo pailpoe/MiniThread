@@ -120,9 +120,11 @@ int iMotorThread = 100;
 void ActionMotorChangeThread(); // Forward declaration
 GEMItem menuItemMotorThread("Thread:", iMotorThread,ActionMotorChangeThread);
 void ActionSetCurrentToMax(); // Forward declaration
-GEMItem menuItemButtonSetPosToMax("Position to Max", ActionSetCurrentToMax);
+GEMItem menuItemButtonSetPosToMax("CurrentPos -> Max", ActionSetCurrentToMax);
 void ActionSetCurrentToMin(); // Forward declaration
-GEMItem menuItemButtonSetPosToMin("Position to Min", ActionSetCurrentToMin);
+GEMItem menuItemButtonSetPosToMin("CurrentPos -> Min", ActionSetCurrentToMin);
+void ActionResetCurrentPos(); // Forward declaration
+GEMItem menuItemButtonResetCurrentPos("Reset CurrentPos", ActionResetCurrentPos);
 
 
 //For tool selection
@@ -246,6 +248,7 @@ void setupMenu() {
   menuPageMotor.addMenuItem(menuItemMotorThread);
   menuPageMotor.addMenuItem(menuItemButtonSetPosToMax);
   menuPageMotor.addMenuItem(menuItemButtonSetPosToMin);
+  menuPageMotor.addMenuItem(menuItemButtonResetCurrentPos);
   // Specify parent menu page for the Motor menu page
   menuPageMotor.setParentMenuPage(menuPageMain);  
   menuPageMain.addMenuItem(menuItemTool);
@@ -725,4 +728,9 @@ void ActionSetCurrentToMin()
   Display_UpdateRealTimeData();
   fMotorStopMin = fMotorCurrentPos;
   ActionMotorStopMin();   
+}
+void ActionResetCurrentPos()
+{
+  fMotorCurrentPos = 0;
+  ActionMotorCurrentPos();  
 }
