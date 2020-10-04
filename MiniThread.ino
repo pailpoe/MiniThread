@@ -135,8 +135,8 @@ void applyTool(); // Forward declaration
 GEMItem menuItemTool("Tool:", ToolChoose, selectTool, applyTool);
 
 boolean RelativeMode = false;
-void UpdateRelAxe();
-GEMItem menuItemRelativeMode("Relative:", RelativeMode,UpdateRelAxe);
+void ActionChangeRelaticeMode();
+GEMItem menuItemRelativeMode("Relative:", RelativeMode,ActionChangeRelaticeMode);
 
 //Threading state
 typedef enum
@@ -298,7 +298,9 @@ void loop() {
   }
 }
 
-// *** DRO context with axe display
+// ***************************************************************************************
+// ***************************************************************************************
+// *** DRO main context ******************************************************************
 void ActionDro() {
   menu.context.loop = DroContextLoop;
   menu.context.enter = DroContextEnter;
@@ -396,9 +398,9 @@ void DroContextExit()
   menu.drawMenu();
   menu.clearContext();
 }
-
-
-// *** Debug context
+// ***************************************************************************************
+// ***************************************************************************************
+// *** Debug context *********************************************************************
 void ActionDebug()
 {
   menu.context.loop = DebugContextLoop;
@@ -474,6 +476,9 @@ void DebugContextExit()
   menu.clearContext();
 }
 
+// ***************************************************************************************
+// ***************************************************************************************
+// *** Save / Restore config *************************************************************
 void Restore_Config()
 {
   //Read Config in Memory
@@ -524,15 +529,6 @@ void Dispatch_Config(sConfigDro *pConf)
   Quad_Z.SetResolution(pConf->Reso_Z);
   Motor1.ChangeParameter((unsigned int)((long)(  pConf->Reso_M1*100/pConf->thread_M1)) , pConf->Inverted_M1);
 }
-
-void PrintInformationOnScreen( char* str)
-{
-  u8g2.clearBuffer();  
-  u8g2.setCursor(0, 0);
-  u8g2.print(str);
-  u8g2.sendBuffer();  
-} 
-
 void ActionSaveSettingsInFlash()
 {
   //Store config in memort
@@ -549,6 +545,9 @@ void ActionRestoreSettingsInFlash()
   Restore_Config();  
 }
 
+// ***************************************************************************************
+// ***************************************************************************************
+// *** Display functions *****************************************************************
 
 void Display_X_Informations(); //Forward declarations
 void Display_Y_Informations(); //Forward declarations
@@ -646,26 +645,27 @@ void Display_Extra_Informations()
 }
 void Display_UpdateRealTimeData()
 {
-  fMotorCurrentPos = Motor1.GetPositionReal();    
-  
+  fMotorCurrentPos = Motor1.GetPositionReal();     
 }
 
 
+// ***************************************************************************************
+// ***************************************************************************************
+// *** Action functions from menu ********************************************************
 
-
-void UpdateRelAxe()
+void ActionChangeRelaticeMode()
 {  
   if( RelativeMode == true )
   {
     Quad_X.SetRelative();  
     Quad_Y.SetRelative();
-    Quad_Z.SetRelative();
+    //Quad_Z.SetRelative();
   }
   else
   {
     Quad_X.SetAbsolut();  
     Quad_Y.SetAbsolut();
-    Quad_Z.SetAbsolut();
+    //Quad_Z.SetAbsolut();
   }      
 }
 
