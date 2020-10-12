@@ -97,6 +97,10 @@ GEMItem menuItemTool("Tool:", ToolChoose, selectTool, applyTool);
 boolean RelativeMode = false;
 void ActionChangeRelaticeMode();
 GEMItem menuItemRelativeMode("Relative:", RelativeMode,ActionChangeRelaticeMode);
+void ActionResetX(); // Forward declaration
+GEMItem menuItemButtonResetX("Set X to zero", ActionResetX);
+void ActionResetY(); // Forward declaration
+GEMItem menuItemButtonResetY("Set Y to zero", ActionResetY);
 float fAxeXPos = 0;
 void ActionAxeXPos(); // Forward declaration
 GEMItem menuItemAxeXPos("X Pos:", fAxeXPos,ActionAxeXPos);
@@ -143,6 +147,16 @@ void ActionSetCurrentToMin(); // Forward declaration
 GEMItem menuItemButtonSetPosToMin("CurrentPos -> Min", ActionSetCurrentToMin);
 void ActionResetCurrentPos(); // Forward declaration
 GEMItem menuItemButtonResetCurrentPos("Reset CurrentPos", ActionResetCurrentPos);
+//Screen choose
+#define SCREEN_DRO 0
+#define SCREEN_MOT1 1
+#define SCREEN_END_LIST 1
+byte bScreenMode = 0;
+SelectOptionByte selectScreenOptions[] = {{"DroXYC", 0}, {"Mot1", 1}};
+GEMSelect selectScreenMode(sizeof(selectScreenOptions)/sizeof(SelectOptionByte), selectScreenOptions);
+void ActionScreenMode(); // Forward declaration
+GEMItem menuItemScreenMode("Screen:", bScreenMode, selectScreenMode, ActionScreenMode);
+void ActionChangeScreen();// Forward declaration
 
 //Threading state
 typedef enum
@@ -247,6 +261,8 @@ void setupMenu() {
   menuPageMain.addMenuItem(menuItemAxe);
   menuPageAxe.addMenuItem(menuItemTool);
   menuPageAxe.addMenuItem(menuItemRelativeMode);
+  menuPageAxe.addMenuItem(menuItemButtonResetX);
+  menuPageAxe.addMenuItem(menuItemButtonResetY);
   menuPageAxe.addMenuItem(menuItemAxeXPos);
   menuPageAxe.addMenuItem(menuItemAxeYPos);
   menuPageAxe.setParentMenuPage(menuPageMain);
@@ -279,6 +295,9 @@ void setupMenu() {
   menuPageSettings.addMenuItem(menuItemButtonRestoreSettings);
   menuPageSettings.addMenuItem(menuItemButtonSaveSettings);
   menuPageSettings.setParentMenuPage(menuPageMain);
+  //Add item screen mode
+  menuPageMain.addMenuItem(menuItemScreenMode);
+  
   //Add Sub menu Debug
   menuPageMain.addMenuItem(menuItemDebug);
   menuPageDebug.addMenuItem(menuItemTestFloat);
@@ -318,8 +337,8 @@ void DroContextLoop()
     menu.context.exit();
   } else 
   {
-    if(key == GEM_KEY_UP)Quad_X.SetZeroActiveMode();
-    if(key == GEM_KEY_OK)Quad_Y.SetZeroActiveMode();
+    //if(key == GEM_KEY_UP)Quad_X.SetZeroActiveMode();
+    if(key == GEM_KEY_OK)ActionChangeScreen();
     //**** Manual mode Key *****
     if( bMotorMode == MOTOR_MODE_MANUAL)
     {
@@ -514,13 +533,23 @@ void Display_Extra_Informations(); //Forward declarations
 void DisplayDrawInformations()
 {
   u8g2.firstPage();
-  do {
-  Display_UpdateRealTimeData();
-  Display_X_Informations();
-  Display_Y_Informations();
-  if( bUseMotor == true ) Display_M_Informations();
-  else Display_C_Informations(); 
-  Display_Extra_Informations();
+  do 
+  {
+    Display_UpdateRealTimeData();
+    if( bScreenMode == SCREEN_DRO )
+    {
+      Display_X_Informations();
+      Display_Y_Informations();    
+      Display_C_Informations();
+      Display_Extra_Informations();
+    }
+    else if( bScreenMode == SCREEN_MOT1 )  
+    {
+      Display_X_Informations();
+      Display_Y_Informations();    
+      Display_M_Informations();
+      Display_Extra_Informations();      
+    }  
   } while (u8g2.nextPage());
 }
 
@@ -564,29 +593,37 @@ void Display_M_Informations()
   char bufferChar[30];
   u8g2.drawStr(0,37,"M");
   u8g2.setColorIndex(1);
-  u8g2.setFont(u8g2_font_profont10_mr); // choose a suitable font
-  sprintf(bufferChar,"%+09.3f",fMotorCurrentPos);
-  u8g2.drawStr(13,37,bufferChar);  // write something to the internal memory
-  switch ( bMotorMode )
+  if( bUseMotor == true )
   {
-    case MOTOR_MODE_NO_MODE:
-      u8g2.drawStr(60,37,"|NoMode");
-    break;
-    case MOTOR_MODE_MANUAL:
-      u8g2.drawStr(60,37,"|Manual");
-    break;
-    case MOTOR_MODE_AUTO:
-      u8g2.drawStr(60,37,"|Auto");
-    break;
-    case MOTOR_MODE_LEFT:
-      u8g2.drawStr(60,37,"|Left"); 
-    break;   
+    u8g2.setFont(u8g2_font_profont10_mr); // choose a suitable font
+    sprintf(bufferChar,"%+09.3f",fMotorCurrentPos);
+    u8g2.drawStr(13,37,bufferChar);  // write something to the internal memory
+    switch ( bMotorMode )
+    {
+      case MOTOR_MODE_NO_MODE:
+        u8g2.drawStr(60,37,"|NoMode");
+      break;
+      case MOTOR_MODE_MANUAL:
+        u8g2.drawStr(60,37,"|Manual");
+      break;
+      case MOTOR_MODE_AUTO:
+        u8g2.drawStr(60,37,"|Auto");
+      break;
+      case MOTOR_MODE_LEFT:
+        u8g2.drawStr(60,37,"|Left"); 
+      break;   
+    }
+    sprintf(bufferChar,"|%d",iMotorSpeed);
+    u8g2.drawStr(100,37,bufferChar);    
+    sprintf(bufferChar,"%+09.3f <> %+09.3f",fMotorStopMax,fMotorStopMin);
+    if(bUseMotorEndLimit)u8g2.drawStr(13,45,bufferChar);
+    else u8g2.drawStr(13,45," WARNING : No limit");       
   }
-  sprintf(bufferChar,"|%d",iMotorSpeed);
-  u8g2.drawStr(100,37,bufferChar);    
-  sprintf(bufferChar,"%+09.3f <> %+09.3f",fMotorStopMax,fMotorStopMin);
-  if(bUseMotorEndLimit)u8g2.drawStr(13,45,bufferChar);
-  else u8g2.drawStr(13,45," WARNING : No limit");  
+  else
+  {
+    u8g2.setFont(u8g2_font_profont10_mr); // choose a suitable font
+    u8g2.drawStr(13,37,"Motor is OFF");   
+  }  
   u8g2.drawRFrame(11,36,116,18,3);    
 }
 void Display_Extra_Informations()
@@ -644,13 +681,15 @@ void ActionUseMotor()
     Motor1.UseEndLimit(bUseMotorEndLimit);
     Motor1.MotorChangePowerState(true);
     eMS_Thread = MS_THREAD_IDLE;
+    bScreenMode = SCREEN_MOT1; 
   }
   else
   {
     Motor1.ChangeTheMode(StepperMotor::NoMode);
     bMotorMode = MOTOR_MODE_NO_MODE; 
     Motor1.MotorChangePowerState(false);
-    eMS_Thread = MS_THREAD_IDLE;  
+    eMS_Thread = MS_THREAD_IDLE;
+    bScreenMode = SCREEN_DRO;   
   }     
 }
 void ActionUseMotorEndLimit()
@@ -746,6 +785,16 @@ void ActionResetCurrentPos()
   fMotorCurrentPos = 0;
   ActionMotorCurrentPos();  
 }
+void ActionResetX()
+{
+  Quad_X.SetZeroActiveMode(); 
+  ActionDro();
+}
+void ActionResetY()
+{
+  Quad_Y.SetZeroActiveMode();
+  ActionDro();  
+}
 void ActionAxeXPos()
 {
   Quad_X.SetValue(fAxeXPos);    
@@ -753,4 +802,13 @@ void ActionAxeXPos()
 void ActionAxeYPos()
 {
   Quad_Y.SetValue(fAxeYPos);   
+}
+void ActionScreenMode()
+{
+  
+}
+void ActionChangeScreen()
+{
+  if(bScreenMode>=SCREEN_END_LIST)bScreenMode=0;
+  else bScreenMode++; 
 }
