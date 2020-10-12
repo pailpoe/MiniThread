@@ -337,7 +337,19 @@ void DroContextLoop()
     menu.context.exit();
   } else 
   {
-    //if(key == GEM_KEY_UP)Quad_X.SetZeroActiveMode();
+    if(key == GEM_KEY_UP)
+    {
+      iMotorSpeed++;
+      ActionMotorMotorSpeed();
+    }
+    if(key == GEM_KEY_DOWN)
+    {
+      if(iMotorSpeed!=1)iMotorSpeed--; 
+      ActionMotorMotorSpeed();  
+    }
+
+
+    
     if(key == GEM_KEY_OK)ActionChangeScreen();
     //**** Manual mode Key *****
     if( bMotorMode == MOTOR_MODE_MANUAL)
