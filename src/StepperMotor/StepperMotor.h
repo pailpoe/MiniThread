@@ -73,10 +73,7 @@ private:
       State_Rotation_Negative, 
       State_No_Rotation 
   };
-	void 			PrepareToTurnPos();
-	void 			TurnPos();
-	void 			PrepareToTurnNeg(); 
-	void 			TurnNeg(); 
+
   boolean   _UseEndLimit;
   teMotorMode _eActualMode;      //Motor mode
 	long 			_AbsoluteCounter; 	//Absolute position of the stepper motor

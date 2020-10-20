@@ -23,19 +23,22 @@ StepperMotor::StepperMotor(unsigned int  Resolution , boolean Sens, char STEP_Pi
 }
 void StepperMotor::TimeToPrepareToMove ()
 {
+    //Release step pin
+    digitalWrite(_PinSTEP, HIGH);
+    
     if((_AbsoluteCounter < _TargetPosition && _eActualMode == PositionMode) || _eActualMode == SpeedModeUp )
     {
       if(_AbsoluteCounter < _StopPositionMax || !_UseEndLimit )
       {
         eState = State_Rotation_Positive; 
-        PrepareToTurnPos();
       }
       else
       {
         eState = State_No_Rotation;
-        _LoopSpeedCount = _MaxSpeed;
-        PrepareToTurnPos();         
-      }    
+        _LoopSpeedCount = _MaxSpeed;            
+      }
+      if(_Sens == false) digitalWrite(_PinDIR, LOW); 
+      else digitalWrite(_PinDIR, HIGH); 
     }
     else if ((_AbsoluteCounter > _TargetPosition && _eActualMode == PositionMode) || _eActualMode == SpeedModeDown)
     {
@@ -43,23 +46,45 @@ void StepperMotor::TimeToPrepareToMove ()
       if(_AbsoluteCounter > _StopPositionMin || !_UseEndLimit )
       {
         eState = State_Rotation_Negative;
-        PrepareToTurnNeg(); 
       }
       else
       {
         eState = State_No_Rotation;
-        _LoopSpeedCount = _MaxSpeed;
-        PrepareToTurnPos();         
-      }   
+        _LoopSpeedCount = _MaxSpeed;          
+      }
+      if(_Sens == false) digitalWrite(_PinDIR, HIGH);
+      else  digitalWrite(_PinDIR, LOW);    
     }
     else
     {
       //At postion
       eState = State_No_Rotation;
-      _LoopSpeedCount = _MaxSpeed;
-      PrepareToTurnPos();     
+      _LoopSpeedCount = _MaxSpeed;     
     }   
 }
+void StepperMotor::TimeToMove () 
+{
+  if(_LoopSpeedCount == 0)
+  {
+    //Ok for a pulse 
+    _LoopSpeedCount = (_MaxSpeed - 1);   
+    if( eState == State_Rotation_Positive)
+    {
+      _AbsoluteCounter++;  
+      digitalWrite(_PinSTEP, LOW); 
+    }
+    else if ( eState == State_Rotation_Negative)
+    {
+      _AbsoluteCounter--; 
+      digitalWrite(_PinSTEP, LOW); 
+    }    
+  }
+  else
+  {
+    _LoopSpeedCount-- ;    
+  }    
+}
+
 
 void StepperMotor::ChangeTheMode(teMotorMode eMode)
 {
@@ -114,52 +139,8 @@ boolean StepperMotor::AreYouAtMinPos()
   if(_AbsoluteCounter==_StopPositionMin)result = true;
   return result;  
 }
-void StepperMotor::TimeToMove () 
-{
-  if(_LoopSpeedCount == 0)
-  {
-    //Ok for a pulse 
-    _LoopSpeedCount = (_MaxSpeed - 1);   
-    if( eState == State_Rotation_Positive)
-    {
-      TurnPos(); 
-    }
-    else if ( eState == State_Rotation_Negative)
-    {
-      TurnNeg();
-    }    
-  }
-  else
-  {
-    _LoopSpeedCount-- ;    
-  }    
-}
-void StepperMotor::PrepareToTurnPos()
-{
-    digitalWrite(_PinSTEP, HIGH);
-    if(_Sens == false) digitalWrite(_PinDIR, LOW); 
-    else digitalWrite(_PinDIR, HIGH);  
-}
-void StepperMotor::TurnPos()
-{
-    _AbsoluteCounter++;  
-    digitalWrite(_PinSTEP, LOW);
-    if(_Sens == false) digitalWrite(_PinDIR, LOW); 
-    else digitalWrite(_PinDIR, HIGH); 
-}
-void StepperMotor::PrepareToTurnNeg()
-{
-    digitalWrite(_PinSTEP, HIGH);   
-    if(_Sens == false) digitalWrite(_PinDIR, HIGH);
-    else  digitalWrite(_PinDIR, LOW);     
-}
-void StepperMotor::TurnNeg()
-{
-    _AbsoluteCounter--; 
-    digitalWrite(_PinSTEP, LOW);   
-    if(_Sens == false) digitalWrite(_PinDIR, HIGH);
-    else  digitalWrite(_PinDIR, LOW);  
-}
+
+
 void StepperMotor::ChangeTargetPositionStep (long Target_Position)
 {
   _TargetPosition = Target_Position;   
