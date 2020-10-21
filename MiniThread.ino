@@ -208,7 +208,8 @@ HardwareTimer MotorControl(4);
 #define PIN_MOT2_STEP  PB13
 #define PIN_MOT2_DIR   PB12
 #define PIN_MOT2_EN    PB14
-StepperMotor Motor1(800,false,PIN_MOT1_STEP,PIN_MOT1_DIR,PIN_MOT1_EN);
+void Update_Overlfow_Timer4();
+StepperMotor Motor1(800,false,PIN_MOT1_STEP,PIN_MOT1_DIR,PIN_MOT1_EN, Update_Overlfow_Timer4);
 
 //Timer 4 overflow for Step motor
 void handler_Timer4_overflow()
@@ -224,6 +225,13 @@ void handler_Timer4_compare3()
 {
   Motor1.TimeToMove();
 }
+//Timer 4 change overflow value in µs
+void Update_Overlfow_Timer4()
+{
+  MotorControl.setOverflow(Motor1.NewInterval());  
+}
+
+
 long GCD_Function ( long n1, long n2); //Forward declaration
 void CalcMotorParameterForThread(); //Forward declaration
 void Display_UpdateRealTimeData(); //Forward declarations
@@ -239,9 +247,11 @@ void setup()
   
   //Timer 4 for motor control
   MotorControl.pause(); //stop...
-  MotorControl.setCompare(TIMER_CH3, 720); //10µs (720) after
+  MotorControl.setCompare(TIMER_CH3, 10); //10µs 
   MotorControl.setChannel3Mode(TIMER_OUTPUT_COMPARE);
-  MotorControl.setPeriod(100); //Period 100µs --> 10Khz
+  MotorControl.setPrescaleFactor(72); // 72Mhz, 1 = 1µs
+  MotorControl.setOverflow(100); // default value 100µs overflow
+  //MotorControl.setPeriod(100); //Period 100µs --> 10Khz
   MotorControl.attachCompare3Interrupt(handler_Timer4_compare3); //interrupt conmpare 3
   MotorControl.attachInterrupt(0, handler_Timer4_overflow); //Overflow interrupt  
   MotorControl.resume();

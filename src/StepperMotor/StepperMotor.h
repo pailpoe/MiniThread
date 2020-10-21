@@ -12,12 +12,14 @@
 class StepperMotor
 {
 public:
-	StepperMotor(unsigned int  Resolution , boolean Sens, char STEP_Pin, char DIR_Pin, char EN_Pin);
+	StepperMotor(unsigned int  Resolution , boolean Sens, char STEP_Pin, char DIR_Pin, char EN_Pin,voidFuncPtr ChangeStepInterval);
 	//Change the motor parameter
   void ChangeParameter(unsigned int  Resolution , boolean Sens);
   
 	void 		TimeToPrepareToMove (); //Be call every 100µs 
 	void 		TimeToMove (); 					//Be call every 10µs after TimeToPrepareToMove() 
+  unsigned int NewInterval ();    //New interval in µs
+  
 
 	enum teMotorMode 
 	{   
@@ -73,21 +75,23 @@ private:
       State_Rotation_Negative, 
       State_No_Rotation 
   };
-
+  voidFuncPtr _ChangeStepInterval; 
   boolean   _UseEndLimit;
-  teMotorMode _eActualMode;      //Motor mode
+  teMotorMode _eActualMode;     //Motor mode
 	long 			_AbsoluteCounter; 	//Absolute position of the stepper motor
 	long 			_TargetPosition; 		//Target position
 	long 			_StopPositionMax; 	//Security Max position
 	long 			_StopPositionMin;		//Security Min position
 	boolean 	_Sens; 							//Sens de rotation
-  char      _PinDIR;             //IO for Dir
-  char      _PinSTEP;            //IO for Step
-  char      _PinEN;              //IO for Enable
+  char      _PinDIR;            //IO for Dir
+  char      _PinSTEP;           //IO for Step
+  char      _PinEN;             //IO for Enable
 	eMS_Motor eState; 						//Motor machine state
+  float _StepInterval;   //Step interval in µs
 	unsigned int _MaxSpeed; 			//Max speed ( 1= max 10Khz) 
-	unsigned int _LoopSpeedCount; //Counter for Max speed 
 	unsigned int _Resolution; 		//Resolution/tr or mm
+  
+  float _n; 
 };
     
 #endif

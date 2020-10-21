@@ -1,30 +1,46 @@
 #include <Arduino.h>
 #include "StepperMotor.h"
 
-StepperMotor::StepperMotor(unsigned int  Resolution , boolean Sens, char STEP_Pin, char DIR_Pin, char EN_Pin)
+StepperMotor::StepperMotor(unsigned int  Resolution , boolean Sens, char STEP_Pin, char DIR_Pin, char EN_Pin,voidFuncPtr ChangeStepInterval)
 {
+  _StepInterval = 500;
   _Resolution = Resolution;
   _MaxSpeed = 2;
-  _LoopSpeedCount = 0;
   _AbsoluteCounter = 0;
   _TargetPosition = 0;
   _StopPositionMax = 0;
   _StopPositionMin = 0; 
   _Sens = Sens;
-  eState = State_No_Rotation;
   _PinDIR = DIR_Pin; 
   _PinSTEP = STEP_Pin; 
   _PinEN = EN_Pin; 
   pinMode(_PinDIR, OUTPUT);
   pinMode(_PinSTEP, OUTPUT);
   pinMode(_PinEN, OUTPUT); 
+  eState = State_No_Rotation;  
   _eActualMode = NoMode;
   _UseEndLimit = true;
+  _ChangeStepInterval = ChangeStepInterval;
 }
 void StepperMotor::TimeToPrepareToMove ()
 {
     //Release step pin
     digitalWrite(_PinSTEP, HIGH);
+    if(_eActualMode == NoMode)
+    {
+        _StepInterval=7000;
+        _n = 0;
+    }
+    else
+    { 
+      _n++;
+      _StepInterval = _StepInterval - (_StepInterval*2)/(_n*4+1);
+      if(_StepInterval<=100)_StepInterval=100; 
+    }
+
+    
+    
+    _ChangeStepInterval();
     
     if((_AbsoluteCounter < _TargetPosition && _eActualMode == PositionMode) || _eActualMode == SpeedModeUp )
     {
@@ -34,8 +50,7 @@ void StepperMotor::TimeToPrepareToMove ()
       }
       else
       {
-        eState = State_No_Rotation;
-        _LoopSpeedCount = _MaxSpeed;            
+        eState = State_No_Rotation;            
       }
       if(_Sens == false) digitalWrite(_PinDIR, LOW); 
       else digitalWrite(_PinDIR, HIGH); 
@@ -49,8 +64,7 @@ void StepperMotor::TimeToPrepareToMove ()
       }
       else
       {
-        eState = State_No_Rotation;
-        _LoopSpeedCount = _MaxSpeed;          
+        eState = State_No_Rotation;          
       }
       if(_Sens == false) digitalWrite(_PinDIR, HIGH);
       else  digitalWrite(_PinDIR, LOW);    
@@ -58,32 +72,27 @@ void StepperMotor::TimeToPrepareToMove ()
     else
     {
       //At postion
-      eState = State_No_Rotation;
-      _LoopSpeedCount = _MaxSpeed;     
+      eState = State_No_Rotation;     
     }   
 }
 void StepperMotor::TimeToMove () 
-{
-  if(_LoopSpeedCount == 0)
+{  
+  if( eState == State_Rotation_Positive)
   {
-    //Ok for a pulse 
-    _LoopSpeedCount = (_MaxSpeed - 1);   
-    if( eState == State_Rotation_Positive)
-    {
-      _AbsoluteCounter++;  
-      digitalWrite(_PinSTEP, LOW); 
-    }
-    else if ( eState == State_Rotation_Negative)
-    {
-      _AbsoluteCounter--; 
-      digitalWrite(_PinSTEP, LOW); 
-    }    
+    _AbsoluteCounter++;  
+    digitalWrite(_PinSTEP, LOW); 
   }
-  else
+  else if ( eState == State_Rotation_Negative)
   {
-    _LoopSpeedCount-- ;    
-  }    
+    _AbsoluteCounter--; 
+    digitalWrite(_PinSTEP, LOW); 
+  }       
 }
+unsigned int StepperMotor::NewInterval ()
+{
+    return _StepInterval;
+}
+
 
 
 void StepperMotor::ChangeTheMode(teMotorMode eMode)
