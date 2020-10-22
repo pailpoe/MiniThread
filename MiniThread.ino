@@ -49,8 +49,9 @@ typedef struct
   boolean Inverted_M1;
   int  Reso_M1;
   int  thread_M1;
+  float Accel_M1;
 } sConfigDro;
-const sConfigDro csConfigDefault = {false,false,false,true,512,512,512,false,1600,200};
+const sConfigDro csConfigDefault = {false,false,false,true,512,512,512,false,1600,200,30000.0};
 // Variable
 sConfigDro ConfigDro;
 
@@ -64,6 +65,7 @@ GEMItem menuItemResoZ("C step/tr:", ConfigDro.Reso_Z);
 GEMItem menuItemDirM1("M1 dir:", ConfigDro.Inverted_M1);
 GEMItem menuItemResoM1("M1 step/tr:", ConfigDro.Reso_M1);
 GEMItem menuItemThreadM1("M1 thread:", ConfigDro.thread_M1);
+GEMItem menuItemAccelM1("M1 accel:", ConfigDro.Accel_M1);
 
 void ActionRestoreSettingsInFlash(); // Forward declaration
 GEMItem menuItemButtonRestoreSettings("Restore settings", ActionRestoreSettingsInFlash);
@@ -302,6 +304,7 @@ void setupMenu() {
   menuPageSettings.addMenuItem(menuItemDirM1);
   menuPageSettings.addMenuItem(menuItemResoM1);
   menuPageSettings.addMenuItem(menuItemThreadM1);
+  menuPageSettings.addMenuItem(menuItemAccelM1);
   menuPageSettings.addMenuItem(menuItemButtonRestoreSettings);
   menuPageSettings.addMenuItem(menuItemButtonSaveSettings);
   menuPageSettings.setParentMenuPage(menuPageMain);
@@ -526,6 +529,7 @@ void Dispatch_Config(sConfigDro *pConf)
   Quad_Y.SetResolution(pConf->Reso_Y);
   Quad_Z.SetResolution(pConf->Reso_Z);
   Motor1.ChangeParameter((unsigned int)((long)(  pConf->Reso_M1*100/pConf->thread_M1)) , pConf->Inverted_M1);
+  Motor1.ChangeAcceleration(ConfigDro.Accel_M1); 
 }
 void ActionSaveSettingsInFlash()
 {
