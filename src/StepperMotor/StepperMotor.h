@@ -47,7 +47,7 @@ public:
 
   
   
-  //Electronic end limit min and max 
+  //Electronic end limit min and max functions 
   void    UseEndLimit ( boolean State );
 	void 		ChangeStopPositionMaxStep (long Stop_Position);
   void    ChangeStopPositionMaxReal (float Stop_Position);  
@@ -58,10 +58,17 @@ public:
   long    GetStopPositionMinStep();
   long    GetStopPositionMaxStep();
 
-  //Change the max speed
-	//MaxSpeed from 1 to x ( 1 = max speed)
-	void 		     ChangeMaxSpeed (unsigned int MaxSpeed);
-  unsigned int GetMaxSpeed ();
+  //Change the max speed in step/s
+	void 		     ChangeMaxSpeed (float MaxSpeed);
+  //Get the max speed in step/s
+  float GetMaxSpeed ();
+  
+  //Change the Acceleration in step/s²
+	void 		     ChangeAcceleration (float Acceleration);
+  //Get the max speed in step/s
+  float GetAcceleration ();  
+  
+  
 
   //Get the absolute position of the motor
 	long 		 GetPositionStep();
@@ -76,22 +83,27 @@ private:
       State_No_Rotation 
   };
   voidFuncPtr _ChangeStepInterval; 
-  boolean   _UseEndLimit;
+  boolean   _UseEndLimit;       //If true, use end limit
   teMotorMode _eActualMode;     //Motor mode
-	long 			_AbsoluteCounter; 	//Absolute position of the stepper motor
-	long 			_TargetPosition; 		//Target position
-	long 			_StopPositionMax; 	//Security Max position
-	long 			_StopPositionMin;		//Security Min position
+	long 			_AbsoluteCounter; 	//Absolute position in step
+	long 			_TargetPosition; 		//Target position in step
+	long 			_StopPositionMax; 	//End limit Max position in step
+	long 			_StopPositionMin;		//End limit Min position in step
 	boolean 	_Sens; 							//Sens de rotation
   char      _PinDIR;            //IO for Dir
   char      _PinSTEP;           //IO for Step
   char      _PinEN;             //IO for Enable
 	eMS_Motor eState; 						//Motor machine state
-  float _StepInterval;   //Step interval in µs
-	unsigned int _MaxSpeed; 			//Max speed ( 1= max 10Khz) 
-	unsigned int _Resolution; 		//Resolution/tr or mm
+	unsigned int _Resolution; 		//Resolution/tr or mm 
   
-  float _n; 
+  float _Speed;                 //Actual speed
+ 	float _MaxSpeed;    			    //Max speed in step/s 
+  float _Acceleration;          //Acceleration in step/s²
+  unsigned int _StepInterval;          //Step interval in µs
+  long _n;                      //The step counter for speed calculations
+  float _c0;                    //Intial step size in µs
+  float _cn;                    //Last step size in µs
+  float _cmin;                  //Min step size in microseconds based on maxSpeed
 };
     
 #endif

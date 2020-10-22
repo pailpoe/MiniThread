@@ -135,7 +135,7 @@ GEMItem menuItemUseMotorEndLimit("Use limit:", bUseMotorEndLimit,ActionUseMotorE
 float fMotorCurrentPos = 0;
 void ActionMotorCurrentPos(); // Forward declaration
 GEMItem menuItemMotorCurrentPos("CurrentPos:", fMotorCurrentPos,ActionMotorCurrentPos);
-int iMotorSpeed = 2;
+int iMotorSpeed = 10000;
 void ActionMotorMotorSpeed(); // Forward declaration
 GEMItem menuItemMotorSpeed("Speed:", iMotorSpeed,ActionMotorMotorSpeed);
 int iMotorThread = 100;

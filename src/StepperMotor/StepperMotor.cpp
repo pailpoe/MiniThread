@@ -5,7 +5,6 @@ StepperMotor::StepperMotor(unsigned int  Resolution , boolean Sens, char STEP_Pi
 {
   _StepInterval = 500;
   _Resolution = Resolution;
-  _MaxSpeed = 2;
   _AbsoluteCounter = 0;
   _TargetPosition = 0;
   _StopPositionMax = 0;
@@ -21,59 +20,159 @@ StepperMotor::StepperMotor(unsigned int  Resolution , boolean Sens, char STEP_Pi
   _eActualMode = NoMode;
   _UseEndLimit = true;
   _ChangeStepInterval = ChangeStepInterval;
+  _n = 0;
+  _Speed = 0.0;
+  ChangeAcceleration(20000.0);
+  ChangeMaxSpeed(10000.0);
+  
+  
 }
 void StepperMotor::TimeToPrepareToMove ()
 {
     //Release step pin
     digitalWrite(_PinSTEP, HIGH);
-    if(_eActualMode == NoMode)
+    
+    long DistanceToGo = 0;
+    long StepToStop = (long)((_Speed * _Speed) / (2.0 * _Acceleration)); // Equation 16
+    
+  //No mode ************************************************ 
+  if(_eActualMode == NoMode)
+  { 
+    if(eState == State_No_Rotation)
     {
-        _StepInterval=7000;
-        _n = 0;
+      //The motor is already stopped
+      _n = 0;   
     }
     else
-    { 
-      _n++;
-      _StepInterval = _StepInterval - (_StepInterval*2)/(_n*4+1);
-      if(_StepInterval<=100)_StepInterval=100; 
+    {
+      //Afer SpeedModeUp -> NoMode or  SpeedModeDown -> NoMode 
+      if( _n > 0 )
+      {
+        //The motor accelerate, need to start deccelerate
+        _n = -StepToStop;
+      }else if( _n == 0 )
+      {
+        //Motor is stopped
+        eState = State_No_Rotation;
+      }
     }
+  }
+  //Speed mode Up +++ ***************************************
+  if(_eActualMode == SpeedModeUp)
+  {
+    if(_AbsoluteCounter < _StopPositionMax || !_UseEndLimit )
+    {
+      eState = State_Rotation_Positive;
+      DistanceToGo = _StopPositionMax - _AbsoluteCounter; 
+      if( StepToStop >= DistanceToGo && _n > 0 && _UseEndLimit  )
+      {
+        //Start deccelerate because we approch from End limit min
+        _n = -StepToStop;
+      }
+      if ( StepToStop < DistanceToGo && _n < 0 )
+      {
+        //Need to acelerate  
+        _n = -_n;
+      }  
+    }
+    else
+    {
+      //At the end limit 
+      eState = State_No_Rotation; 
+      _n = 0; 
+    }
+    if(_Sens == false) digitalWrite(_PinDIR, LOW); 
+    else digitalWrite(_PinDIR, HIGH); 
+  }
+  //Speed mode Down --- ***********************************
+  if(_eActualMode == SpeedModeDown)
+  {
+    if(_AbsoluteCounter > _StopPositionMin || !_UseEndLimit )
+    {
+      eState = State_Rotation_Negative;
+      DistanceToGo = _AbsoluteCounter - _StopPositionMin;
+      if( StepToStop >= DistanceToGo && _n > 0 && _UseEndLimit )
+      {
+        //Start deccelerate because we approch from End limit min
+        _n = -StepToStop;
+      }
+      if ( StepToStop < DistanceToGo && _n < 0 )
+      {
+        //Need to acelerate  
+        _n = -_n;
+      }  
+    }
+    else
+    {
+      //At the end limit
+      eState = State_No_Rotation; 
+      _n = 0; 
+    }
+    if(_Sens == false) digitalWrite(_PinDIR, HIGH);
+    else  digitalWrite(_PinDIR, LOW);   
+  }
+  //Position mode ***********************************************************
+  if((_AbsoluteCounter < _TargetPosition && _eActualMode == PositionMode) )
+  {
+    if(_AbsoluteCounter < _StopPositionMax || !_UseEndLimit )
+    {
+      eState = State_Rotation_Positive;
+      DistanceToGo = _StopPositionMax - _AbsoluteCounter;
+      if( StepToStop >= DistanceToGo && _n > 0 )
+      {
+          //Start deccelerate because we approch from End limit min
+          _n = -StepToStop;
+      }   
+    }
+    else
+    {
+      //At the end limit
+      eState = State_No_Rotation;
+      _n = 0;     
+    }
+    if(_Sens == false) digitalWrite(_PinDIR, LOW); 
+    else digitalWrite(_PinDIR, HIGH); 
+  }
+  else if ((_AbsoluteCounter > _TargetPosition && _eActualMode == PositionMode) )
+  {
+    //Negatif
+    if(_AbsoluteCounter > _StopPositionMin || !_UseEndLimit )
+    {
+      eState = State_Rotation_Negative;
+      DistanceToGo = _AbsoluteCounter - _StopPositionMin;
+    }
+    else
+    {
+      //At the end limit
+      eState = State_No_Rotation;
+      _n = 0;       
+    }
+    if(_Sens == false) digitalWrite(_PinDIR, HIGH);
+    else  digitalWrite(_PinDIR, LOW);    
+  }
+  else if (_AbsoluteCounter == _TargetPosition && _eActualMode == PositionMode)
+  {
+      eState = State_No_Rotation;
+        
+  }
+ 
 
-    
-    
-    _ChangeStepInterval();
-    
-    if((_AbsoluteCounter < _TargetPosition && _eActualMode == PositionMode) || _eActualMode == SpeedModeUp )
-    {
-      if(_AbsoluteCounter < _StopPositionMax || !_UseEndLimit )
-      {
-        eState = State_Rotation_Positive; 
-      }
-      else
-      {
-        eState = State_No_Rotation;            
-      }
-      if(_Sens == false) digitalWrite(_PinDIR, LOW); 
-      else digitalWrite(_PinDIR, HIGH); 
-    }
-    else if ((_AbsoluteCounter > _TargetPosition && _eActualMode == PositionMode) || _eActualMode == SpeedModeDown)
-    {
-      //Negatif
-      if(_AbsoluteCounter > _StopPositionMin || !_UseEndLimit )
-      {
-        eState = State_Rotation_Negative;
-      }
-      else
-      {
-        eState = State_No_Rotation;          
-      }
-      if(_Sens == false) digitalWrite(_PinDIR, HIGH);
-      else  digitalWrite(_PinDIR, LOW);    
-    }
-    else
-    {
-      //At postion
-      eState = State_No_Rotation;     
-    }   
+  //**********************************************
+  if(_n == 0)
+  {
+    // First step from stopped
+    _cn = _c0;
+  }
+  else
+  { 
+
+    _cn = _cn - (_cn*2)/(_n*4+1);
+    if( _cn <= _cmin ) _cn = _cmin; 
+  }
+  _n++;  
+  _StepInterval = _cn;
+  _Speed = 1000000.0 / _cn;
+  _ChangeStepInterval();
 }
 void StepperMotor::TimeToMove () 
 {  
@@ -171,11 +270,22 @@ void    StepperMotor::ChangeCurrentPositionReal (float Position)
 
 
 
-void StepperMotor::ChangeMaxSpeed (unsigned int MaxSpeed)
+void StepperMotor::ChangeMaxSpeed (float MaxSpeed)
 {
-  _MaxSpeed = MaxSpeed;  
+  if (MaxSpeed < 0.0)
+    MaxSpeed = -MaxSpeed;
+  if (_MaxSpeed != MaxSpeed)
+  {
+    _MaxSpeed = MaxSpeed;
+    _cmin = 1000000.0 / MaxSpeed;
+    // Recompute _n from current speed and adjust speed if accelerating or cruising
+    if (_n > 0)
+    {
+      _n = (long)((_Speed * _Speed) / (2.0 * _Acceleration)); // Equation 16
+    }
+  }  
 }
-unsigned int StepperMotor::GetMaxSpeed ()
+float StepperMotor::GetMaxSpeed ()
 {
   return _MaxSpeed;   
 }
@@ -218,3 +328,25 @@ void StepperMotor::ChangeParameter(unsigned int  Resolution , boolean Sens)
   _Resolution = Resolution;
   _Sens = Sens;  
 }
+void StepperMotor::ChangeAcceleration (float Acceleration)
+{
+  if (Acceleration == 0.0)
+    return;
+  if (Acceleration < 0.0)
+    Acceleration = -Acceleration;
+  if (_Acceleration != Acceleration)
+  {
+    // Recompute _n 
+    _n = _n * (_Acceleration / Acceleration);
+    // New c0
+    _c0 = 0.676 * sqrt(2.0 / Acceleration) * 1000000.0; // Equation 15
+    _Acceleration = Acceleration;
+  }  
+}
+float StepperMotor::GetAcceleration ()
+{
+  return _Acceleration;
+} 
+
+
+
