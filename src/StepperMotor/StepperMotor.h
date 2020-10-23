@@ -99,7 +99,7 @@ private:
   float _Speed;                 //Actual speed
  	float _MaxSpeed;    			    //Max speed in step/s 
   float _Acceleration;          //Acceleration in step/s²
-  unsigned int _StepInterval;          //Step interval in µs
+  unsigned int _StepInterval;   //Step interval in µs
   long _n;                      //The step counter for speed calculations
   float _c0;                    //Intial step size in µs
   float _cn;                    //Last step size in µs

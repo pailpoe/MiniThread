@@ -112,12 +112,20 @@ void StepperMotor::TimeToPrepareToMove ()
     else  digitalWrite(_PinDIR, LOW);   
   }
   //Position mode ***********************************************************
-  if((_AbsoluteCounter < _TargetPosition && _eActualMode == PositionMode) )
+  if((_AbsoluteCounter <= _TargetPosition && _eActualMode == PositionMode) )
   {
+    //We need to accelerate
     if(_AbsoluteCounter < _StopPositionMax || !_UseEndLimit )
     {
+
       eState = State_Rotation_Positive;
       DistanceToGo = _StopPositionMax - _AbsoluteCounter;
+      if(_n < 0)
+      {
+        //Need to accelerte
+        _n = -_n;  
+      }
+      
       if( StepToStop >= DistanceToGo && _n > 0 )
       {
           //Start deccelerate because we approch from End limit min
@@ -135,24 +143,18 @@ void StepperMotor::TimeToPrepareToMove ()
   }
   else if ((_AbsoluteCounter > _TargetPosition && _eActualMode == PositionMode) )
   {
-    //Negatif
-    if(_AbsoluteCounter > _StopPositionMin || !_UseEndLimit )
+    //We need to decelerate
+    if(_n > 0)
     {
-      eState = State_Rotation_Negative;
-      DistanceToGo = _AbsoluteCounter - _StopPositionMin;
+      //Need to decellerate
+      _n = -StepToStop; 
     }
-    else
-    {
-      //At the end limit
-      eState = State_No_Rotation;
-      _n = 0;       
-    }
-    if(_Sens == false) digitalWrite(_PinDIR, HIGH);
-    else  digitalWrite(_PinDIR, LOW);    
+ 
   }
-  else if (_AbsoluteCounter == _TargetPosition && _eActualMode == PositionMode)
+  if (_AbsoluteCounter >= _TargetPosition && _eActualMode == PositionMode && _n == 0)
   {
-      eState = State_No_Rotation;
+    //At position with speed min, no movment
+    eState = State_No_Rotation;
         
   }
  
@@ -210,11 +212,13 @@ void StepperMotor::ChangeTheMode(teMotorMode eMode)
     case PositionMode:
       _TargetPosition = _AbsoluteCounter;
       _eActualMode = eMode; 
+      _n = 0;
+      eState = State_No_Rotation;
     break;
     default:
       _eActualMode = NoMode;
     break;
-  }
+  }  
 }
 StepperMotor::teMotorMode StepperMotor::ReturnTheMode()
 {
