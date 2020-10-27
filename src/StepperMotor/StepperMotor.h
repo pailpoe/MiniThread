@@ -87,6 +87,7 @@ private:
   teMotorMode _eActualMode;     //Motor mode
 	long 			_AbsoluteCounter; 	//Absolute position in step
 	long 			_TargetPosition; 		//Target position in step
+  long      _ErrorPos;          //Error absolute - target
 	long 			_StopPositionMax; 	//End limit Max position in step
 	long 			_StopPositionMin;		//End limit Min position in step
 	boolean 	_Sens; 							//Sens de rotation

@@ -249,7 +249,7 @@ void setup()
   
   //Timer 4 for motor control
   MotorControl.pause(); //stop...
-  MotorControl.setCompare(TIMER_CH3, 10); //10µs 
+  MotorControl.setCompare(TIMER_CH3, 20); //10µs 
   MotorControl.setChannel3Mode(TIMER_OUTPUT_COMPARE);
   MotorControl.setPrescaleFactor(72); // 72Mhz, 1 = 1µs
   MotorControl.setOverflow(100); // default value 100µs overflow

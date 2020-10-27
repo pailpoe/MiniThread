@@ -90,10 +90,13 @@ void StepperMotor::TimeToPrepareToMove ()
   //PositionMode
   if(_eActualMode == PositionMode)
   {
- 
+    _ErrorPos = _AbsoluteCounter - _TargetPosition; 
    
-    if( _AbsoluteCounter < _TargetPosition )
+    if( _ErrorPos < 0 )
     {
+      if ( _n < 0 ) _n = -_n; //Decelerate, we need to accelerate 
+      eState = State_Rotation_Positive;
+      /*
       if(eState == State_Rotation_Negative)
       {
         //Wrong way !
@@ -104,13 +107,14 @@ void StepperMotor::TimeToPrepareToMove ()
       {
         eState = State_Rotation_Positive;
         if ( _n < 0 ) _n = -_n; //Decelerate, we need to accelerate      
-      }     
+      }
+      */      
     }
-   if( _AbsoluteCounter > _TargetPosition )  
+   if( _ErrorPos > 0 )  
     {
-        //if( _n > 0 ) _n = -StepToStop; //Start deccelerate if accelerate
-        //if ( _n == 0 ) eState = State_No_Rotation;  
-      //We need to decellerate
+      if ( _n < 0 ) _n = -_n; //Decelerate, we need to accelerate  
+      eState = State_Rotation_Negative;
+      /*
       if(eState == State_Rotation_Positive)
       {
         //Wrong way !
@@ -121,13 +125,21 @@ void StepperMotor::TimeToPrepareToMove ()
       {
         eState = State_Rotation_Negative;
         if ( _n < 0 ) _n = -_n; //Decelerate, we need to accelerate      
-      }  
+      } 
+      */
     }
-   if( _AbsoluteCounter == _TargetPosition )  
+   if( _ErrorPos == 0 )  
     {
-        if ( _n == 0 ) eState = State_No_Rotation; 
+        eState = State_No_Rotation; 
+        if ( _n > 0 ) _n = -StepToStop; 
+        /*
+        if ( _n == 1 || _n == 0  )
+        {
+          _n = 0;
+          eState = State_No_Rotation;  
+        }           
         if ( _n > 0 ) _n = -StepToStop;     
-      
+        */
     }
    
   }
@@ -200,7 +212,7 @@ void StepperMotor::TimeToPrepareToMove ()
     if( _cn <= _cmin ) _cn = _cmin; 
   }
   _n++;  
-  _StepInterval = _cn;
+  _StepInterval = (unsigned int)_cn;
   _Speed = 1000000.0 / _cn;
   _ChangeStepInterval();
 }
