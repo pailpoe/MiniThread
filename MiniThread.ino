@@ -237,6 +237,8 @@ void Update_Overlfow_Timer4()
 long GCD_Function ( long n1, long n2); //Forward declaration
 void CalcMotorParameterForThread(); //Forward declaration
 void Display_UpdateRealTimeData(); //Forward declarations
+void ActionMotorSpeedUp();//Forward declarations
+void ActionMotorSpeedDown();//Forward declarations
 
 // ***************************************************************************************
 // ***************************************************************************************
@@ -350,19 +352,21 @@ void DroContextLoop()
     menu.context.exit();
   } else 
   {
-    if(key == GEM_KEY_UP)
-    {
-      iMotorSpeed++;
-      ActionMotorMotorSpeed();
-    }
-    if(key == GEM_KEY_DOWN)
-    {
-      if(iMotorSpeed!=1)iMotorSpeed--; 
-      ActionMotorMotorSpeed();  
-    }
 
 
-    
+    if( bMotorMode == MOTOR_MODE_MANUAL || bMotorMode == MOTOR_MODE_AUTO )
+    {
+      if(key == GEM_KEY_UP)
+      {
+        ActionMotorSpeedUp();
+        ActionMotorMotorSpeed();
+      }
+      if(key == GEM_KEY_DOWN)
+      {
+        ActionMotorSpeedDown(); 
+        ActionMotorMotorSpeed();  
+      }
+    } 
     if(key == GEM_KEY_OK)ActionChangeScreen();
     //**** Manual mode Key *****
     if( bMotorMode == MOTOR_MODE_MANUAL)
@@ -372,7 +376,8 @@ void DroContextLoop()
         if( customKeypad.isPressed(GEM_KEY_LEFT))Motor1.ChangeTheMode(StepperMotor::SpeedModeUp);
         if( customKeypad.isPressed(GEM_KEY_RIGHT))Motor1.ChangeTheMode(StepperMotor::SpeedModeDown);
       }
-      else Motor1.ChangeTheMode(StepperMotor::NoMode);       
+      else Motor1.ChangeTheMode(StepperMotor::NoMode); 
+
     }
     //**** Auto mode Key *****
     if (bMotorMode == MOTOR_MODE_AUTO)
@@ -627,20 +632,20 @@ void Display_M_Informations()
     switch ( bMotorMode )
     {
       case MOTOR_MODE_NO_MODE:
-        u8g2.drawStr(60,37,"|NoMode");
+        u8g2.drawStr(57,37,"|NO");
       break;
       case MOTOR_MODE_MANUAL:
-        u8g2.drawStr(60,37,"|Manual");
+        u8g2.drawStr(57,37,"|Manual");
       break;
       case MOTOR_MODE_AUTO:
-        u8g2.drawStr(60,37,"|Auto");
+        u8g2.drawStr(57,37,"|Auto");
       break;
       case MOTOR_MODE_LEFT:
-        u8g2.drawStr(60,37,"|Left"); 
+        u8g2.drawStr(57,37,"|Left"); 
       break;   
     }
     sprintf(bufferChar,"|%d",iMotorSpeed);
-    u8g2.drawStr(100,37,bufferChar);    
+    u8g2.drawStr(90,37,bufferChar);    
     sprintf(bufferChar,"%+09.3f <> %+09.3f",fMotorStopMax,fMotorStopMin);
     if(bUseMotorEndLimit)u8g2.drawStr(13,45,bufferChar);
     else u8g2.drawStr(13,45," WARNING : No limit");       
@@ -785,9 +790,18 @@ void ActionMotorCurrentPos()
 {
   Motor1.ChangeCurrentPositionReal(fMotorCurrentPos);    
 }
+void ActionMotorSpeedUp()
+{
+  iMotorSpeed = iMotorSpeed+100;  
+}
+void ActionMotorSpeedDown()
+{
+  if(iMotorSpeed>100) iMotorSpeed = iMotorSpeed - 100;  
+}
 void ActionMotorMotorSpeed()
 {
   if(iMotorSpeed<1)iMotorSpeed=1;
+  if(iMotorSpeed>30000)iMotorSpeed=30000;
   Motor1.ChangeMaxSpeed(iMotorSpeed);    
 }
 void ActionMotorChangeThread()
