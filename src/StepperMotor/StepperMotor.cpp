@@ -34,8 +34,8 @@ void StepperMotor::TimeToPrepareToMove ()
     
     long DistanceToGo = 0;
     long StepToStop = (long)((_Speed * _Speed) / (2.0 * _Acceleration)); // Equation 16
-    
-  //No mode ************************************************ 
+  //**********************************************
+  //No mode
   if(_eActualMode == NoMode)
   { 
     if(eState == State_No_Rotation)
@@ -45,7 +45,6 @@ void StepperMotor::TimeToPrepareToMove ()
     }
     else
     {
-      //Afer SpeedModeUp -> NoMode or  SpeedModeDown -> NoMode 
       if( _n > 0 )
       {
         //The motor accelerate, need to start deccelerate
@@ -57,109 +56,139 @@ void StepperMotor::TimeToPrepareToMove ()
       }
     }
   }
-  //Speed mode Up +++ ***************************************
+  //**********************************************
+  //SpeedModeUp
   if(_eActualMode == SpeedModeUp)
   {
-    if(_AbsoluteCounter < _StopPositionMax || !_UseEndLimit )
+    if(eState == State_Rotation_Negative && _n != 0)
     {
-      eState = State_Rotation_Positive;
-      DistanceToGo = _StopPositionMax - _AbsoluteCounter; 
-      if( StepToStop >= DistanceToGo && _n > 0 && _UseEndLimit  )
-      {
-        //Start deccelerate because we approch from End limit min
-        _n = -StepToStop;
-      }
-      if ( StepToStop < DistanceToGo && _n < 0 )
-      {
-        //Need to acelerate  
-        _n = -_n;
-      }  
+      //Wrong way !
+      if( _n > 0 ) _n = -StepToStop; //Start deccelerate if accelerate
     }
     else
     {
-      //At the end limit 
-      eState = State_No_Rotation; 
-      _n = 0; 
+      eState = State_Rotation_Positive;
+      if ( _n < 0 ) _n = -_n; //Decelerate, we need to accelerate      
     }
-    if(_Sens == false) digitalWrite(_PinDIR, LOW); 
-    else digitalWrite(_PinDIR, HIGH); 
   }
-  //Speed mode Down --- ***********************************
+  //**********************************************
+  //SpeedModeDown
   if(_eActualMode == SpeedModeDown)
   {
-    if(_AbsoluteCounter > _StopPositionMin || !_UseEndLimit )
+    if(eState == State_Rotation_Positive && _n != 0)
+    {
+      //Wrong way !
+      if( _n > 0 ) _n = -StepToStop; //Start deccelerate if accelerate
+    }
+    else
     {
       eState = State_Rotation_Negative;
+      if ( _n < 0 ) _n = -_n; //Decelerate, we need to accelerate        
+    }
+  }
+  //**********************************************
+  //PositionMode
+  if(_eActualMode == PositionMode)
+  {
+ 
+   
+    if( _AbsoluteCounter < _TargetPosition )
+    {
+      if(eState == State_Rotation_Negative)
+      {
+        //Wrong way !
+        if( _n > 0 ) _n = -StepToStop; //Start deccelerate if accelerate
+        if( _n == 0 )eState = State_Rotation_Positive;
+      }
+      else
+      {
+        eState = State_Rotation_Positive;
+        if ( _n < 0 ) _n = -_n; //Decelerate, we need to accelerate      
+      }     
+    }
+   if( _AbsoluteCounter > _TargetPosition )  
+    {
+        //if( _n > 0 ) _n = -StepToStop; //Start deccelerate if accelerate
+        //if ( _n == 0 ) eState = State_No_Rotation;  
+      //We need to decellerate
+      if(eState == State_Rotation_Positive)
+      {
+        //Wrong way !
+        if( _n > 0 ) _n = -StepToStop; //Start deccelerate if accelerate
+        if( _n == 0 )eState = State_Rotation_Negative;
+      }
+      else
+      {
+        eState = State_Rotation_Negative;
+        if ( _n < 0 ) _n = -_n; //Decelerate, we need to accelerate      
+      }  
+    }
+   if( _AbsoluteCounter == _TargetPosition )  
+    {
+        if ( _n == 0 ) eState = State_No_Rotation; 
+        if ( _n > 0 ) _n = -StepToStop;     
+      
+    }
+   
+  }
+  //**********************************************
+  //End limit
+  if(_UseEndLimit )
+  {
+    //Use the end limit
+    if(eState == State_Rotation_Positive)
+    {
+      //Go to the max limit
+      if(_AbsoluteCounter < _StopPositionMax)
+      {
+        DistanceToGo = _StopPositionMax - _AbsoluteCounter; 
+        if( StepToStop >= DistanceToGo && _n > 0 )
+        {
+          //Start deccelerate because we approch from End limit max and we accelerate
+          _n = -StepToStop;
+        }
+      }
+      else
+      {
+        //At the end limit 
+        eState = State_No_Rotation; 
+        _n = 0; 
+      }      
+    }
+    if(eState == State_Rotation_Negative)
+    {
+      //Go to the min limit
+      if(_AbsoluteCounter > _StopPositionMin)
+      {
       DistanceToGo = _AbsoluteCounter - _StopPositionMin;
-      if( StepToStop >= DistanceToGo && _n > 0 && _UseEndLimit )
+      if( StepToStop >= DistanceToGo && _n > 0)
       {
         //Start deccelerate because we approch from End limit min
         _n = -StepToStop;
+      } 
       }
-      if ( StepToStop < DistanceToGo && _n < 0 )
+      else
       {
-        //Need to acelerate  
-        _n = -_n;
-      }  
-    }
-    else
-    {
-      //At the end limit
-      eState = State_No_Rotation; 
-      _n = 0; 
-    }
-    if(_Sens == false) digitalWrite(_PinDIR, HIGH);
-    else  digitalWrite(_PinDIR, LOW);   
+        //At the end limit
+        eState = State_No_Rotation; 
+        _n = 0; 
+      }     
+    }  
   }
-  //Position mode ***********************************************************
-  if((_AbsoluteCounter <= _TargetPosition && _eActualMode == PositionMode) )
-  {
-    //We need to accelerate
-    if(_AbsoluteCounter < _StopPositionMax || !_UseEndLimit )
-    {
-
-      eState = State_Rotation_Positive;
-      DistanceToGo = _StopPositionMax - _AbsoluteCounter;
-      if(_n < 0)
-      {
-        //Need to accelerte
-        _n = -_n;  
-      }
-      
-      if( StepToStop >= DistanceToGo && _n > 0 )
-      {
-          //Start deccelerate because we approch from End limit min
-          _n = -StepToStop;
-      }   
-    }
-    else
-    {
-      //At the end limit
-      eState = State_No_Rotation;
-      _n = 0;     
-    }
-    if(_Sens == false) digitalWrite(_PinDIR, LOW); 
-    else digitalWrite(_PinDIR, HIGH); 
-  }
-  else if ((_AbsoluteCounter > _TargetPosition && _eActualMode == PositionMode) )
-  {
-    //We need to decelerate
-    if(_n > 0)
-    {
-      //Need to decellerate
-      _n = -StepToStop; 
-    }
- 
-  }
-  if (_AbsoluteCounter >= _TargetPosition && _eActualMode == PositionMode && _n == 0)
-  {
-    //At position with speed min, no movment
-    eState = State_No_Rotation;
-        
-  }
- 
-
   //**********************************************
+  //Direction output
+  if(eState == State_Rotation_Positive)
+  {
+    if(_Sens == false) digitalWrite(_PinDIR, LOW); 
+    else digitalWrite(_PinDIR, HIGH);     
+  }
+  if(eState == State_Rotation_Negative)
+  {
+    if(_Sens == false) digitalWrite(_PinDIR, HIGH);
+    else  digitalWrite(_PinDIR, LOW);     
+  }
+  //**********************************************
+  //Calcul Step, Speed,...
   if(_n == 0)
   {
     // First step from stopped
@@ -167,7 +196,6 @@ void StepperMotor::TimeToPrepareToMove ()
   }
   else
   { 
-
     _cn = _cn - (_cn*2)/(_n*4+1);
     if( _cn <= _cmin ) _cn = _cmin; 
   }
