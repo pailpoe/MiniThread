@@ -74,7 +74,7 @@ public:
 	long 		 GetPositionStep();
   float    GetPositionReal(); // mm,turn
   
-  
+  long _n;                      //The step counter for speed calculations
 private:
 	enum eMS_Motor 
 	{   
@@ -101,7 +101,7 @@ private:
  	float _MaxSpeed;    			    //Max speed in step/s 
   float _Acceleration;          //Acceleration in step/s²
   unsigned int _StepInterval;   //Step interval in µs
-  long _n;                      //The step counter for speed calculations
+  
   float _c0;                    //Intial step size in µs
   float _cn;                    //Last step size in µs
   float _cmin;                  //Min step size in microseconds based on maxSpeed

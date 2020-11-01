@@ -152,9 +152,10 @@ GEMItem menuItemButtonResetCurrentPos("Reset CurrentPos", ActionResetCurrentPos)
 //Screen choose
 #define SCREEN_DRO 0
 #define SCREEN_MOT1 1
-#define SCREEN_END_LIST 1
+#define SCREEN_DEBUG 2
+#define SCREEN_END_LIST 2
 byte bScreenMode = 0;
-SelectOptionByte selectScreenOptions[] = {{"DroXYC", 0}, {"Mot1", 1}};
+SelectOptionByte selectScreenOptions[] = {{"DroXYC", 0}, {"Mot1", 1}, {"Debug", 2}};
 GEMSelect selectScreenMode(sizeof(selectScreenOptions)/sizeof(SelectOptionByte), selectScreenOptions);
 void ActionScreenMode(); // Forward declaration
 GEMItem menuItemScreenMode("Screen:", bScreenMode, selectScreenMode, ActionScreenMode);
@@ -561,6 +562,7 @@ void Display_Y_Informations(); //Forward declarations
 void Display_C_Informations(); //Forward declarations
 void Display_M_Informations(); //Forward declarations
 void Display_Extra_Informations(); //Forward declarations
+void Display_Debug_Informations(); //Forward declarations
 void DisplayDrawInformations()
 {
   u8g2.firstPage();
@@ -580,7 +582,11 @@ void DisplayDrawInformations()
       Display_Y_Informations();    
       Display_M_Informations();
       Display_Extra_Informations();      
-    }  
+    }
+    else if( bScreenMode == SCREEN_DEBUG )  
+    {
+      Display_Debug_Informations(); 
+    }   
   } while (u8g2.nextPage());
 }
 
@@ -673,8 +679,17 @@ void Display_UpdateRealTimeData()
   fAxeXPos = Quad_X.GetValue();
   fAxeYPos = Quad_Y.GetValue();     
 }
+void Display_Debug_Informations()
+{
+  char bufferChar[30];
+  u8g2.setFont(u8g2_font_profont10_mr); // choose a suitable font
+  u8g2.drawStr(0,0,"Debug page !");
+  sprintf(bufferChar,"I:%d",Motor1.NewInterval());
+  u8g2.drawStr(0,9,bufferChar);  // write something to the internal memory
+  sprintf(bufferChar,"_n:%ld",Motor1._n);
+  u8g2.drawStr(0,18,bufferChar);  // write something to the internal memory
 
-
+}
 // ***************************************************************************************
 // ***************************************************************************************
 // *** Action functions from menu ********************************************************

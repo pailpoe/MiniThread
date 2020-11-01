@@ -48,6 +48,7 @@ void StepperMotor::TimeToPrepareToMove ()
       if( _n > 0 )
       {
         //The motor accelerate, need to start deccelerate
+        if( StepToStop == 0 ) StepToStop = 1; // Correction BUG low speed
         _n = -StepToStop;
       }else if( _n == 0 )
       {
@@ -212,7 +213,8 @@ void StepperMotor::TimeToPrepareToMove ()
     if( _cn <= _cmin ) _cn = _cmin; 
   }
   _n++;  
-  _StepInterval = (unsigned int)_cn;
+  if( (unsigned int)_cn >= 65535 ) _StepInterval = 65535;
+  else  _StepInterval = (unsigned int)_cn;
   _Speed = 1000000.0 / _cn;
   _ChangeStepInterval();
 }
