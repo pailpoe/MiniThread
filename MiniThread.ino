@@ -18,9 +18,11 @@ Revision        :
 #include "src/StepperMotor/StepperMotor.h"
 #include <EEPROM.h>
 
-#define TEXT_MAIN_MENU_TITLE "MiniThread V1.0 G.Pailleret"
+#define TEXT_MAIN_MENU_TITLE "MiniThread V1.0"
 
-U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);
+#define PIN_RES_SCR PB9
+//U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);
+U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, PIN_RES_SCR);
 
 const byte ROWS = 4; //four rows
 const byte COLS = 4; //four columns
@@ -234,9 +236,12 @@ void Update_Overlfow_Timer4()
   MotorControl.setOverflow(Motor1.NewInterval());  
 }
 
-
+// ***************************************************************************************
+// Forward declarations Funtions
+ 
 long GCD_Function ( long n1, long n2); //Forward declaration
 void CalcMotorParameterForThread(); //Forward declaration
+void UsbSerial_Pos(); 
 void Display_UpdateRealTimeData(); //Forward declarations
 void ActionMotorSpeedUp();//Forward declarations
 void ActionMotorSpeedDown();//Forward declarations
@@ -246,9 +251,17 @@ void ActionMotorSpeedDown();//Forward declarations
 // *** setup, loop, ...  *****************************************************************
 void setup() 
 {
+//  pinMode(PIN_RES_SCR, OUTPUT);
+//  digitalWrite(PIN_RES_SCR, LOW);
+//  delay(1000);
+//  digitalWrite(PIN_RES_SCR, HIGH);
+//  delay(1000);
   u8g2.begin();
   //Debug port...
   afio_cfg_debug_ports(AFIO_DEBUG_SW_ONLY); //Only SWD
+
+  //USB Serial
+  Serial.begin(115200); // Ignored by Maple. But needed by boards using hardware serial via a USB to Serial adaptor
   
   //Timer 4 for motor control
   MotorControl.pause(); //stop...
@@ -432,6 +445,7 @@ void DroContextLoop()
       }
     }     
     DisplayDrawInformations();
+    UsbSerial_Pos();   
   }
 }
 void DroContextExit() 
@@ -553,6 +567,17 @@ void ActionRestoreSettingsInFlash()
   Restore_Config();  
 }
 
+
+// ***************************************************************************************
+// ***************************************************************************************
+// *** Display functions *****************************************************************
+void UsbSerial_Pos()
+{
+  //char bufferChar[30];
+  //sprintf(bufferChar,"%0.3f",fAxeXPos); 
+  //Serial.write(bufferChar);
+  //Serial.print(':');
+}
 // ***************************************************************************************
 // ***************************************************************************************
 // *** Display functions *****************************************************************
@@ -563,6 +588,7 @@ void Display_C_Informations(); //Forward declarations
 void Display_M_Informations(); //Forward declarations
 void Display_Extra_Informations(); //Forward declarations
 void Display_Debug_Informations(); //Forward declarations
+
 void DisplayDrawInformations()
 {
   u8g2.firstPage();
@@ -597,7 +623,7 @@ void Display_X_Informations()
   u8g2.setFont(u8g2_font_profont22_tf); // choose a suitable font
   u8g2.drawStr(0,1,"X");
   u8g2.setColorIndex(1);
-  sprintf(bufferChar,"%+09.3f",Quad_X.GetValue());  
+  sprintf(bufferChar,"%+09.3f",fAxeXPos);  
   u8g2.drawStr(13,1,bufferChar);  // write something to the internal memory
   u8g2.drawRFrame(11,0,116,18,3);  
 }
@@ -607,7 +633,7 @@ void Display_Y_Informations()
   u8g2.setColorIndex(1);
   u8g2.setFont(u8g2_font_profont22_tf); // choose a suitable font
   u8g2.drawStr(0,19,"Y");
-  sprintf(bufferChar,"%+09.3f",Quad_Y.GetValue());
+  sprintf(bufferChar,"%+09.3f",fAxeYPos);
   u8g2.drawStr(13,19,bufferChar);  // write something to the internal memory
   u8g2.drawRFrame(11,18,116,18,3);    
 }
@@ -688,8 +714,10 @@ void Display_Debug_Informations()
   u8g2.drawStr(0,9,bufferChar);  // write something to the internal memory
   sprintf(bufferChar,"_n:%ld",Motor1._n);
   u8g2.drawStr(0,18,bufferChar);  // write something to the internal memory
-
 }
+
+
+
 // ***************************************************************************************
 // ***************************************************************************************
 // *** Action functions from menu ********************************************************
