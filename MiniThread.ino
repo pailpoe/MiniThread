@@ -251,11 +251,7 @@ void ActionMotorSpeedDown();//Forward declarations
 // *** setup, loop, ...  *****************************************************************
 void setup() 
 {
-//  pinMode(PIN_RES_SCR, OUTPUT);
-//  digitalWrite(PIN_RES_SCR, LOW);
-//  delay(1000);
-//  digitalWrite(PIN_RES_SCR, HIGH);
-//  delay(1000);
+
   u8g2.begin();
   //Debug port...
   afio_cfg_debug_ports(AFIO_DEBUG_SW_ONLY); //Only SWD
@@ -570,12 +566,19 @@ void ActionRestoreSettingsInFlash()
 
 // ***************************************************************************************
 // ***************************************************************************************
-// *** Display functions *****************************************************************
+// *** Usb Serial functions *****************************************************************
 void UsbSerial_Pos()
 {
-  //char bufferChar[30];
-  //sprintf(bufferChar,"%0.3f",fAxeXPos); 
-  //Serial.write(bufferChar);
+  char bufferChar[30];
+  if(Serial.isConnected())
+  {
+    sprintf(bufferChar,"X%0.3f:",fAxeXPos); 
+    Serial.print(bufferChar);
+    sprintf(bufferChar,"Y%0.3f",fAxeYPos); 
+    Serial.print(bufferChar);
+    Serial.print("\n");   
+  }
+
   //Serial.print(':');
 }
 // ***************************************************************************************
