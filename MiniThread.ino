@@ -166,12 +166,12 @@ void ActionChangeScreen();// Forward declaration
 //Threading state
 typedef enum
 {
-  MS_THREAD_IDLE, //Idle
-  MS_THREAD_WAIT_THE_START, //Wait the action to start
-  MS_THREAD_WAIT_THE_SPLINDLE_ZERO,
-  MS_THREAD_IN_THREAD,
-  MS_THREAD_END_THREAD,
-  MS_THREAD_IN_RETURN
+  MS_THREAD_IDLE = 0, //Idle
+  MS_THREAD_WAIT_THE_START = 1, //Wait the action to start
+  MS_THREAD_WAIT_THE_SPLINDLE_ZERO = 2, // Wait spindle zero
+  MS_THREAD_IN_THREAD = 3, // In threat
+  MS_THREAD_END_THREAD = 4, // Wait the button to return
+  MS_THREAD_IN_RETURN = 5 // In return
 } teMS_ThreadingMode;
 teMS_ThreadingMode eMS_Thread = MS_THREAD_IDLE;
 typedef struct
@@ -699,10 +699,34 @@ void Display_Extra_Informations()
   char bufferChar[10];
   u8g2.setFont(u8g2_font_profont10_mr); // choose a suitable font
   u8g2.drawStr(0,54,selectTool.getSelectedOptionName((byte*)&ToolChoose ));
-  sprintf(bufferChar,"%d",eMS_Thread);
-  u8g2.drawStr(50,54,bufferChar);
-  if(RelativeMode==true)u8g2.drawStr(80,54,"Relative");
-  else u8g2.drawStr(80,54,"Absolute");  
+  //Display thread Mastersate 
+  if (bMotorMode == MOTOR_MODE_LEFT)
+  {
+    switch(eMS_Thread)
+    {
+      case MS_THREAD_IDLE:
+        u8g2.drawStr(30,54,"|Idle");
+      break;  
+      case MS_THREAD_WAIT_THE_START:
+        u8g2.drawStr(30,54,"|Wait left sw");
+      break;  
+      case MS_THREAD_WAIT_THE_SPLINDLE_ZERO:
+        u8g2.drawStr(30,54,"|Wait zero s");
+      break;  
+      case MS_THREAD_IN_THREAD:
+        u8g2.drawStr(30,54,"|In thread");
+      break;  
+      case MS_THREAD_END_THREAD:
+        u8g2.drawStr(30,54,"|Wait right sw");
+      break;             
+      case MS_THREAD_IN_RETURN:
+        u8g2.drawStr(30,54,"|In return");
+      break;      
+    }    
+  }
+  //Display Abs / relative for axe X and Y 
+  if(RelativeMode==true)u8g2.drawStr(108,54,"|Rel");
+  else u8g2.drawStr(108,54,"|Abs");  
 }
 void Display_UpdateRealTimeData()
 {
