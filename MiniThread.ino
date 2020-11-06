@@ -251,7 +251,9 @@ void ActionMotorSpeedDown();//Forward declarations
 // *** setup, loop, ...  *****************************************************************
 void setup() 
 {
-
+  //Delay 500ms for boot of the screen without problem
+  delay(500);
+  
   u8g2.begin();
   //Debug port...
   afio_cfg_debug_ports(AFIO_DEBUG_SW_ONLY); //Only SWD
