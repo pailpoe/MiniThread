@@ -700,10 +700,10 @@ void Display_C_Informations()
   u8g2.drawStr(0,37,"C");
   sprintf(bufferChar,"%+5.5d",Quad_Z.GiveMeTheSpeed());
   u8g2.drawStr(13,37,bufferChar);  // write something to the internal memory
-  sprintf(bufferChar,"%5.5d",Quad_Z.GetValuePos());
   u8g2.setFont(u8g2_font_profont10_mr); // choose a suitable font
-  u8g2.drawStr(95,37,bufferChar);  // write something to the internal memory
-  u8g2.drawStr(95,45,"tr/min");
+  sprintf(bufferChar,"%07.3f",(float)Quad_Z.GetValuePos()/ConfigDro.Reso_Z*360.0);
+  u8g2.drawStr(85,37,bufferChar);  // write something to the internal memory
+  u8g2.drawStr(85,45,"tr/min");
   u8g2.drawRFrame(11,36,116,18,3);    
 }
 void Display_M_Informations()
