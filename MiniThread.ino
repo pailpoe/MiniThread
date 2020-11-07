@@ -16,12 +16,31 @@ Revision        :
 #include "src/QuadDecoder/QuadDecoder.h"
 #include "src/Keypad/Keypad.h"
 #include "src/StepperMotor/StepperMotor.h"
+#include "src/Various/Splash.h"
 #include <EEPROM.h>
 
 #define TEXT_MAIN_MENU_TITLE "MiniThread V1.0"
+#define TEXT_AUTHOR_SOFT "Pailpoe"
+#define TEXT_VERSION_SOFT "V1.0"
 
-#define PIN_RES_SCR PB9
-//U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);
+// IO def ( for quad decoder, define in class !)
+#define PIN_RES_SCR    PB9
+#define PIN_MOT1_STEP  PA10
+#define PIN_MOT1_DIR   PB15
+#define PIN_MOT1_EN    PA15
+#define PIN_MOT2_STEP  PB13
+#define PIN_MOT2_DIR   PB12
+#define PIN_MOT2_EN    PB14
+#define PIN_SW_LIN_1   PA5
+#define PIN_SW_LIN_2   PA4
+#define PIN_SW_LIN_3   PA3
+#define PIN_SW_LIN_4   PA2
+#define PIN_SW_COL_1   PB0
+#define PIN_SW_COL_2   PB1
+#define PIN_SW_COL_3   PB10
+#define PIN_SW_COL_4   PB11
+
+//Instance Screen 
 U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, PIN_RES_SCR);
 
 const byte ROWS = 4; //four rows
@@ -32,11 +51,10 @@ char hexaKeys[ROWS][COLS] = {
   {'Z'             ,'Z'           ,GEM_KEY_DOWN ,'Z'            },
   {'Z'             ,'Z'           ,'Z'          ,'Z'            }
 };
-byte rowPins[ROWS] = {PA5, PA4, PA3, PA2}; //connect to the row pinouts of the keypad
-byte colPins[COLS] = {PB0, PB1, PB10, PB11}; //connect to the column pinouts of the keypad
+byte rowPins[ROWS] = {PIN_SW_LIN_1, PIN_SW_LIN_2, PIN_SW_LIN_3, PIN_SW_LIN_4};
+byte colPins[COLS] = {PIN_SW_COL_1, PIN_SW_COL_2, PIN_SW_COL_3, PIN_SW_COL_4};
 //initialize an instance of class NewKeypad
 Keypad customKeypad ( makeKeymap(hexaKeys), rowPins, colPins, ROWS, COLS);
-//customKeypad.getKey();
 
 
 typedef struct
@@ -52,11 +70,16 @@ typedef struct
   int  Reso_M1;
   int  thread_M1;
   float Accel_M1;
+  int Speed_M1;
 } sConfigDro;
-const sConfigDro csConfigDefault = {false,false,false,true,512,512,512,false,1600,200,30000.0};
+const sConfigDro csConfigDefault = {false,false,false,true,512,512,1200,false,1600,200,60000.0,12000};
+
 // Variable
 sConfigDro ConfigDro;
 
+//Settings sub menu ******************************************
+GEMPage menuPageSettings("Settings"); // Settings submenu
+GEMItem menuItemMainSettings("Settings", menuPageSettings);
 GEMItem menuItemDirX("X dir:", ConfigDro.Inverted_X);
 GEMItem menuItemDirY("Y dir:", ConfigDro.Inverted_Y);
 GEMItem menuItemDirZ("C dir:", ConfigDro.Inverted_Z);
@@ -68,7 +91,7 @@ GEMItem menuItemDirM1("M1 dir:", ConfigDro.Inverted_M1);
 GEMItem menuItemResoM1("M1 step/tr:", ConfigDro.Reso_M1);
 GEMItem menuItemThreadM1("M1 thread:", ConfigDro.thread_M1);
 GEMItem menuItemAccelM1("M1 accel:", ConfigDro.Accel_M1);
-
+GEMItem menuItemSpeedM1("M1 speed:", ConfigDro.Speed_M1);
 void ActionRestoreSettingsInFlash(); // Forward declaration
 GEMItem menuItemButtonRestoreSettings("Restore settings", ActionRestoreSettingsInFlash);
 void ActionSaveSettingsInFlash(); // Forward declaration
@@ -79,9 +102,7 @@ GEMItem menuItemButtonDro("Return to Screen", ActionDro);
 
 //Main Page Menu
 GEMPage menuPageMain(TEXT_MAIN_MENU_TITLE);
-//Settings Page Menu
-GEMPage menuPageSettings("Settings"); // Settings submenu
-GEMItem menuItemMainSettings("Settings", menuPageSettings);
+
 //Debug Page Menu
 GEMPage menuPageDebug("Debug tools"); // Debug submenu
 GEMItem menuItemDebug("Debug tools", menuPageDebug);
@@ -207,12 +228,7 @@ void IT_Timer2_Overflow()
 //Hardware timer 4 for motor control
 HardwareTimer MotorControl(4); 
 //Motor Class
-#define PIN_MOT1_STEP  PA10
-#define PIN_MOT1_DIR   PB15
-#define PIN_MOT1_EN    PA15
-#define PIN_MOT2_STEP  PB13
-#define PIN_MOT2_DIR   PB12
-#define PIN_MOT2_EN    PB14
+
 void Update_Overlfow_Timer4();
 StepperMotor Motor1(800,false,PIN_MOT1_STEP,PIN_MOT1_DIR,PIN_MOT1_EN, Update_Overlfow_Timer4);
 
@@ -245,6 +261,7 @@ void UsbSerial_Pos();
 void Display_UpdateRealTimeData(); //Forward declarations
 void ActionMotorSpeedUp();//Forward declarations
 void ActionMotorSpeedDown();//Forward declarations
+void Display_StartScreen(); //Forward declarations
 
 // ***************************************************************************************
 // ***************************************************************************************
@@ -255,6 +272,10 @@ void setup()
   delay(500);
   
   u8g2.begin();
+
+  //Display start screen
+  Display_StartScreen();
+  
   //Debug port...
   afio_cfg_debug_ports(AFIO_DEBUG_SW_ONLY); //Only SWD
 
@@ -319,6 +340,7 @@ void setupMenu() {
   menuPageSettings.addMenuItem(menuItemResoM1);
   menuPageSettings.addMenuItem(menuItemThreadM1);
   menuPageSettings.addMenuItem(menuItemAccelM1);
+  menuPageSettings.addMenuItem(menuItemSpeedM1);  
   menuPageSettings.addMenuItem(menuItemButtonRestoreSettings);
   menuPageSettings.addMenuItem(menuItemButtonSaveSettings);
   menuPageSettings.setParentMenuPage(menuPageMain);
@@ -587,6 +609,7 @@ void UsbSerial_Pos()
 // ***************************************************************************************
 // *** Display functions *****************************************************************
 
+
 void Display_X_Informations(); //Forward declarations
 void Display_Y_Informations(); //Forward declarations
 void Display_C_Informations(); //Forward declarations
@@ -594,9 +617,36 @@ void Display_M_Informations(); //Forward declarations
 void Display_Extra_Informations(); //Forward declarations
 void Display_Debug_Informations(); //Forward declarations
 
+void Display_StartScreen() 
+{
+  u8g2.firstPage();
+  u8g2.setFontPosTop();
+  do 
+  {
+    u8g2.drawXBMP((u8g2.getDisplayWidth() - logoMiniThread_width) / 2, (u8g2.getDisplayHeight() - logoMiniThread_height) / 2, logoMiniThread_width, logoMiniThread_height, logoMiniThread_bits);
+  } while (u8g2.nextPage());  
+  delay(500); 
+  do 
+  {
+    u8g2.setFont(u8g2_font_6x12_tr); // choose a suitable font
+    u8g2.drawStr(0,55,TEXT_AUTHOR_SOFT);
+    u8g2.drawStr(80,55,TEXT_VERSION_SOFT);   
+  } while (u8g2.nextPage()); 
+  delay(2000);
+  u8g2.firstPage();
+  do 
+  {
+    u8g2.setCursor(0,0);
+    u8g2.drawStr(0,0,"Use this system");
+    u8g2.drawStr(0,10,"at your own risk !");
+  } while (u8g2.nextPage());
+  delay(4000); 
+}
+
 void DisplayDrawInformations()
 {
   u8g2.firstPage();
+  u8g2.setFontPosTop();
   do 
   {
     Display_UpdateRealTimeData();
@@ -681,8 +731,13 @@ void Display_M_Informations()
         u8g2.drawStr(57,37,"|Left"); 
       break;   
     }
-    sprintf(bufferChar,"|%d",iMotorSpeed);
+    //Motor speed
+    //if motor is Left mode, display the speed from the settings (Max speed )
+    sprintf(bufferChar,"|%d", bMotorMode == MOTOR_MODE_LEFT ? ConfigDro.Speed_M1 : iMotorSpeed);
+    //sprintf(bufferChar,"|%d",iMotorSpeed);
     u8g2.drawStr(90,37,bufferChar);    
+    
+    //End limit 
     sprintf(bufferChar,"%+09.3f <> %+09.3f",fMotorStopMax,fMotorStopMin);
     if(bUseMotorEndLimit)u8g2.drawStr(13,45,bufferChar);
     else u8g2.drawStr(13,45," WARNING : No limit");       
@@ -833,6 +888,8 @@ void applyMotorMode()
         eMS_Thread = MS_THREAD_WAIT_THE_START;
         //Calcul the motor parameter for Thread
         CalcMotorParameterForThread();
+        //Use Max speed in the setting
+        Motor1.ChangeMaxSpeed(ConfigDro.Speed_M1); 
         //Motor in position mode
         Motor1.ChangeTheMode(StepperMotor::PositionMode);    
       }
@@ -846,6 +903,7 @@ void applyMotorMode()
     case MOTOR_MODE_AUTO :
     default:
       eMS_Thread = MS_THREAD_IDLE;
+      ActionMotorMotorSpeed();
       Motor1.ChangeTheMode(StepperMotor::NoMode);  
     break;
   }  
