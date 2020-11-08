@@ -148,10 +148,10 @@ SelectOptionByte selectMotorModeOptions[] = {{"NoMode", 0}, {"Manual", 1},{"Auto
 GEMSelect selectMotorMode(sizeof(selectMotorModeOptions)/sizeof(SelectOptionByte), selectMotorModeOptions);
 void applyMotorMode(); // Forward declaration
 GEMItem menuItemMotorMode("Motor mode:", bMotorMode, selectMotorMode, applyMotorMode);
-float fMotorStopMin = 0;
+float fMotorStopMin = -200.0;
 void ActionMotorStopMin(); // Forward declaration
 GEMItem menuItemMotorStopMin("Stop Min:", fMotorStopMin,ActionMotorStopMin);
-float fMotorStopMax = 1000;
+float fMotorStopMax = 200.0;
 void ActionMotorStopMax(); // Forward declaration
 GEMItem menuItemMotorStopMax("Stop Max:", fMotorStopMax,ActionMotorStopMax);
 boolean bUseMotorEndLimit = true;
@@ -160,7 +160,7 @@ GEMItem menuItemUseMotorEndLimit("Use limit:", bUseMotorEndLimit,ActionUseMotorE
 float fMotorCurrentPos = 0;
 void ActionMotorCurrentPos(); // Forward declaration
 GEMItem menuItemMotorCurrentPos("CurrentPos:", fMotorCurrentPos,ActionMotorCurrentPos);
-int iMotorSpeed = 10000;
+int iMotorSpeed = 1000;
 void ActionMotorMotorSpeed(); // Forward declaration
 GEMItem menuItemMotorSpeed("Speed:", iMotorSpeed,ActionMotorMotorSpeed);
 int iMotorThread = 100;
@@ -173,15 +173,15 @@ GEMItem menuItemButtonSetPosToMin("CurrentPos -> Min", ActionSetCurrentToMin);
 void ActionResetCurrentPos(); // Forward declaration
 GEMItem menuItemButtonResetCurrentPos("Reset CurrentPos", ActionResetCurrentPos);
 //Screen choose
-#define SCREEN_DRO 0
-#define SCREEN_MOT1 1
-#define SCREEN_DEBUG 2
-#define SCREEN_END_LIST 2
-byte bScreenMode = 0;
+#define  SCREEN_DRO 0
+#define  SCREEN_MOT1 1
+#define  SCREEN_DEBUG 2
+#define  SCREEN_END_LIST 2 
+byte eScreenChoose = SCREEN_DRO;
 SelectOptionByte selectScreenOptions[] = {{"DroXYC", 0}, {"Mot1", 1}, {"Debug", 2}};
 GEMSelect selectScreenMode(sizeof(selectScreenOptions)/sizeof(SelectOptionByte), selectScreenOptions);
 void ActionScreenMode(); // Forward declaration
-GEMItem menuItemScreenMode("Screen:", bScreenMode, selectScreenMode, ActionScreenMode);
+GEMItem menuItemScreenMode("Screen:", eScreenChoose, selectScreenMode, ActionScreenMode);
 void ActionChangeScreen();// Forward declaration
 
 //Threading state
@@ -268,11 +268,16 @@ void Display_StartScreen(); //Forward declarations
 // *** setup, loop, ...  *****************************************************************
 void setup() 
 {
-  //Delay 500ms for boot of the screen without problem
-  delay(500);
-  
-  u8g2.begin();
+  //Delay  for boot of the screen without problem
+  delay(200);
+  pinMode(PIN_RES_SCR, OUTPUT);  //channel A
+  digitalWrite(PIN_RES_SCR,0);
+  delay(200);
+  digitalWrite(PIN_RES_SCR,1);
+  delay(200);
 
+    
+  u8g2.begin();
   //Display start screen
   Display_StartScreen();
   
@@ -356,7 +361,7 @@ void setupMenu() {
   menu.setMenuPageCurrent(menuPageMain);
 }
 void loop() {
-  // If menu is ready to accept button press...
+  // This loop turn when i'm in the menu !
   if (menu.readyForKey()) 
   {
     Display_UpdateRealTimeData(); 
@@ -382,12 +387,10 @@ void DroContextLoop()
   byte key = customKeypad.getKey();
   if (key == GEM_KEY_CANCEL) 
   { 
-    // Exit animation routine if GEM_KEY_CANCEL key was pressed
+    // Exit Dro screen if GEM_KEY_CANCEL key was pressed
     menu.context.exit();
   } else 
   {
-
-
     if( bMotorMode == MOTOR_MODE_MANUAL || bMotorMode == MOTOR_MODE_AUTO )
     {
       if(key == GEM_KEY_UP)
@@ -401,30 +404,52 @@ void DroContextLoop()
         ActionMotorMotorSpeed();  
       }
     } 
-    if(key == GEM_KEY_OK)ActionChangeScreen();
+    // Ok key for change the screen only when the motor is not in speed mode
+    if(key == GEM_KEY_OK && (Motor1.ReturnTheMode()!=StepperMotor::SpeedModeUp))
+    {
+      if(key == GEM_KEY_OK && (Motor1.ReturnTheMode()!=StepperMotor::SpeedModeDown))
+      {
+        ActionChangeScreen();
+      }  
+    }
     //**** Manual mode Key *****
     if( bMotorMode == MOTOR_MODE_MANUAL)
     {
       if( customKeypad.isPressed(GEM_KEY_LEFT) || customKeypad.isPressed(GEM_KEY_RIGHT))
       {
+        eScreenChoose = SCREEN_MOT1;
+        //eScreenChoose = SCREEN_DEBUG;
         if( customKeypad.isPressed(GEM_KEY_LEFT))Motor1.ChangeTheMode(StepperMotor::SpeedModeUp);
         if( customKeypad.isPressed(GEM_KEY_RIGHT))Motor1.ChangeTheMode(StepperMotor::SpeedModeDown);
       }
-      else Motor1.ChangeTheMode(StepperMotor::NoMode); 
-
+      else Motor1.ChangeTheMode(StepperMotor::NoMode);
+      //Fast Speed with OK pressed
+      if(Motor1.ReturnTheMode()!=StepperMotor::SpeedModeUp || Motor1.ReturnTheMode()!=StepperMotor::SpeedModeDown)
+      {
+        if(customKeypad.isPressed(GEM_KEY_OK))Motor1.ChangeMaxSpeed(ConfigDro.Speed_M1);
+        else Motor1.ChangeMaxSpeed(iMotorSpeed);   
+      } 
     }
     //**** Auto mode Key *****
     if (bMotorMode == MOTOR_MODE_AUTO)
     {
       if (key == GEM_KEY_LEFT ) 
       {
+        eScreenChoose = SCREEN_MOT1;
         if( Motor1.ReturnTheMode() == StepperMotor::NoMode ) Motor1.ChangeTheMode(StepperMotor::SpeedModeUp);
         else Motor1.ChangeTheMode(StepperMotor::NoMode);      
       }  
       if (key == GEM_KEY_RIGHT ) 
       { 
+        eScreenChoose = SCREEN_MOT1;
         if( Motor1.ReturnTheMode() == StepperMotor::NoMode ) Motor1.ChangeTheMode(StepperMotor::SpeedModeDown);
         else Motor1.ChangeTheMode(StepperMotor::NoMode);  
+      }
+      //Fast Speed with OK pressed
+      if(Motor1.ReturnTheMode()!=StepperMotor::SpeedModeUp || Motor1.ReturnTheMode()!=StepperMotor::SpeedModeDown)
+      {
+        if(customKeypad.isPressed(GEM_KEY_OK))Motor1.ChangeMaxSpeed(ConfigDro.Speed_M1);
+        else Motor1.ChangeMaxSpeed(iMotorSpeed);   
       }    
      } 
      //**** Left threading mode Key *****
@@ -650,21 +675,21 @@ void DisplayDrawInformations()
   do 
   {
     Display_UpdateRealTimeData();
-    if( bScreenMode == SCREEN_DRO )
+    if( eScreenChoose == SCREEN_DRO )
     {
       Display_X_Informations();
       Display_Y_Informations();    
       Display_C_Informations();
       Display_Extra_Informations();
     }
-    else if( bScreenMode == SCREEN_MOT1 )  
+    else if( eScreenChoose == SCREEN_MOT1 )  
     {
       Display_X_Informations();
       Display_Y_Informations();    
       Display_M_Informations();
       Display_Extra_Informations();      
     }
-    else if( bScreenMode == SCREEN_DEBUG )  
+    else if( eScreenChoose == SCREEN_DEBUG )  
     {
       Display_Debug_Informations(); 
     }   
@@ -839,7 +864,7 @@ void ActionUseMotor()
     Motor1.UseEndLimit(bUseMotorEndLimit);
     Motor1.MotorChangePowerState(true);
     eMS_Thread = MS_THREAD_IDLE;
-    bScreenMode = SCREEN_MOT1; 
+    eScreenChoose = SCREEN_MOT1; 
   }
   else
   {
@@ -847,7 +872,7 @@ void ActionUseMotor()
     bMotorMode = MOTOR_MODE_NO_MODE; 
     Motor1.MotorChangePowerState(false);
     eMS_Thread = MS_THREAD_IDLE;
-    bScreenMode = SCREEN_DRO;   
+    eScreenChoose = SCREEN_DRO;   
   }     
 }
 void ActionUseMotorEndLimit()
@@ -979,6 +1004,6 @@ void ActionScreenMode()
 }
 void ActionChangeScreen()
 {
-  if(bScreenMode>=SCREEN_END_LIST)bScreenMode=0;
-  else bScreenMode++; 
+  if(eScreenChoose>=SCREEN_END_LIST)eScreenChoose = SCREEN_DRO;
+  else eScreenChoose++; 
 }
