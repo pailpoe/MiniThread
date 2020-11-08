@@ -946,17 +946,17 @@ void ActionMotorCurrentPos()
   Motor1.ChangeCurrentPositionReal(fMotorCurrentPos);    
 }
 void ActionMotorSpeedUp()
-{
-  iMotorSpeed = iMotorSpeed+100;  
+{ //20%
+  iMotorSpeed = iMotorSpeed + iMotorSpeed / 5 ; 
 }
 void ActionMotorSpeedDown()
-{
-  if(iMotorSpeed>100) iMotorSpeed = iMotorSpeed - 100;  
+{ //20%
+  iMotorSpeed = iMotorSpeed - iMotorSpeed / 5 ; 
 }
 void ActionMotorMotorSpeed()
 {
-  if(iMotorSpeed<1)iMotorSpeed=1;
-  if(iMotorSpeed>30000)iMotorSpeed=30000;
+  if(iMotorSpeed < 1)iMotorSpeed=1;
+  if(iMotorSpeed > ConfigDro.Speed_M1)iMotorSpeed = ConfigDro.Speed_M1;
   Motor1.ChangeMaxSpeed(iMotorSpeed);    
 }
 void ActionMotorChangeThread()
