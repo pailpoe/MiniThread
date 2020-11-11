@@ -17,6 +17,8 @@ Revision        :
 #include "src/Keypad/Keypad.h"
 #include "src/StepperMotor/StepperMotor.h"
 #include "src/Various/Splash.h"
+#include "src/Various/Various.h"
+
 #include <EEPROM.h>
 
 #define TEXT_MAIN_MENU_TITLE "MiniThread V1.0"
@@ -176,7 +178,7 @@ GEMItem menuItemButtonResetCurrentPos("Reset CurrentPos", ActionResetCurrentPos)
 #define  SCREEN_DRO 0
 #define  SCREEN_MOT1 1
 #define  SCREEN_DEBUG 2
-#define  SCREEN_END_LIST 2 
+#define  SCREEN_END_LIST 1 
 byte eScreenChoose = SCREEN_DRO;
 SelectOptionByte selectScreenOptions[] = {{"DroXYC", 0}, {"Mot1", 1}, {"Debug", 2}};
 GEMSelect selectScreenMode(sizeof(selectScreenOptions)/sizeof(SelectOptionByte), selectScreenOptions);
@@ -255,7 +257,6 @@ void Update_Overlfow_Timer4()
 // ***************************************************************************************
 // Forward declarations Funtions
  
-long GCD_Function ( long n1, long n2); //Forward declaration
 void CalcMotorParameterForThread(); //Forward declaration
 void UsbSerial_Pos(); 
 void Display_UpdateRealTimeData(); //Forward declarations
@@ -880,15 +881,7 @@ void ActionUseMotorEndLimit()
   Motor1.UseEndLimit(bUseMotorEndLimit);  
 }
 //Returns the greatest common divisor of two integers
-long GCD_Function ( long n1, long n2)
-{
-  long i,result;
-  for(i=1;i<=n1 && i<=n2;i++)
-  {
-    if(n1%i==0 && n2%i==0)result = i;  
-  }
-  return result;     
-}
+
 void CalcMotorParameterForThread()
 {
   long lnumber;

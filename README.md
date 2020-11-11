@@ -10,21 +10,21 @@ A Digital readout (DRO) display for lathe with threading :
 
 ## Input / Output
 ### Keyboard
-The system use 6 push buttons for the navigation (joystick configuration) : 
-- Up button ( pin PB15 ) : Navigate up through the menu list, select next value of the digit/char of editable variable, or previous option in select.
-- Down button ( pin PB12 ) : Navigate down through the menu items list, select previous value of the digit/char of editable variable, or next option in select.
-- Left button ( pin PB0 ) : Navigate through the Back button to the previous menu page, select previous digit/char of editable variable
-- Right button ( pin PB1 ) : Navigate through the link to another (child) menu page, select next digit/char of editable variable, execute code associated with button
-- Ok button ( pin PB15 ) : Toggle boolean menu item, enter edit mode of the associated non-boolean variable, exit edit mode with saving the variable, execute code associated with button
-- Cancel button ( pin PB13 ) : Navigate to the previous (parent) menu page, exit edit mode without saving the variable, exit context loop if allowed within context's settings
+The system use 6 push buttons for the navigation (joystick configuration) and it's possible to add 10 extra buttons for other functions  
+- Up button : Navigate up through the menu list, select next value of the digit/char of editable variable, or previous option in select.
+- Down button : Navigate down through the menu items list, select previous value of the digit/char of editable variable, or next option in select.
+- Left button : Navigate through the Back button to the previous menu page, select previous digit/char of editable variable
+- Right button : Navigate through the link to another (child) menu page, select next digit/char of editable variable, execute code associated with button
+- Ok button : Toggle boolean menu item, enter edit mode of the associated non-boolean variable, exit edit mode with saving the variable, execute code associated with button
+- Cancel button : Navigate to the previous (parent) menu page, exit edit mode without saving the variable, exit context loop if allowed within context's settings
 
 The GEM menu library is used : https://github.com/Spirik/GEM
 
 ### Quadrature encoder input
 The system can handle 3 quadrature encoder : 
-- Quadrature decoder X on Timer1 ( A=PA8 and B=PA9)
-- Quadrature decoder Y on Timer3 ( A=PA6 and B=PA7)
-- Quadrature decoder Z on Timer2 ( A=PA0 and B=PA1)
+- Quadrature decoder X on Timer1 ( A=PA8 and B=PA9) for the longitudinal
+- Quadrature decoder Y on Timer3 ( A=PA6 and B=PA7) for the transversal
+- Quadrature decoder C on Timer2 ( A=PA0 and B=PA1) for the Spindle
 ### Oled display
 The system use a Oled SSD1306 128 x 64 screen with hardware I2C communication. 
 - SCL = PB6 ( need a 1,5kOhm external resistance to vcc) 
