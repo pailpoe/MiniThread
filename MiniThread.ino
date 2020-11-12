@@ -419,8 +419,8 @@ void DroContextLoop()
     {
       if( customKeypad.isPressed(GEM_KEY_LEFT) || customKeypad.isPressed(GEM_KEY_RIGHT))
       {
-        //eScreenChoose = SCREEN_MOT1;
-        eScreenChoose = SCREEN_DEBUG;
+        eScreenChoose = SCREEN_MOT1;
+        //eScreenChoose = SCREEN_DEBUG;
         if( customKeypad.isPressed(GEM_KEY_LEFT))Motor1.ChangeTheMode(StepperMotor::SpeedModeUp);
         if( customKeypad.isPressed(GEM_KEY_RIGHT))Motor1.ChangeTheMode(StepperMotor::SpeedModeDown);
       }
