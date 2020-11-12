@@ -209,8 +209,9 @@ void StepperMotor::TimeToPrepareToMove ()
   }
   else
   { 
+    if( _cn <= _cmin )_n = -StepToStop; //Pour passage vitesse Haute à basse et avoir une rampe de decceleration
     _cn = _cn - (_cn*2)/(_n*4+1);
-    if( _cn <= _cmin ) _cn = _cmin; 
+    if( _cn <= _cmin && _n > 0  ) _cn = _cmin; //Seulement si le moteur accelere pour éviter la d'ecceleration brutale
   }
   _n++;  
   if( (unsigned int)_cn >= 65535 ) _StepInterval = 65535;

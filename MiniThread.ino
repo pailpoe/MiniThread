@@ -45,6 +45,7 @@ Revision        :
 //Instance Screen 
 U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, PIN_RES_SCR);
 
+//Keyboard
 const byte ROWS = 4; //four rows
 const byte COLS = 4; //four columns
 char hexaKeys[ROWS][COLS] = {
@@ -286,7 +287,7 @@ void setup()
   afio_cfg_debug_ports(AFIO_DEBUG_SW_ONLY); //Only SWD
 
   //USB Serial
-  Serial.begin(115200); // Ignored by Maple. But needed by boards using hardware serial via a USB to Serial adaptor
+  //Serial.begin(115200); // Ignored by Maple. But needed by boards using hardware serial via a USB to Serial adaptor
   
   //Timer 4 for motor control
   MotorControl.pause(); //stop...
@@ -619,6 +620,7 @@ void ActionRestoreSettingsInFlash()
 // *** Usb Serial functions *****************************************************************
 void UsbSerial_Pos()
 {
+  /*
   char bufferChar[30];
   if(Serial.isConnected())
   {
@@ -628,6 +630,7 @@ void UsbSerial_Pos()
     Serial.print(bufferChar);
     Serial.print("\n");   
   }
+  */
 
   //Serial.print(':');
 }
