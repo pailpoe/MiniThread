@@ -175,6 +175,9 @@ void ActionSetCurrentToMin(); // Forward declaration
 GEMItem menuItemButtonSetPosToMin("CurrentPos -> Min", ActionSetCurrentToMin);
 void ActionResetCurrentPos(); // Forward declaration
 GEMItem menuItemButtonResetCurrentPos("Reset CurrentPos", ActionResetCurrentPos);
+
+float fM1ActualSpeed; // Motor Actual Speed
+
 //Screen choose
 #define  SCREEN_DRO 0
 #define  SCREEN_MOT1 1
@@ -762,7 +765,7 @@ void Display_M_Informations()
     }
     //Motor speed
     //if motor is Left mode, display the speed from the settings (Max speed )
-    sprintf(bufferChar,"|%d", bMotorMode == MOTOR_MODE_LEFT ? ConfigDro.Speed_M1 : iMotorSpeed);
+    sprintf(bufferChar,"|%d", (unsigned int)fM1ActualSpeed);
     //sprintf(bufferChar,"|%d",iMotorSpeed);
     u8g2.drawStr(90,37,bufferChar);    
     
@@ -814,7 +817,8 @@ void Display_Extra_Informations()
 }
 void Display_UpdateRealTimeData()
 {
-  fMotorCurrentPos = Motor1.GetPositionReal(); 
+  fMotorCurrentPos = Motor1.GetPositionReal();
+  fM1ActualSpeed = Motor1.GetMaxSpeed(); 
   fAxeXPos = Quad_X.GetValue();
   fAxeYPos = Quad_Y.GetValue();     
 }
