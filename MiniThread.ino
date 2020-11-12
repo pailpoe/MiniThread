@@ -218,7 +218,7 @@ void IT_Timer1_Overflow(); // Forward declaration
 void IT_Timer2_Overflow(); // Forward declaration
 void IT_Timer3_Overflow(); // Forward declaration
 QuadDecoder Quad_Y(3,QuadDecoder::LinearEncoder,512,false,false,IT_Timer3_Overflow); //Timer 3
-QuadDecoder Quad_Z(2,QuadDecoder::RotaryEncoder,512,true,false,IT_Timer2_Overflow); //Timer 2
+QuadDecoder Quad_Z(2,QuadDecoder::RotaryEncoder,1200,true,false,IT_Timer2_Overflow); //Timer 2
 QuadDecoder Quad_X(1,QuadDecoder::LinearEncoder,512,false,false,IT_Timer1_Overflow); //Timer 1
 void IT_Timer1_Overflow(){Quad_X.IT_OverflowHardwareTimer();}
 void IT_Timer3_Overflow(){Quad_Y.IT_OverflowHardwareTimer();}
@@ -662,7 +662,7 @@ void Display_StartScreen()
   {
     u8g2.setFont(u8g2_font_6x12_tr); // choose a suitable font
     u8g2.drawStr(0,55,TEXT_AUTHOR_SOFT);
-    u8g2.drawStr(80,55,TEXT_VERSION_SOFT);   
+    u8g2.drawStr(100,55,TEXT_VERSION_SOFT);   
   } while (u8g2.nextPage()); 
   delay(2000);
   u8g2.firstPage();
