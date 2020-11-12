@@ -179,7 +179,7 @@ GEMItem menuItemButtonResetCurrentPos("Reset CurrentPos", ActionResetCurrentPos)
 #define  SCREEN_DRO 0
 #define  SCREEN_MOT1 1
 #define  SCREEN_DEBUG 2
-#define  SCREEN_END_LIST 1 
+#define  SCREEN_END_LIST 2 
 byte eScreenChoose = SCREEN_DRO;
 SelectOptionByte selectScreenOptions[] = {{"DroXYC", 0}, {"Mot1", 1}, {"Debug", 2}};
 GEMSelect selectScreenMode(sizeof(selectScreenOptions)/sizeof(SelectOptionByte), selectScreenOptions);
@@ -419,8 +419,8 @@ void DroContextLoop()
     {
       if( customKeypad.isPressed(GEM_KEY_LEFT) || customKeypad.isPressed(GEM_KEY_RIGHT))
       {
-        eScreenChoose = SCREEN_MOT1;
-        //eScreenChoose = SCREEN_DEBUG;
+        //eScreenChoose = SCREEN_MOT1;
+        eScreenChoose = SCREEN_DEBUG;
         if( customKeypad.isPressed(GEM_KEY_LEFT))Motor1.ChangeTheMode(StepperMotor::SpeedModeUp);
         if( customKeypad.isPressed(GEM_KEY_RIGHT))Motor1.ChangeTheMode(StepperMotor::SpeedModeDown);
       }
@@ -827,6 +827,10 @@ void Display_Debug_Informations()
   u8g2.drawStr(0,9,bufferChar);  // write something to the internal memory
   sprintf(bufferChar,"_n:%ld",Motor1._n);
   u8g2.drawStr(0,18,bufferChar);  // write something to the internal memory
+  sprintf(bufferChar,"_c0:%f",Motor1._c0);
+  u8g2.drawStr(0,27,bufferChar);  // write something to the internal memory
+  sprintf(bufferChar,"_cmin:%f",Motor1._cmin);
+  u8g2.drawStr(0,36,bufferChar);  // write something to the internal memory
 }
 
 
