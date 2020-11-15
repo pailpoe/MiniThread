@@ -178,16 +178,16 @@ GEMItem menuItemThreadParameters("Thread parameters", menuPageThreadParameters);
 int iMotorThread = 100;
 void ActionMotorChangeThread(); // Forward declaration
 GEMItem menuItemMotorThread("Thread:", iMotorThread,ActionMotorChangeThread);
-float fMotor1ThreadOffset = 0;
+float fMotor1ThreadOffset = 0.0;
 void ActionChangeMotor1Offset(); // Forward declaration
 GEMItem menuItemMotor1ThreadOffset("Offset:", fMotor1ThreadOffset,ActionChangeMotor1Offset);
 boolean Motor1ThreadUseY = false;
 void ActionMotor1ThreadUseY();
 GEMItem menuItemMotor1ThreadUseY("Use Y:", Motor1ThreadUseY,ActionMotor1ThreadUseY);
-float fMotor1ThreadDiameter = 0;
+float fMotor1ThreadDiameter = 0.0;
 void ActionChangeMotor1ThreadDiameter(); // Forward declaration
 GEMItem menuItemMotor1ThreadDiameter("Diameter:", fMotor1ThreadDiameter,ActionChangeMotor1ThreadDiameter);
-float fMotor1ThreadAngle = 0;
+float fMotor1ThreadAngle = 30.0;
 void ActionChangeMotor1ThreadAngle(); // Forward declaration
 GEMItem menuItemMotor1ThreadAngle("Angle:", fMotor1ThreadAngle,ActionChangeMotor1ThreadAngle);
 
@@ -490,7 +490,12 @@ void DroContextLoop()
           //No action here
         break;
         case MS_THREAD_WAIT_THE_START:
-          if (key == GEM_KEY_LEFT ) eMS_Thread = MS_THREAD_WAIT_THE_SPLINDLE_ZERO;   
+          if (key == GEM_KEY_LEFT )
+          {
+            //Calcul the motor parameter for Thread before start
+            CalcMotorParameterForThread();
+            eMS_Thread = MS_THREAD_WAIT_THE_SPLINDLE_ZERO;
+          }   
         break;
         case MS_THREAD_WAIT_THE_SPLINDLE_ZERO:
           //No action here
@@ -939,8 +944,6 @@ void applyMotorMode()
       {
         //Need to have end limit and position at min pos to start
         eMS_Thread = MS_THREAD_WAIT_THE_START;
-        //Calcul the motor parameter for Thread
-        CalcMotorParameterForThread();
         //Use Max speed in the setting
         Motor1.ChangeMaxSpeed(ConfigDro.Speed_M1); 
         //Motor in position mode
