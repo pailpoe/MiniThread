@@ -76,8 +76,8 @@ typedef struct
   int  thread_M1;
   float Accel_M1;
   int Speed_M1;
-} sConfigDro;
-const sConfigDro csConfigDefault = {false,false,false,true,512,512,1200,false,1600,200,60000.0,12000};
+} tsConfigDro;
+const tsConfigDro csConfigDefault = {false,false,false,true,512,512,1200,false,1600,200,60000.0,12000};
 
 //Threading machine state
 typedef enum
@@ -111,10 +111,10 @@ typedef struct
 #define MOTOR_MODE_LEFT    3
 
 // Variables global ******************************************
-sConfigDro  ConfigDro;
+tsConfigDro  sGeneralConf;
 float       TestFloat = 999.2;
-byte        ToolChoose = 0; //Tool selection
-boolean     RelativeMode = false; //Relative or absolute mode
+byte        bToolChoose = 0; //Tool selection
+boolean     bRelativeModeActived = false; //Relative or absolute mode
 float       fAxeXPos = 0; // X position
 float       fAxeYPos = 0; // Y position
 byte        bMotorMode = 0;
@@ -126,7 +126,7 @@ float       fMotorCurrentPos = 0;
 int         iMotorSpeed = 1000;
 int         iMotorThread = 100;
 float       fMotor1ThreadOffset = 0.0;
-boolean     Motor1ThreadUseY = false;
+boolean     bMotor1ThreadUseY = false;
 float       fMotor1ThreadDiameter = 0.0;
 float       fMotor1ThreadAngle = 30.0;
 float       fM1ActualSpeed; // Motor Actual Speed
@@ -182,18 +182,18 @@ void Display_Debug_Informations();
 //Menu item ******************************************
 GEMPage menuPageSettings("Settings"); // Settings submenu
 GEMItem menuItemMainSettings("Settings", menuPageSettings);
-GEMItem menuItemDirX("X dir:", ConfigDro.Inverted_X);
-GEMItem menuItemDirY("Y dir:", ConfigDro.Inverted_Y);
-GEMItem menuItemDirZ("C dir:", ConfigDro.Inverted_Z);
-GEMItem menuItemDiamY("Y diameter:", ConfigDro.Diameter_Mode_Y);
-GEMItem menuItemResoX("X step/mm:", ConfigDro.Reso_X);
-GEMItem menuItemResoY("Y step/mm:", ConfigDro.Reso_Y);
-GEMItem menuItemResoZ("C step/tr:", ConfigDro.Reso_Z);
-GEMItem menuItemDirM1("M1 dir:", ConfigDro.Inverted_M1);
-GEMItem menuItemResoM1("M1 step/tr:", ConfigDro.Reso_M1);
-GEMItem menuItemThreadM1("M1 thread:", ConfigDro.thread_M1);
-GEMItem menuItemAccelM1("M1 accel:", ConfigDro.Accel_M1);
-GEMItem menuItemSpeedM1("M1 speed:", ConfigDro.Speed_M1);
+GEMItem menuItemDirX("X dir:", sGeneralConf.Inverted_X);
+GEMItem menuItemDirY("Y dir:", sGeneralConf.Inverted_Y);
+GEMItem menuItemDirZ("C dir:", sGeneralConf.Inverted_Z);
+GEMItem menuItemDiamY("Y diameter:", sGeneralConf.Diameter_Mode_Y);
+GEMItem menuItemResoX("X step/mm:", sGeneralConf.Reso_X);
+GEMItem menuItemResoY("Y step/mm:", sGeneralConf.Reso_Y);
+GEMItem menuItemResoZ("C step/tr:", sGeneralConf.Reso_Z);
+GEMItem menuItemDirM1("M1 dir:", sGeneralConf.Inverted_M1);
+GEMItem menuItemResoM1("M1 step/tr:", sGeneralConf.Reso_M1);
+GEMItem menuItemThreadM1("M1 thread:", sGeneralConf.thread_M1);
+GEMItem menuItemAccelM1("M1 accel:", sGeneralConf.Accel_M1);
+GEMItem menuItemSpeedM1("M1 speed:", sGeneralConf.Speed_M1);
 GEMItem menuItemButtonRestoreSettings("Restore settings", ActionRestoreSettingsInFlash);
 GEMItem menuItemButtonSaveSettings("Save settings", ActionSaveSettingsInFlash);
 GEMItem menuItemButtonDro("Return to Screen", ActionDro);
@@ -206,8 +206,8 @@ GEMPage menuPageAxe("Axe Functions"); // Axe submenu
 GEMItem menuItemAxe("Axe Functions", menuPageAxe);
 SelectOptionByte selectToolOptions[] = {{"Tool_0", 0}, {"Tool_1", 1}, {"Tool_2", 2}, {"Tool_3", 3}, {"Tool_4", 4}, {"Tool_5", 5}};
 GEMSelect selectTool(sizeof(selectToolOptions)/sizeof(SelectOptionByte), selectToolOptions);
-GEMItem menuItemTool("Tool:", ToolChoose, selectTool, applyTool);
-GEMItem menuItemRelativeMode("Relative:", RelativeMode,ActionChangeRelaticeMode);
+GEMItem menuItemTool("Tool:", bToolChoose, selectTool, applyTool);
+GEMItem menuItemRelativeMode("Relative:", bRelativeModeActived,ActionChangeRelaticeMode);
 GEMItem menuItemButtonResetX("Set X to zero", ActionResetX);
 GEMItem menuItemButtonResetY("Set Y to zero", ActionResetY);
 GEMItem menuItemAxeXPos("X Pos:", fAxeXPos,ActionAxeXPos);
@@ -230,7 +230,7 @@ GEMPage menuPageThreadParameters("Thread parameters"); // Thread parameters subm
 GEMItem menuItemThreadParameters("Thread parameters", menuPageThreadParameters);
 GEMItem menuItemMotorThread("Thread:", iMotorThread,ActionMotorChangeThread);
 GEMItem menuItemMotor1ThreadOffset("Offset:", fMotor1ThreadOffset,ActionChangeMotor1Offset);
-GEMItem menuItemMotor1ThreadUseY("Use Y:", Motor1ThreadUseY,ActionMotor1ThreadUseY);
+GEMItem menuItemMotor1ThreadUseY("Use Y:", bMotor1ThreadUseY,ActionMotor1ThreadUseY);
 GEMItem menuItemMotor1ThreadDiameter("Diameter:", fMotor1ThreadDiameter,ActionChangeMotor1ThreadDiameter);
 GEMItem menuItemMotor1ThreadAngle("Angle:", fMotor1ThreadAngle,ActionChangeMotor1ThreadAngle);
 SelectOptionByte selectScreenOptions[] = {{"DroXYC", 0}, {"Mot1", 1}, {"Debug", 2}};
@@ -371,7 +371,6 @@ void setupMenu() {
   menuPageSettings.setParentMenuPage(menuPageMain);
   //Add item screen mode
   menuPageMain.addMenuItem(menuItemScreenMode);
-  
   //Add Sub menu Debug
   menuPageMain.addMenuItem(menuItemDebug);
   menuPageDebug.addMenuItem(menuItemTestFloat);
@@ -446,7 +445,7 @@ void DroContextLoop()
       //Fast Speed with OK pressed
       if(Motor1.ReturnTheMode()!=StepperMotor::SpeedModeUp || Motor1.ReturnTheMode()!=StepperMotor::SpeedModeDown)
       {
-        if(customKeypad.isPressed(GEM_KEY_OK))Motor1.ChangeMaxSpeed(ConfigDro.Speed_M1);
+        if(customKeypad.isPressed(GEM_KEY_OK))Motor1.ChangeMaxSpeed(sGeneralConf.Speed_M1);
         else Motor1.ChangeMaxSpeed(iMotorSpeed);   
       } 
     }
@@ -468,7 +467,7 @@ void DroContextLoop()
       //Fast Speed with OK pressed
       if(Motor1.ReturnTheMode()!=StepperMotor::SpeedModeUp || Motor1.ReturnTheMode()!=StepperMotor::SpeedModeDown)
       {
-        if(customKeypad.isPressed(GEM_KEY_OK))Motor1.ChangeMaxSpeed(ConfigDro.Speed_M1);
+        if(customKeypad.isPressed(GEM_KEY_OK))Motor1.ChangeMaxSpeed(sGeneralConf.Speed_M1);
         else Motor1.ChangeMaxSpeed(iMotorSpeed);   
       }    
      } 
@@ -575,23 +574,23 @@ void DebugContextExit()
 void Restore_Config()
 {
   //Read Config in Memory
-  ReadConfigInFlash(&ConfigDro);
+  ReadConfigInFlash(&sGeneralConf);
   //Dispatch the config
-  Dispatch_Config(&ConfigDro);
+  Dispatch_Config(&sGeneralConf);
 }
-void SaveConfigInFlash(sConfigDro *pConf)
+void SaveConfigInFlash(tsConfigDro *pConf)
 {
   unsigned int uiCount;
   char *pt;
   EEPROM.format();
   pt = (char*)pConf; 
-  for(uiCount=0;uiCount<sizeof(sConfigDro);uiCount++)
+  for(uiCount=0;uiCount<sizeof(tsConfigDro);uiCount++)
   {
     EEPROM.write(uiCount,*pt);
     pt++;  
   } 
 }
-void ReadConfigInFlash(sConfigDro *pConf)
+void ReadConfigInFlash(tsConfigDro *pConf)
 {
   unsigned int uiCount;
   uint16 uiState;
@@ -599,7 +598,7 @@ void ReadConfigInFlash(sConfigDro *pConf)
   char *pt;
   uiState = EEPROM_OK;
   pt = (char*)pConf; 
-  for(uiCount=0;uiCount<sizeof(sConfigDro);uiCount++)
+  for(uiCount=0;uiCount<sizeof(tsConfigDro);uiCount++)
   {
     uiState |= EEPROM.read(uiCount,&value);
     *pt = (char) value;
@@ -611,7 +610,7 @@ void ReadConfigInFlash(sConfigDro *pConf)
     *pConf = csConfigDefault;
   } 
 }
-void Dispatch_Config(sConfigDro *pConf)
+void Dispatch_Config(tsConfigDro *pConf)
 {
   Quad_X.SetSens( pConf->Inverted_X );  
   Quad_Y.SetSens( pConf->Inverted_Y );
@@ -621,21 +620,21 @@ void Dispatch_Config(sConfigDro *pConf)
   Quad_Y.SetResolution(pConf->Reso_Y);
   Quad_Z.SetResolution(pConf->Reso_Z);
   Motor1.ChangeParameter((unsigned int)((long)(  pConf->Reso_M1*100/pConf->thread_M1)) , pConf->Inverted_M1);
-  Motor1.ChangeAcceleration(ConfigDro.Accel_M1); 
+  Motor1.ChangeAcceleration(pConf->Accel_M1); 
 }
 void ActionSaveSettingsInFlash()
 {
   //Store config in memort
-  SaveConfigInFlash(&ConfigDro);
+  SaveConfigInFlash(&sGeneralConf);
   //Dispatch config to function
-  Dispatch_Config(&ConfigDro); 
+  Dispatch_Config(&sGeneralConf); 
   //PrintInformationOnScreen("Save in flash");
   //delay(100);   
 }
 void ActionRestoreSettingsInFlash()
 {
   //Save default config in flash
-  SaveConfigInFlash((sConfigDro*)&csConfigDefault);
+  SaveConfigInFlash((tsConfigDro*)&csConfigDefault);
   Restore_Config();  
 }
 
@@ -746,7 +745,7 @@ void Display_C_Informations()
   sprintf(bufferChar,"%+5.5d",Quad_Z.GiveMeTheSpeed());
   u8g2.drawStr(13,37,bufferChar);  // write something to the internal memory
   u8g2.setFont(u8g2_font_profont10_mr); // choose a suitable font
-  sprintf(bufferChar,"%07.3f",(float)Quad_Z.GetValuePos()/ConfigDro.Reso_Z*360.0);
+  sprintf(bufferChar,"%07.3f",(float)Quad_Z.GetValuePos()/sGeneralConf.Reso_Z*360.0);
   u8g2.drawStr(85,37,bufferChar);  // write something to the internal memory
   u8g2.drawStr(85,45,"tr/min");
   u8g2.drawRFrame(11,36,116,18,3);    
@@ -798,7 +797,7 @@ void Display_Extra_Informations()
 {
   char bufferChar[10];
   u8g2.setFont(u8g2_font_profont10_mr); // choose a suitable font
-  u8g2.drawStr(0,54,selectTool.getSelectedOptionName((byte*)&ToolChoose ));
+  u8g2.drawStr(0,54,selectTool.getSelectedOptionName((byte*)&bToolChoose ));
   //Display thread Mastersate 
   if (bMotorMode == MOTOR_MODE_LEFT)
   {
@@ -825,7 +824,7 @@ void Display_Extra_Informations()
     }    
   }
   //Display Abs / relative for axe X and Y 
-  if(RelativeMode==true)u8g2.drawStr(108,54,"|Rel");
+  if(bRelativeModeActived==true)u8g2.drawStr(108,54,"|Rel");
   else u8g2.drawStr(108,54,"|Abs");  
 }
 void Display_UpdateRealTimeData()
@@ -855,7 +854,7 @@ void Display_Debug_Informations()
 
 void ActionChangeRelaticeMode()
 {  
-  if( RelativeMode == true )
+  if( bRelativeModeActived == true )
   {
     Quad_X.SetRelative();  
     Quad_Y.SetRelative();
@@ -907,13 +906,13 @@ void CalcMotorParameterForThread()
 {
   long lnumber;
   float OffsetFixe; //Constant offset
-  sThreadCalc.Numerator = ConfigDro.Reso_M1 * iMotorThread;  
-  sThreadCalc.Denominator = ConfigDro.thread_M1 * ConfigDro.Reso_Z ; 
+  sThreadCalc.Numerator = sGeneralConf.Reso_M1 * iMotorThread;  
+  sThreadCalc.Denominator = sGeneralConf.thread_M1 * sGeneralConf.Reso_Z ; 
   lnumber = GCD_Function(sThreadCalc.Numerator,sThreadCalc.Denominator);
   sThreadCalc.Numerator = sThreadCalc.Numerator / lnumber;
   sThreadCalc.Denominator = sThreadCalc.Denominator / lnumber;   
   //Calcul of the offset
-  OffsetFixe = (float)(fMotor1ThreadOffset*iMotorThread*ConfigDro.Reso_M1) /(float)(360*ConfigDro.thread_M1); 
+  OffsetFixe = (float)(fMotor1ThreadOffset*iMotorThread*sGeneralConf.Reso_M1) /(float)(360*sGeneralConf.thread_M1); 
   sThreadCalc.Offset = Motor1.GetStopPositionMinStep() - (long)OffsetFixe ;  
 }
 void applyMotorMode()
@@ -927,7 +926,7 @@ void applyMotorMode()
         //Need to have end limit and position at min pos to start
         eMS_Thread = MS_THREAD_WAIT_THE_START;
         //Use Max speed in the setting
-        Motor1.ChangeMaxSpeed(ConfigDro.Speed_M1); 
+        Motor1.ChangeMaxSpeed(sGeneralConf.Speed_M1); 
         //Motor in position mode
         Motor1.ChangeTheMode(StepperMotor::PositionMode);    
       }
@@ -969,7 +968,7 @@ void ActionMotorSpeedDown()
 void ActionMotorMotorSpeed()
 {
   if(iMotorSpeed < 1)iMotorSpeed=1;
-  if(iMotorSpeed > ConfigDro.Speed_M1)iMotorSpeed = ConfigDro.Speed_M1;
+  if(iMotorSpeed > sGeneralConf.Speed_M1)iMotorSpeed = sGeneralConf.Speed_M1;
   Motor1.ChangeMaxSpeed(iMotorSpeed);    
 }
 void ActionMotorChangeThread()
