@@ -17,11 +17,13 @@ Revision        :
 #include "src/Keypad/Keypad.h"
 #include "src/StepperMotor/StepperMotor.h"
 #include "src/Various/Splash.h"
+#include "src/Various/Various.h"
+
 #include <EEPROM.h>
 
-#define TEXT_MAIN_MENU_TITLE "MiniThread V1.0"
+#define TEXT_MAIN_MENU_TITLE "MiniThread"
 #define TEXT_AUTHOR_SOFT "Pailpoe"
-#define TEXT_VERSION_SOFT "V1.0"
+#define TEXT_VERSION_SOFT "1.0.0Dev"
 
 // IO def ( for quad decoder, define in class !)
 #define PIN_RES_SCR    PB9
@@ -43,6 +45,7 @@ Revision        :
 //Instance Screen 
 U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, PIN_RES_SCR);
 
+//Keyboard
 const byte ROWS = 4; //four rows
 const byte COLS = 4; //four columns
 char hexaKeys[ROWS][COLS] = {
@@ -163,15 +166,34 @@ GEMItem menuItemMotorCurrentPos("CurrentPos:", fMotorCurrentPos,ActionMotorCurre
 int iMotorSpeed = 1000;
 void ActionMotorMotorSpeed(); // Forward declaration
 GEMItem menuItemMotorSpeed("Speed:", iMotorSpeed,ActionMotorMotorSpeed);
-int iMotorThread = 100;
-void ActionMotorChangeThread(); // Forward declaration
-GEMItem menuItemMotorThread("Thread:", iMotorThread,ActionMotorChangeThread);
 void ActionSetCurrentToMax(); // Forward declaration
 GEMItem menuItemButtonSetPosToMax("CurrentPos -> Max", ActionSetCurrentToMax);
 void ActionSetCurrentToMin(); // Forward declaration
 GEMItem menuItemButtonSetPosToMin("CurrentPos -> Min", ActionSetCurrentToMin);
 void ActionResetCurrentPos(); // Forward declaration
 GEMItem menuItemButtonResetCurrentPos("Reset CurrentPos", ActionResetCurrentPos);
+//Sub menu of motor for thread parameters ****************************************
+GEMPage menuPageThreadParameters("Thread parameters"); // Thread parameters submenu
+GEMItem menuItemThreadParameters("Thread parameters", menuPageThreadParameters);
+int iMotorThread = 100;
+void ActionMotorChangeThread(); // Forward declaration
+GEMItem menuItemMotorThread("Thread:", iMotorThread,ActionMotorChangeThread);
+float fMotor1ThreadOffset = 0.0;
+void ActionChangeMotor1Offset(); // Forward declaration
+GEMItem menuItemMotor1ThreadOffset("Offset:", fMotor1ThreadOffset,ActionChangeMotor1Offset);
+boolean Motor1ThreadUseY = false;
+void ActionMotor1ThreadUseY();
+GEMItem menuItemMotor1ThreadUseY("Use Y:", Motor1ThreadUseY,ActionMotor1ThreadUseY);
+float fMotor1ThreadDiameter = 0.0;
+void ActionChangeMotor1ThreadDiameter(); // Forward declaration
+GEMItem menuItemMotor1ThreadDiameter("Diameter:", fMotor1ThreadDiameter,ActionChangeMotor1ThreadDiameter);
+float fMotor1ThreadAngle = 30.0;
+void ActionChangeMotor1ThreadAngle(); // Forward declaration
+GEMItem menuItemMotor1ThreadAngle("Angle:", fMotor1ThreadAngle,ActionChangeMotor1ThreadAngle);
+
+
+float fM1ActualSpeed; // Motor Actual Speed
+
 //Screen choose
 #define  SCREEN_DRO 0
 #define  SCREEN_MOT1 1
@@ -184,7 +206,7 @@ void ActionScreenMode(); // Forward declaration
 GEMItem menuItemScreenMode("Screen:", eScreenChoose, selectScreenMode, ActionScreenMode);
 void ActionChangeScreen();// Forward declaration
 
-//Threading state
+//Threading machine state
 typedef enum
 {
   MS_THREAD_IDLE = 0, //Idle
@@ -195,6 +217,7 @@ typedef enum
   MS_THREAD_IN_RETURN = 5 // In return
 } teMS_ThreadingMode;
 teMS_ThreadingMode eMS_Thread = MS_THREAD_IDLE;
+
 typedef struct
 {
   long Numerator;
@@ -204,7 +227,7 @@ typedef struct
 tsThreadCalc sThreadCalc; 
 
 
-// Create menu object of class GEM_u8g2. Supply its constructor with reference to u8g2 object we created earlier
+// Create menu object of class GEM_u8g2
 GEM_u8g2 menu(u8g2,GEM_POINTER_ROW,5,10,10,75);
 
 //Quadrature decoder
@@ -212,7 +235,7 @@ void IT_Timer1_Overflow(); // Forward declaration
 void IT_Timer2_Overflow(); // Forward declaration
 void IT_Timer3_Overflow(); // Forward declaration
 QuadDecoder Quad_Y(3,QuadDecoder::LinearEncoder,512,false,false,IT_Timer3_Overflow); //Timer 3
-QuadDecoder Quad_Z(2,QuadDecoder::RotaryEncoder,512,true,false,IT_Timer2_Overflow); //Timer 2
+QuadDecoder Quad_Z(2,QuadDecoder::RotaryEncoder,1200,true,false,IT_Timer2_Overflow); //Timer 2
 QuadDecoder Quad_X(1,QuadDecoder::LinearEncoder,512,false,false,IT_Timer1_Overflow); //Timer 1
 void IT_Timer1_Overflow(){Quad_X.IT_OverflowHardwareTimer();}
 void IT_Timer3_Overflow(){Quad_Y.IT_OverflowHardwareTimer();}
@@ -255,7 +278,6 @@ void Update_Overlfow_Timer4()
 // ***************************************************************************************
 // Forward declarations Funtions
  
-long GCD_Function ( long n1, long n2); //Forward declaration
 void CalcMotorParameterForThread(); //Forward declaration
 void UsbSerial_Pos(); 
 void Display_UpdateRealTimeData(); //Forward declarations
@@ -285,7 +307,7 @@ void setup()
   afio_cfg_debug_ports(AFIO_DEBUG_SW_ONLY); //Only SWD
 
   //USB Serial
-  Serial.begin(115200); // Ignored by Maple. But needed by boards using hardware serial via a USB to Serial adaptor
+  //Serial.begin(115200); // Ignored by Maple. But needed by boards using hardware serial via a USB to Serial adaptor
   
   //Timer 4 for motor control
   MotorControl.pause(); //stop...
@@ -318,6 +340,13 @@ void setupMenu() {
   menuPageAxe.addMenuItem(menuItemAxeXPos);
   menuPageAxe.addMenuItem(menuItemAxeYPos);
   menuPageAxe.setParentMenuPage(menuPageMain);
+  //Create sub menu Thread parameter form menu Motor
+  menuPageThreadParameters.setParentMenuPage(menuPageMotor);
+  menuPageThreadParameters.addMenuItem(menuItemMotorThread);
+  menuPageThreadParameters.addMenuItem(menuItemMotor1ThreadOffset);
+  menuPageThreadParameters.addMenuItem(menuItemMotor1ThreadUseY);
+  menuPageThreadParameters.addMenuItem(menuItemMotor1ThreadDiameter);
+  menuPageThreadParameters.addMenuItem(menuItemMotor1ThreadAngle);
   //Add Sub menu Motor
   menuPageMain.addMenuItem(menuItemMotor);
   menuPageMotor.addMenuItem(menuItemUseMotor);
@@ -327,7 +356,7 @@ void setupMenu() {
   menuPageMotor.addMenuItem(menuItemUseMotorEndLimit);
   menuPageMotor.addMenuItem(menuItemMotorCurrentPos);
   menuPageMotor.addMenuItem(menuItemMotorSpeed);
-  menuPageMotor.addMenuItem(menuItemMotorThread);
+  menuPageMotor.addMenuItem(menuItemThreadParameters); //Sub menu thread parameter
   menuPageMotor.addMenuItem(menuItemButtonSetPosToMax);
   menuPageMotor.addMenuItem(menuItemButtonSetPosToMin);
   menuPageMotor.addMenuItem(menuItemButtonResetCurrentPos);
@@ -461,7 +490,12 @@ void DroContextLoop()
           //No action here
         break;
         case MS_THREAD_WAIT_THE_START:
-          if (key == GEM_KEY_LEFT ) eMS_Thread = MS_THREAD_WAIT_THE_SPLINDLE_ZERO;   
+          if (key == GEM_KEY_LEFT )
+          {
+            //Calcul the motor parameter for Thread before start
+            CalcMotorParameterForThread();
+            eMS_Thread = MS_THREAD_WAIT_THE_SPLINDLE_ZERO;
+          }   
         break;
         case MS_THREAD_WAIT_THE_SPLINDLE_ZERO:
           //No action here
@@ -524,10 +558,12 @@ void DebugContextLoop()
       u8g2.setFont(u8g2_font_profont10_mr); // choose a suitable font
       CalcMotorParameterForThread();
       char buffer[16];
-      sprintf(buffer,"Numerator:%u",sThreadCalc.Numerator);
+      sprintf(buffer,"Numerator:%ld",sThreadCalc.Numerator);
       u8g2.drawStr(0,0,buffer);
-      sprintf(buffer,"Denominator:%u",sThreadCalc.Denominator);
-      u8g2.drawStr(0,10,buffer);      
+      sprintf(buffer,"Denominator:%ld",sThreadCalc.Denominator);
+      u8g2.drawStr(0,10,buffer);
+      sprintf(buffer,"Offset:%ld",sThreadCalc.Offset);
+      u8g2.drawStr(0,20,buffer);       
   } while (u8g2.nextPage());
   if (key == GEM_KEY_CANCEL) 
   { 
@@ -618,6 +654,7 @@ void ActionRestoreSettingsInFlash()
 // *** Usb Serial functions *****************************************************************
 void UsbSerial_Pos()
 {
+  /*
   char bufferChar[30];
   if(Serial.isConnected())
   {
@@ -627,6 +664,7 @@ void UsbSerial_Pos()
     Serial.print(bufferChar);
     Serial.print("\n");   
   }
+  */
 
   //Serial.print(':');
 }
@@ -655,7 +693,7 @@ void Display_StartScreen()
   {
     u8g2.setFont(u8g2_font_6x12_tr); // choose a suitable font
     u8g2.drawStr(0,55,TEXT_AUTHOR_SOFT);
-    u8g2.drawStr(80,55,TEXT_VERSION_SOFT);   
+    u8g2.drawStr(70,55,TEXT_VERSION_SOFT);   
   } while (u8g2.nextPage()); 
   delay(2000);
   u8g2.firstPage();
@@ -758,7 +796,7 @@ void Display_M_Informations()
     }
     //Motor speed
     //if motor is Left mode, display the speed from the settings (Max speed )
-    sprintf(bufferChar,"|%d", bMotorMode == MOTOR_MODE_LEFT ? ConfigDro.Speed_M1 : iMotorSpeed);
+    sprintf(bufferChar,"|%d", (unsigned int)fM1ActualSpeed);
     //sprintf(bufferChar,"|%d",iMotorSpeed);
     u8g2.drawStr(90,37,bufferChar);    
     
@@ -810,7 +848,8 @@ void Display_Extra_Informations()
 }
 void Display_UpdateRealTimeData()
 {
-  fMotorCurrentPos = Motor1.GetPositionReal(); 
+  fMotorCurrentPos = Motor1.GetPositionReal();
+  fM1ActualSpeed = Motor1.GetMaxSpeed(); 
   fAxeXPos = Quad_X.GetValue();
   fAxeYPos = Quad_Y.GetValue();     
 }
@@ -823,6 +862,10 @@ void Display_Debug_Informations()
   u8g2.drawStr(0,9,bufferChar);  // write something to the internal memory
   sprintf(bufferChar,"_n:%ld",Motor1._n);
   u8g2.drawStr(0,18,bufferChar);  // write something to the internal memory
+  sprintf(bufferChar,"_c0:%f",Motor1._c0);
+  u8g2.drawStr(0,27,bufferChar);  // write something to the internal memory
+  sprintf(bufferChar,"_cmin:%f",Motor1._cmin);
+  u8g2.drawStr(0,36,bufferChar);  // write something to the internal memory
 }
 
 
@@ -880,26 +923,19 @@ void ActionUseMotorEndLimit()
   Motor1.UseEndLimit(bUseMotorEndLimit);  
 }
 //Returns the greatest common divisor of two integers
-long GCD_Function ( long n1, long n2)
-{
-  long i,result;
-  for(i=1;i<=n1 && i<=n2;i++)
-  {
-    if(n1%i==0 && n2%i==0)result = i;  
-  }
-  return result;     
-}
+
 void CalcMotorParameterForThread()
 {
   long lnumber;
+  float OffsetFixe; //Constant offset
   sThreadCalc.Numerator = ConfigDro.Reso_M1 * iMotorThread;  
   sThreadCalc.Denominator = ConfigDro.thread_M1 * ConfigDro.Reso_Z ; 
   lnumber = GCD_Function(sThreadCalc.Numerator,sThreadCalc.Denominator);
   sThreadCalc.Numerator = sThreadCalc.Numerator / lnumber;
   sThreadCalc.Denominator = sThreadCalc.Denominator / lnumber;   
-  //sThreadCalc.Numerator = 16 * iMotorThread;  
-  //sThreadCalc.Denominator = 2400; 
-  sThreadCalc.Offset = Motor1.GetStopPositionMinStep() ;  
+  //Calcul of the offset
+  OffsetFixe = (float)(fMotor1ThreadOffset*iMotorThread*ConfigDro.Reso_M1) /(float)(360*ConfigDro.thread_M1); 
+  sThreadCalc.Offset = Motor1.GetStopPositionMinStep() - (long)OffsetFixe ;  
 }
 void applyMotorMode()
 {
@@ -911,8 +947,6 @@ void applyMotorMode()
       {
         //Need to have end limit and position at min pos to start
         eMS_Thread = MS_THREAD_WAIT_THE_START;
-        //Calcul the motor parameter for Thread
-        CalcMotorParameterForThread();
         //Use Max speed in the setting
         Motor1.ChangeMaxSpeed(ConfigDro.Speed_M1); 
         //Motor in position mode
@@ -1006,4 +1040,20 @@ void ActionChangeScreen()
 {
   if(eScreenChoose>=SCREEN_END_LIST)eScreenChoose = SCREEN_DRO;
   else eScreenChoose++; 
+}
+void ActionChangeMotor1Offset()
+{
+  if(fMotor1ThreadOffset < 0)fMotor1ThreadOffset = 0.0;
+  if(fMotor1ThreadOffset > 360)fMotor1ThreadOffset = 360.0;   
+}
+void ActionMotor1ThreadUseY()
+{
+}
+void ActionChangeMotor1ThreadDiameter()
+{
+}
+void ActionChangeMotor1ThreadAngle()
+{
+  if(fMotor1ThreadAngle < 0)fMotor1ThreadAngle = 0.0;
+  if(fMotor1ThreadAngle > 70)fMotor1ThreadAngle = 70; 
 }
