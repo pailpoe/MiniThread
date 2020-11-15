@@ -102,7 +102,7 @@ typedef struct
 #define  SCREEN_DRO 0
 #define  SCREEN_MOT1 1
 #define  SCREEN_DEBUG 2
-#define  SCREEN_END_LIST 2
+#define  SCREEN_END_LIST 1
 
 //Motor mode
 #define MOTOR_MODE_NO_MODE 0
