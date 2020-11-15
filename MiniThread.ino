@@ -117,6 +117,7 @@ byte        bToolChoose = 0; //Tool selection
 boolean     bRelativeModeActived = false; //Relative or absolute mode
 float       fAxeXPos = 0; // X position
 float       fAxeYPos = 0; // Y position
+float       fAxeCSpeed = 0; // C speed
 byte        bMotorMode = 0;
 boolean     bUseMotor = false;
 float       fMotorStopMin = 0.0;
@@ -130,12 +131,14 @@ boolean     bMotor1ThreadUseY = true;
 float       fMotor1ThreadDiameter = 2.0;
 float       fMotor1ThreadAngle = 30.0;
 float       fM1ActualSpeed; // Motor Actual Speed
+float       fM1MaxThreadSpeed; // Motor Max spindle speed for thread
 byte        eScreenChoose = SCREEN_DRO;
 teMS_ThreadingMode  eMS_Thread = MS_THREAD_IDLE;
 tsThreadCalc sThreadCalc; 
 
 // Forward declarations Funtions  ******************************************
 void CalcMotorParameterForThread(); 
+void CalcMotorMaxSpeedForThread();
 void UsbSerial_Pos(); 
 void Display_UpdateRealTimeData(); 
 void ActionMotorSpeedUp();
@@ -236,6 +239,7 @@ GEMItem menuItemMotor1ThreadOffset("Offset:", fMotor1ThreadOffset,ActionChangeMo
 GEMItem menuItemMotor1ThreadUseY("Use Y:", bMotor1ThreadUseY,ActionMotor1ThreadUseY);
 GEMItem menuItemMotor1ThreadDiameter("Diameter:", fMotor1ThreadDiameter,ActionChangeMotor1ThreadDiameter);
 GEMItem menuItemMotor1ThreadAngle("Angle:", fMotor1ThreadAngle,ActionChangeMotor1ThreadAngle);
+GEMItem menuItemMotor1ThreadInfo("Speed max:", fM1MaxThreadSpeed,true);
 SelectOptionByte selectScreenOptions[] = {{"DroXYC", 0}, {"Mot1", 1}, {"Debug", 2}};
 GEMSelect selectScreenMode(sizeof(selectScreenOptions)/sizeof(SelectOptionByte), selectScreenOptions);
 GEMItem menuItemScreenMode("Screen:", eScreenChoose, selectScreenMode, ActionScreenMode);
@@ -318,9 +322,7 @@ void setup()
   // Menu init, setup and draw
   menu.init();
   setupMenu();
-  //menu.drawMenu(); //Start with menu screen
   ActionDro(); //Start with dro screen
-  //ActionDebug(); //Start with debug screen
 }
 void setupMenu() {
   // Add menu items to menu page
@@ -337,6 +339,7 @@ void setupMenu() {
   //Create sub menu Thread parameter form menu Motor
   menuPageThreadParameters.setParentMenuPage(menuPageMotor);
   menuPageThreadParameters.addMenuItem(menuItemMotorThread);
+  menuPageThreadParameters.addMenuItem(menuItemMotor1ThreadInfo);  
   menuPageThreadParameters.addMenuItem(menuItemMotor1ThreadOffset);
   menuPageThreadParameters.addMenuItem(menuItemMotor1ThreadUseY);
   menuPageThreadParameters.addMenuItem(menuItemMotor1ThreadDiameter);
@@ -562,7 +565,12 @@ void DebugContextLoop()
       sprintf(buffer,"Denominator:%ld",sThreadCalc.Denominator);
       u8g2.drawStr(0,10,buffer);
       sprintf(buffer,"Offset:%ld",sThreadCalc.Offset);
-      u8g2.drawStr(0,20,buffer);       
+      u8g2.drawStr(0,20,buffer);  
+      CalcMotorMaxSpeedForThread();
+      sprintf(buffer,"speed:%f",fM1MaxThreadSpeed);
+      u8g2.drawStr(0,30,buffer);  
+
+           
   } while (u8g2.nextPage());
   if (key == GEM_KEY_CANCEL) 
   { 
@@ -751,7 +759,7 @@ void Display_C_Informations()
   u8g2.setColorIndex(1); 
   u8g2.setFont(u8g2_font_profont22_tf); // choose a suitable font 
   u8g2.drawStr(0,37,"C");
-  sprintf(bufferChar,"%+5.5d",Quad_Z.GiveMeTheSpeed());
+  sprintf(bufferChar,"%+5.5d",(int)fAxeCSpeed);
   u8g2.drawStr(13,37,bufferChar);  // write something to the internal memory
   u8g2.setFont(u8g2_font_profont10_mr); // choose a suitable font
   sprintf(bufferChar,"%07.3f",(float)Quad_Z.GetValuePos()/sGeneralConf.Reso_Z*360.0);
@@ -841,7 +849,8 @@ void Display_UpdateRealTimeData()
   fMotorCurrentPos = Motor1.GetPositionReal();
   fM1ActualSpeed = Motor1.GetMaxSpeed(); 
   fAxeXPos = Quad_X.GetValue();
-  fAxeYPos = Quad_Y.GetValue();     
+  fAxeYPos = Quad_Y.GetValue();
+  fAxeCSpeed = (float)Quad_Z.GiveMeTheSpeed();     
 }
 void Display_Debug_Informations()
 {
@@ -936,6 +945,10 @@ void CalcMotorParameterForThread()
   OffsetFixe = (float)(fMotor1ThreadOffset*iMotorThread*sGeneralConf.Reso_M1) /(float)(360*sGeneralConf.thread_M1); 
   sThreadCalc.Offset = Motor1.GetStopPositionMinStep() - (long)OffsetFixe ;  
 }
+void CalcMotorMaxSpeedForThread()
+{
+  fM1MaxThreadSpeed = (float)(sGeneralConf.Speed_M1*60.0*sGeneralConf.thread_M1/(sGeneralConf.Reso_M1*iMotorThread));  
+}
 void applyMotorMode()
 {
   switch (bMotorMode)
@@ -994,7 +1007,8 @@ void ActionMotorMotorSpeed()
 }
 void ActionMotorChangeThread()
 {
-  if(iMotorThread<=0)iMotorThread = 100;  
+  if(iMotorThread<=0)iMotorThread = 100;
+  CalcMotorMaxSpeedForThread();  
 }
 void ActionSetCurrentToMax()
 {
@@ -1066,8 +1080,19 @@ boolean M1_AreYouOkToStartTheThread()
     {
       result = false;
       Display_Notice_Informations("Move Y : Y > Dia");     
-    }
-  }  
+    }   
+  } 
+  CalcMotorMaxSpeedForThread(); //Check the speed
+  if( fAxeCSpeed >= fM1MaxThreadSpeed)
+  {
+    result = false;
+    Display_Notice_Informations("Reduce spindle speed");     
+  }
+  if( fAxeCSpeed < 0 )
+  {
+    result = false;
+    Display_Notice_Informations("Spindle wrong dir");     
+  }   
   return result;
 }
 boolean M1_AreYouOkToReturnAfterThread()
