@@ -54,7 +54,7 @@ QuadDecoder::QuadDecoder(unsigned int  TimerChannel,teTypeEncoder  eTypeEncoder,
   _HardwareTimer->setEdgeCounting(TIMER_SMCR_SMS_ENCODER3); //or TIMER_SMCR_SMS_ENCODER1 or TIMER_SMCR_SMS_ENCODER2. This uses both channels to count and ascertain direction. 
   _HardwareTimer->attachInterrupt(0, handler); //Overflow interrupt (extern function)  
   _HardwareTimer->resume();//start the encoder...
-  
+  _HardwareTimer->refresh(); 
   InitSpeedMeasure();
    
 }
@@ -163,12 +163,13 @@ void QuadDecoder::ComputeAbsoluteValue()
 void QuadDecoder::SetResolution(unsigned int  Resolution)
 {
   _HardwareTimer->pause(); //stop...
-  ResetAllTheCounter();
   _Resolution = Resolution;   
   UpdatOverflowSize();
   _HardwareTimer->setOverflow(_Overflow_Size);    
   _HardwareTimer->setCount(0); //reset the counter. 
   _HardwareTimer->resume();//start the encoder... 
+  _HardwareTimer->refresh();
+  ResetAllTheCounter();  
 }
 void QuadDecoder::SetSens(boolean Sens)
 {

@@ -23,7 +23,7 @@ Revision        :
 
 #define TEXT_MAIN_MENU_TITLE "MiniThread"
 #define TEXT_AUTHOR_SOFT "Pailpoe"
-#define TEXT_VERSION_SOFT "1.0.0Dev"
+#define TEXT_VERSION_SOFT "1.0.0 Dev"
 
 // IO def ( for quad decoder, define in class !)
 #define PIN_RES_SCR    PB9
