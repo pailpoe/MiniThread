@@ -119,15 +119,15 @@ float       fAxeXPos = 0; // X position
 float       fAxeYPos = 0; // Y position
 byte        bMotorMode = 0;
 boolean     bUseMotor = false;
-float       fMotorStopMin = -200.0;
-float       fMotorStopMax = 200.0;
+float       fMotorStopMin = 0.0;
+float       fMotorStopMax = 2.0;
 boolean     bUseMotorEndLimit = true;
 float       fMotorCurrentPos = 0;
 int         iMotorSpeed = 1000;
 int         iMotorThread = 100;
 float       fMotor1ThreadOffset = 0.0;
-boolean     bMotor1ThreadUseY = false;
-float       fMotor1ThreadDiameter = 0.0;
+boolean     bMotor1ThreadUseY = true;
+float       fMotor1ThreadDiameter = 2.0;
 float       fMotor1ThreadAngle = 30.0;
 float       fM1ActualSpeed; // Motor Actual Speed
 byte        eScreenChoose = SCREEN_DRO;
@@ -166,6 +166,8 @@ void ActionChangeMotor1Offset();
 void ActionMotor1ThreadUseY();
 void ActionChangeMotor1ThreadDiameter(); 
 void ActionChangeMotor1ThreadAngle(); 
+boolean M1_AreYouOkToStartTheThread();
+boolean M1_AreYouOkToReturnAfterThread();
 void ActionScreenMode(); 
 void ActionChangeScreen();
 void IT_Timer1_Overflow(); 
@@ -178,6 +180,7 @@ void Display_C_Informations();
 void Display_M_Informations();
 void Display_Extra_Informations();
 void Display_Debug_Informations();
+void Display_Notice_Informations(char* str);
 
 //Menu item ******************************************
 GEMPage menuPageSettings("Settings"); // Settings submenu
@@ -482,9 +485,12 @@ void DroContextLoop()
         case MS_THREAD_WAIT_THE_START:
           if (key == GEM_KEY_LEFT )
           {
-            //Calcul the motor parameter for Thread before start
-            CalcMotorParameterForThread();
-            eMS_Thread = MS_THREAD_WAIT_THE_SPLINDLE_ZERO;
+            if(M1_AreYouOkToStartTheThread() == true)
+            {
+              //Calcul the motor parameter for Thread before start
+              CalcMotorParameterForThread();
+              eMS_Thread = MS_THREAD_WAIT_THE_SPLINDLE_ZERO;                
+            }
           }   
         break;
         case MS_THREAD_WAIT_THE_SPLINDLE_ZERO:
@@ -500,8 +506,11 @@ void DroContextLoop()
         case MS_THREAD_END_THREAD:
           if (key == GEM_KEY_RIGHT )
           {
-            eMS_Thread = MS_THREAD_IN_RETURN;
-            Motor1.ChangeTheMode(StepperMotor::SpeedModeDown);    
+            if(M1_AreYouOkToReturnAfterThread() == true)
+            {
+              eMS_Thread = MS_THREAD_IN_RETURN;
+              Motor1.ChangeTheMode(StepperMotor::SpeedModeDown);              
+            }
           }
         break;
         case MS_THREAD_IN_RETURN:
@@ -848,6 +857,18 @@ void Display_Debug_Informations()
   sprintf(bufferChar,"_cmin:%f",Motor1._cmin);
   u8g2.drawStr(0,36,bufferChar);  // write something to the internal memory
 }
+void Display_Notice_Informations(char* str)
+{
+  u8g2.firstPage();
+  u8g2.setFontPosTop();
+  do 
+  {
+    u8g2.drawRFrame(0,0 ,128,64,4);
+    u8g2.setFont(u8g2_font_6x12_tr); // choose a suitable font
+    u8g2.drawStr(3,3,str);
+  } while (u8g2.nextPage());  
+  delay(2000); 
+}
 // ***************************************************************************************
 // ***************************************************************************************
 // *** Action functions from menu ********************************************************
@@ -1029,9 +1050,38 @@ void ActionMotor1ThreadUseY()
 }
 void ActionChangeMotor1ThreadDiameter()
 {
+  if(fMotor1ThreadDiameter<0) fMotor1ThreadDiameter = -fMotor1ThreadDiameter;
 }
 void ActionChangeMotor1ThreadAngle()
 {
   if(fMotor1ThreadAngle < 0)fMotor1ThreadAngle = 0.0;
-  if(fMotor1ThreadAngle > 70)fMotor1ThreadAngle = 70; 
+  if(fMotor1ThreadAngle > 45)fMotor1ThreadAngle = 45; 
+}
+boolean M1_AreYouOkToStartTheThread()
+{
+  boolean result = true;
+  if(bMotor1ThreadUseY == true)
+  {
+    if( fAxeYPos > fMotor1ThreadDiameter)
+    {
+      result = false;
+      Display_Notice_Informations("Move Y : Y > Dia");     
+    }
+  }  
+  return result;
+}
+boolean M1_AreYouOkToReturnAfterThread()
+{
+  boolean result = true;
+  if(bMotor1ThreadUseY == true)
+  {
+    if( fAxeYPos < fMotor1ThreadDiameter)
+    {
+      result = false;
+      Display_Notice_Informations("Move Y : Y < Dia");
+    }
+      
+  }
+  return result;  
+  
 }
