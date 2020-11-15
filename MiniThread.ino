@@ -178,7 +178,7 @@ GEMItem menuItemThreadParameters("Thread parameters", menuPageThreadParameters);
 int iMotorThread = 100;
 void ActionMotorChangeThread(); // Forward declaration
 GEMItem menuItemMotorThread("Thread:", iMotorThread,ActionMotorChangeThread);
-float fMotor1ThreadOffset = 180.0;
+float fMotor1ThreadOffset = 0.0;
 void ActionChangeMotor1Offset(); // Forward declaration
 GEMItem menuItemMotor1ThreadOffset("Offset:", fMotor1ThreadOffset,ActionChangeMotor1Offset);
 boolean Motor1ThreadUseY = false;
