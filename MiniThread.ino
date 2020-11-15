@@ -60,6 +60,8 @@ byte colPins[COLS] = {PIN_SW_COL_1, PIN_SW_COL_2, PIN_SW_COL_3, PIN_SW_COL_4};
 Keypad customKeypad ( makeKeymap(hexaKeys), rowPins, colPins, ROWS, COLS);
 
 
+
+//Struct and Enum def  ******************************************
 typedef struct
 {
   boolean Inverted_X;  
@@ -77,10 +79,107 @@ typedef struct
 } sConfigDro;
 const sConfigDro csConfigDefault = {false,false,false,true,512,512,1200,false,1600,200,60000.0,12000};
 
-// Variable
-sConfigDro ConfigDro;
+//Threading machine state
+typedef enum
+{
+  MS_THREAD_IDLE = 0, //Idle
+  MS_THREAD_WAIT_THE_START = 1, //Wait the action to start
+  MS_THREAD_WAIT_THE_SPLINDLE_ZERO = 2, // Wait spindle zero
+  MS_THREAD_IN_THREAD = 3, // In threat
+  MS_THREAD_END_THREAD = 4, // Wait the button to return
+  MS_THREAD_IN_RETURN = 5 // In return
+} teMS_ThreadingMode;
 
-//Settings sub menu ******************************************
+//Parameter for the thread
+typedef struct
+{
+  long Numerator;
+  long Denominator;
+  long Offset;  
+} tsThreadCalc;
+
+//Screen choose
+#define  SCREEN_DRO 0
+#define  SCREEN_MOT1 1
+#define  SCREEN_DEBUG 2
+#define  SCREEN_END_LIST 2
+
+//Motor mode
+#define MOTOR_MODE_NO_MODE 0
+#define MOTOR_MODE_MANUAL  1
+#define MOTOR_MODE_AUTO    2
+#define MOTOR_MODE_LEFT    3
+
+// Variables global ******************************************
+sConfigDro  ConfigDro;
+float       TestFloat = 999.2;
+byte        ToolChoose = 0; //Tool selection
+boolean     RelativeMode = false; //Relative or absolute mode
+float       fAxeXPos = 0; // X position
+float       fAxeYPos = 0; // Y position
+byte        bMotorMode = 0;
+boolean     bUseMotor = false;
+float       fMotorStopMin = -200.0;
+float       fMotorStopMax = 200.0;
+boolean     bUseMotorEndLimit = true;
+float       fMotorCurrentPos = 0;
+int         iMotorSpeed = 1000;
+int         iMotorThread = 100;
+float       fMotor1ThreadOffset = 0.0;
+boolean     Motor1ThreadUseY = false;
+float       fMotor1ThreadDiameter = 0.0;
+float       fMotor1ThreadAngle = 30.0;
+float       fM1ActualSpeed; // Motor Actual Speed
+byte        eScreenChoose = SCREEN_DRO;
+teMS_ThreadingMode  eMS_Thread = MS_THREAD_IDLE;
+tsThreadCalc sThreadCalc; 
+
+// Forward declarations Funtions  ******************************************
+void CalcMotorParameterForThread(); 
+void UsbSerial_Pos(); 
+void Display_UpdateRealTimeData(); 
+void ActionMotorSpeedUp();
+void ActionMotorSpeedDown();
+void Display_StartScreen(); 
+void ActionRestoreSettingsInFlash(); 
+void ActionSaveSettingsInFlash(); 
+void ActionDro(); 
+void ActionDebug(); 
+void applyTool(); 
+void ActionChangeRelaticeMode();
+void ActionResetX(); 
+void ActionResetY(); 
+void ActionAxeXPos(); 
+void ActionAxeYPos(); 
+void ActionUseMotor(); 
+void applyMotorMode(); 
+void ActionMotorStopMin(); 
+void ActionMotorStopMax(); 
+void ActionUseMotorEndLimit(); 
+void ActionMotorCurrentPos(); 
+void ActionMotorMotorSpeed(); 
+void ActionSetCurrentToMax(); 
+void ActionSetCurrentToMin(); 
+void ActionResetCurrentPos(); 
+void ActionMotorChangeThread(); 
+void ActionChangeMotor1Offset(); 
+void ActionMotor1ThreadUseY();
+void ActionChangeMotor1ThreadDiameter(); 
+void ActionChangeMotor1ThreadAngle(); 
+void ActionScreenMode(); 
+void ActionChangeScreen();
+void IT_Timer1_Overflow(); 
+void IT_Timer2_Overflow(); 
+void IT_Timer3_Overflow(); 
+void Update_Overlfow_Timer4();
+void Display_X_Informations(); 
+void Display_Y_Informations();
+void Display_C_Informations();
+void Display_M_Informations();
+void Display_Extra_Informations();
+void Display_Debug_Informations();
+
+//Menu item ******************************************
 GEMPage menuPageSettings("Settings"); // Settings submenu
 GEMItem menuItemMainSettings("Settings", menuPageSettings);
 GEMItem menuItemDirX("X dir:", ConfigDro.Inverted_X);
@@ -95,148 +194,58 @@ GEMItem menuItemResoM1("M1 step/tr:", ConfigDro.Reso_M1);
 GEMItem menuItemThreadM1("M1 thread:", ConfigDro.thread_M1);
 GEMItem menuItemAccelM1("M1 accel:", ConfigDro.Accel_M1);
 GEMItem menuItemSpeedM1("M1 speed:", ConfigDro.Speed_M1);
-void ActionRestoreSettingsInFlash(); // Forward declaration
 GEMItem menuItemButtonRestoreSettings("Restore settings", ActionRestoreSettingsInFlash);
-void ActionSaveSettingsInFlash(); // Forward declaration
 GEMItem menuItemButtonSaveSettings("Save settings", ActionSaveSettingsInFlash);
-
-void ActionDro(); // Forward declaration
 GEMItem menuItemButtonDro("Return to Screen", ActionDro);
-
-//Main Page Menu
 GEMPage menuPageMain(TEXT_MAIN_MENU_TITLE);
-
-//Debug Page Menu
 GEMPage menuPageDebug("Debug tools"); // Debug submenu
 GEMItem menuItemDebug("Debug tools", menuPageDebug);
-void ActionDebug(); // Forward declaration
 GEMItem menuItemButtonDebug("Debug screen", ActionDebug);
-float TestFloat = 999.2;
 GEMItem menuItemTestFloat("Float:", TestFloat);
-
-//Axe Functions ******************************************
 GEMPage menuPageAxe("Axe Functions"); // Axe submenu
 GEMItem menuItemAxe("Axe Functions", menuPageAxe);
-byte ToolChoose = 0;
 SelectOptionByte selectToolOptions[] = {{"Tool_0", 0}, {"Tool_1", 1}, {"Tool_2", 2}, {"Tool_3", 3}, {"Tool_4", 4}, {"Tool_5", 5}};
 GEMSelect selectTool(sizeof(selectToolOptions)/sizeof(SelectOptionByte), selectToolOptions);
-void applyTool(); // Forward declaration
 GEMItem menuItemTool("Tool:", ToolChoose, selectTool, applyTool);
-boolean RelativeMode = false;
-void ActionChangeRelaticeMode();
 GEMItem menuItemRelativeMode("Relative:", RelativeMode,ActionChangeRelaticeMode);
-void ActionResetX(); // Forward declaration
 GEMItem menuItemButtonResetX("Set X to zero", ActionResetX);
-void ActionResetY(); // Forward declaration
 GEMItem menuItemButtonResetY("Set Y to zero", ActionResetY);
-float fAxeXPos = 0;
-void ActionAxeXPos(); // Forward declaration
 GEMItem menuItemAxeXPos("X Pos:", fAxeXPos,ActionAxeXPos);
-float fAxeYPos = 0;
-void ActionAxeYPos(); // Forward declaration
 GEMItem menuItemAxeYPos("Y Pos:", fAxeYPos,ActionAxeYPos);
-
-//Motor Functions ****************************************
 GEMPage menuPageMotor("Motor Functions"); // Motor submenu
 GEMItem menuItemMotor("Motor Functions", menuPageMotor);
-boolean bUseMotor = false;
-void ActionUseMotor(); // Forward declaration
 GEMItem menuItemUseMotor("Use motor:", bUseMotor,ActionUseMotor);
-#define MOTOR_MODE_NO_MODE 0
-#define MOTOR_MODE_MANUAL  1
-#define MOTOR_MODE_AUTO    2
-#define MOTOR_MODE_LEFT    3
-byte bMotorMode = 0;
 SelectOptionByte selectMotorModeOptions[] = {{"NoMode", 0}, {"Manual", 1},{"Auto", 2}, {"Left", 3}};
 GEMSelect selectMotorMode(sizeof(selectMotorModeOptions)/sizeof(SelectOptionByte), selectMotorModeOptions);
-void applyMotorMode(); // Forward declaration
 GEMItem menuItemMotorMode("Motor mode:", bMotorMode, selectMotorMode, applyMotorMode);
-float fMotorStopMin = -200.0;
-void ActionMotorStopMin(); // Forward declaration
 GEMItem menuItemMotorStopMin("Stop Min:", fMotorStopMin,ActionMotorStopMin);
-float fMotorStopMax = 200.0;
-void ActionMotorStopMax(); // Forward declaration
 GEMItem menuItemMotorStopMax("Stop Max:", fMotorStopMax,ActionMotorStopMax);
-boolean bUseMotorEndLimit = true;
-void ActionUseMotorEndLimit(); // Forward declaration
 GEMItem menuItemUseMotorEndLimit("Use limit:", bUseMotorEndLimit,ActionUseMotorEndLimit);
-float fMotorCurrentPos = 0;
-void ActionMotorCurrentPos(); // Forward declaration
 GEMItem menuItemMotorCurrentPos("CurrentPos:", fMotorCurrentPos,ActionMotorCurrentPos);
-int iMotorSpeed = 1000;
-void ActionMotorMotorSpeed(); // Forward declaration
 GEMItem menuItemMotorSpeed("Speed:", iMotorSpeed,ActionMotorMotorSpeed);
-void ActionSetCurrentToMax(); // Forward declaration
 GEMItem menuItemButtonSetPosToMax("CurrentPos -> Max", ActionSetCurrentToMax);
-void ActionSetCurrentToMin(); // Forward declaration
 GEMItem menuItemButtonSetPosToMin("CurrentPos -> Min", ActionSetCurrentToMin);
-void ActionResetCurrentPos(); // Forward declaration
 GEMItem menuItemButtonResetCurrentPos("Reset CurrentPos", ActionResetCurrentPos);
-//Sub menu of motor for thread parameters ****************************************
 GEMPage menuPageThreadParameters("Thread parameters"); // Thread parameters submenu
 GEMItem menuItemThreadParameters("Thread parameters", menuPageThreadParameters);
-int iMotorThread = 100;
-void ActionMotorChangeThread(); // Forward declaration
 GEMItem menuItemMotorThread("Thread:", iMotorThread,ActionMotorChangeThread);
-float fMotor1ThreadOffset = 0.0;
-void ActionChangeMotor1Offset(); // Forward declaration
 GEMItem menuItemMotor1ThreadOffset("Offset:", fMotor1ThreadOffset,ActionChangeMotor1Offset);
-boolean Motor1ThreadUseY = false;
-void ActionMotor1ThreadUseY();
 GEMItem menuItemMotor1ThreadUseY("Use Y:", Motor1ThreadUseY,ActionMotor1ThreadUseY);
-float fMotor1ThreadDiameter = 0.0;
-void ActionChangeMotor1ThreadDiameter(); // Forward declaration
 GEMItem menuItemMotor1ThreadDiameter("Diameter:", fMotor1ThreadDiameter,ActionChangeMotor1ThreadDiameter);
-float fMotor1ThreadAngle = 30.0;
-void ActionChangeMotor1ThreadAngle(); // Forward declaration
 GEMItem menuItemMotor1ThreadAngle("Angle:", fMotor1ThreadAngle,ActionChangeMotor1ThreadAngle);
-
-
-float fM1ActualSpeed; // Motor Actual Speed
-
-//Screen choose
-#define  SCREEN_DRO 0
-#define  SCREEN_MOT1 1
-#define  SCREEN_DEBUG 2
-#define  SCREEN_END_LIST 2 
-byte eScreenChoose = SCREEN_DRO;
 SelectOptionByte selectScreenOptions[] = {{"DroXYC", 0}, {"Mot1", 1}, {"Debug", 2}};
 GEMSelect selectScreenMode(sizeof(selectScreenOptions)/sizeof(SelectOptionByte), selectScreenOptions);
-void ActionScreenMode(); // Forward declaration
 GEMItem menuItemScreenMode("Screen:", eScreenChoose, selectScreenMode, ActionScreenMode);
-void ActionChangeScreen();// Forward declaration
 
-//Threading machine state
-typedef enum
-{
-  MS_THREAD_IDLE = 0, //Idle
-  MS_THREAD_WAIT_THE_START = 1, //Wait the action to start
-  MS_THREAD_WAIT_THE_SPLINDLE_ZERO = 2, // Wait spindle zero
-  MS_THREAD_IN_THREAD = 3, // In threat
-  MS_THREAD_END_THREAD = 4, // Wait the button to return
-  MS_THREAD_IN_RETURN = 5 // In return
-} teMS_ThreadingMode;
-teMS_ThreadingMode eMS_Thread = MS_THREAD_IDLE;
+//Class instance ******************************************
+GEM_u8g2 menu(u8g2,GEM_POINTER_ROW,5,10,10,75); // menu
+QuadDecoder Quad_Y(3,QuadDecoder::LinearEncoder,512,false,false,IT_Timer3_Overflow); //Quad Y with timer 3
+QuadDecoder Quad_Z(2,QuadDecoder::RotaryEncoder,1200,true,false,IT_Timer2_Overflow); //Quad Z with timer 2
+QuadDecoder Quad_X(1,QuadDecoder::LinearEncoder,512,false,false,IT_Timer1_Overflow); //Quad X with timer 1
+HardwareTimer MotorControl(4);  //for motor control with timer 4
+StepperMotor Motor1(800,false,PIN_MOT1_STEP,PIN_MOT1_DIR,PIN_MOT1_EN, Update_Overlfow_Timer4);// Motor 1
 
-typedef struct
-{
-  long Numerator;
-  long Denominator;
-  long Offset;  
-} tsThreadCalc;
-tsThreadCalc sThreadCalc; 
-
-
-// Create menu object of class GEM_u8g2
-GEM_u8g2 menu(u8g2,GEM_POINTER_ROW,5,10,10,75);
-
-//Quadrature decoder
-void IT_Timer1_Overflow(); // Forward declaration
-void IT_Timer2_Overflow(); // Forward declaration
-void IT_Timer3_Overflow(); // Forward declaration
-QuadDecoder Quad_Y(3,QuadDecoder::LinearEncoder,512,false,false,IT_Timer3_Overflow); //Timer 3
-QuadDecoder Quad_Z(2,QuadDecoder::RotaryEncoder,1200,true,false,IT_Timer2_Overflow); //Timer 2
-QuadDecoder Quad_X(1,QuadDecoder::LinearEncoder,512,false,false,IT_Timer1_Overflow); //Timer 1
+//Interrupt handler functions ******************************************
 void IT_Timer1_Overflow(){Quad_X.IT_OverflowHardwareTimer();}
 void IT_Timer3_Overflow(){Quad_Y.IT_OverflowHardwareTimer();}
 void IT_Timer2_Overflow()
@@ -248,13 +257,6 @@ void IT_Timer2_Overflow()
     eMS_Thread = MS_THREAD_IN_THREAD;   
   }  
 }
-//Hardware timer 4 for motor control
-HardwareTimer MotorControl(4); 
-//Motor Class
-
-void Update_Overlfow_Timer4();
-StepperMotor Motor1(800,false,PIN_MOT1_STEP,PIN_MOT1_DIR,PIN_MOT1_EN, Update_Overlfow_Timer4);
-
 //Timer 4 overflow for Step motor
 void handler_Timer4_overflow()
 { 
@@ -274,17 +276,6 @@ void Update_Overlfow_Timer4()
 {
   MotorControl.setOverflow(Motor1.NewInterval());  
 }
-
-// ***************************************************************************************
-// Forward declarations Funtions
- 
-void CalcMotorParameterForThread(); //Forward declaration
-void UsbSerial_Pos(); 
-void Display_UpdateRealTimeData(); //Forward declarations
-void ActionMotorSpeedUp();//Forward declarations
-void ActionMotorSpeedDown();//Forward declarations
-void Display_StartScreen(); //Forward declarations
-
 // ***************************************************************************************
 // ***************************************************************************************
 // *** setup, loop, ...  *****************************************************************
@@ -671,15 +662,6 @@ void UsbSerial_Pos()
 // ***************************************************************************************
 // ***************************************************************************************
 // *** Display functions *****************************************************************
-
-
-void Display_X_Informations(); //Forward declarations
-void Display_Y_Informations(); //Forward declarations
-void Display_C_Informations(); //Forward declarations
-void Display_M_Informations(); //Forward declarations
-void Display_Extra_Informations(); //Forward declarations
-void Display_Debug_Informations(); //Forward declarations
-
 void Display_StartScreen() 
 {
   u8g2.firstPage();
@@ -867,9 +849,6 @@ void Display_Debug_Informations()
   sprintf(bufferChar,"_cmin:%f",Motor1._cmin);
   u8g2.drawStr(0,36,bufferChar);  // write something to the internal memory
 }
-
-
-
 // ***************************************************************************************
 // ***************************************************************************************
 // *** Action functions from menu ********************************************************
