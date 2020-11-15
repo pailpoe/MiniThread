@@ -121,14 +121,14 @@ float       fAxeCSpeed = 0; // C speed
 byte        bMotorMode = 0;
 boolean     bUseMotor = false;
 float       fMotorStopMin = 0.0;
-float       fMotorStopMax = 2.0;
+float       fMotorStopMax = 200.0;
 boolean     bUseMotorEndLimit = true;
 float       fMotorCurrentPos = 0;
 int         iMotorSpeed = 1000;
 int         iMotorThread = 100;
 float       fMotor1ThreadOffset = 0.0;
-boolean     bMotor1ThreadUseY = true;
-float       fMotor1ThreadDiameter = 2.0;
+boolean     bMotor1ThreadUseY = false;
+float       fMotor1ThreadDiameter = 0.0;
 float       fMotor1ThreadAngle = 30.0;
 float       fM1ActualSpeed; // Motor Actual Speed
 float       fM1MaxThreadSpeed; // Motor Max spindle speed for thread
@@ -637,7 +637,8 @@ void Dispatch_Config(tsConfigDro *pConf)
   Quad_Y.SetResolution(pConf->Reso_Y);
   Quad_Z.SetResolution(pConf->Reso_Z);
   Motor1.ChangeParameter((unsigned int)((long)(  pConf->Reso_M1*100/pConf->thread_M1)) , pConf->Inverted_M1);
-  Motor1.ChangeAcceleration(pConf->Accel_M1); 
+  Motor1.ChangeAcceleration(pConf->Accel_M1);
+  CalcMotorMaxSpeedForThread(); 
 }
 void ActionSaveSettingsInFlash()
 {
