@@ -18,7 +18,6 @@ Revision        :
 #include "src/StepperMotor/StepperMotor.h"
 #include "src/Various/Splash.h"
 #include "src/Various/Various.h"
-
 #include <EEPROM.h>
 
 #define TEXT_MAIN_MENU_TITLE "MiniThread"
@@ -42,9 +41,6 @@ Revision        :
 #define PIN_SW_COL_3   PB10
 #define PIN_SW_COL_4   PB11
 
-//Instance Screen 
-U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, PIN_RES_SCR);
-
 //Keyboard
 const byte ROWS = 4; //four rows
 const byte COLS = 4; //four columns
@@ -56,10 +52,6 @@ char hexaKeys[ROWS][COLS] = {
 };
 byte rowPins[ROWS] = {PIN_SW_LIN_1, PIN_SW_LIN_2, PIN_SW_LIN_3, PIN_SW_LIN_4};
 byte colPins[COLS] = {PIN_SW_COL_1, PIN_SW_COL_2, PIN_SW_COL_3, PIN_SW_COL_4};
-//initialize an instance of class NewKeypad
-Keypad customKeypad ( makeKeymap(hexaKeys), rowPins, colPins, ROWS, COLS);
-
-
 
 //Struct and Enum def  ******************************************
 typedef struct
@@ -245,12 +237,14 @@ GEMSelect selectScreenMode(sizeof(selectScreenOptions)/sizeof(SelectOptionByte),
 GEMItem menuItemScreenMode("Screen:", eScreenChoose, selectScreenMode, ActionScreenMode);
 
 //Class instance ******************************************
+U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, PIN_RES_SCR); //Screen
 GEM_u8g2 menu(u8g2,GEM_POINTER_ROW,5,10,10,75); // menu
 QuadDecoder Quad_Y(3,QuadDecoder::LinearEncoder,512,false,false,IT_Timer3_Overflow); //Quad Y with timer 3
 QuadDecoder Quad_Z(2,QuadDecoder::RotaryEncoder,1200,true,false,IT_Timer2_Overflow); //Quad Z with timer 2
 QuadDecoder Quad_X(1,QuadDecoder::LinearEncoder,512,false,false,IT_Timer1_Overflow); //Quad X with timer 1
 HardwareTimer MotorControl(4);  //for motor control with timer 4
 StepperMotor Motor1(800,false,PIN_MOT1_STEP,PIN_MOT1_DIR,PIN_MOT1_EN, Update_Overlfow_Timer4);// Motor 1
+Keypad customKeypad ( makeKeymap(hexaKeys), rowPins, colPins, ROWS, COLS); //Keypad
 
 //Interrupt handler functions ******************************************
 void IT_Timer1_Overflow(){Quad_X.IT_OverflowHardwareTimer();}
