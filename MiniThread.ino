@@ -21,9 +21,9 @@ Revision        :
 
 #include <EEPROM.h>
 
-#define TEXT_MAIN_MENU_TITLE "MiniThread V1.0"
+#define TEXT_MAIN_MENU_TITLE "MiniThread"
 #define TEXT_AUTHOR_SOFT "Pailpoe"
-#define TEXT_VERSION_SOFT "V1.0"
+#define TEXT_VERSION_SOFT "1.0.0 Dev"
 
 // IO def ( for quad decoder, define in class !)
 #define PIN_RES_SCR    PB9
@@ -166,15 +166,31 @@ GEMItem menuItemMotorCurrentPos("CurrentPos:", fMotorCurrentPos,ActionMotorCurre
 int iMotorSpeed = 1000;
 void ActionMotorMotorSpeed(); // Forward declaration
 GEMItem menuItemMotorSpeed("Speed:", iMotorSpeed,ActionMotorMotorSpeed);
-int iMotorThread = 100;
-void ActionMotorChangeThread(); // Forward declaration
-GEMItem menuItemMotorThread("Thread:", iMotorThread,ActionMotorChangeThread);
 void ActionSetCurrentToMax(); // Forward declaration
 GEMItem menuItemButtonSetPosToMax("CurrentPos -> Max", ActionSetCurrentToMax);
 void ActionSetCurrentToMin(); // Forward declaration
 GEMItem menuItemButtonSetPosToMin("CurrentPos -> Min", ActionSetCurrentToMin);
 void ActionResetCurrentPos(); // Forward declaration
 GEMItem menuItemButtonResetCurrentPos("Reset CurrentPos", ActionResetCurrentPos);
+//Sub menu of motor for thread parameters ****************************************
+GEMPage menuPageThreadParameters("Thread parameters"); // Thread parameters submenu
+GEMItem menuItemThreadParameters("Thread parameters", menuPageThreadParameters);
+int iMotorThread = 100;
+void ActionMotorChangeThread(); // Forward declaration
+GEMItem menuItemMotorThread("Thread:", iMotorThread,ActionMotorChangeThread);
+float fMotor1ThreadOffset = 0;
+void ActionChangeMotor1Offset(); // Forward declaration
+GEMItem menuItemMotor1ThreadOffset("Offset:", fMotor1ThreadOffset,ActionChangeMotor1Offset);
+boolean Motor1ThreadUseY = false;
+void ActionMotor1ThreadUseY();
+GEMItem menuItemMotor1ThreadUseY("Use Y:", Motor1ThreadUseY,ActionMotor1ThreadUseY);
+float fMotor1ThreadDiameter = 0;
+void ActionChangeMotor1ThreadDiameter(); // Forward declaration
+GEMItem menuItemMotor1ThreadDiameter("Diameter:", fMotor1ThreadDiameter,ActionChangeMotor1ThreadDiameter);
+float fMotor1ThreadAngle = 0;
+void ActionChangeMotor1ThreadAngle(); // Forward declaration
+GEMItem menuItemMotor1ThreadAngle("Angle:", fMotor1ThreadAngle,ActionChangeMotor1ThreadAngle);
+
 
 float fM1ActualSpeed; // Motor Actual Speed
 
@@ -190,7 +206,7 @@ void ActionScreenMode(); // Forward declaration
 GEMItem menuItemScreenMode("Screen:", eScreenChoose, selectScreenMode, ActionScreenMode);
 void ActionChangeScreen();// Forward declaration
 
-//Threading state
+//Threading machine state
 typedef enum
 {
   MS_THREAD_IDLE = 0, //Idle
@@ -201,6 +217,7 @@ typedef enum
   MS_THREAD_IN_RETURN = 5 // In return
 } teMS_ThreadingMode;
 teMS_ThreadingMode eMS_Thread = MS_THREAD_IDLE;
+
 typedef struct
 {
   long Numerator;
@@ -210,7 +227,7 @@ typedef struct
 tsThreadCalc sThreadCalc; 
 
 
-// Create menu object of class GEM_u8g2. Supply its constructor with reference to u8g2 object we created earlier
+// Create menu object of class GEM_u8g2
 GEM_u8g2 menu(u8g2,GEM_POINTER_ROW,5,10,10,75);
 
 //Quadrature decoder
@@ -323,6 +340,13 @@ void setupMenu() {
   menuPageAxe.addMenuItem(menuItemAxeXPos);
   menuPageAxe.addMenuItem(menuItemAxeYPos);
   menuPageAxe.setParentMenuPage(menuPageMain);
+  //Create sub menu Thread parameter form menu Motor
+  menuPageThreadParameters.setParentMenuPage(menuPageMotor);
+  menuPageThreadParameters.addMenuItem(menuItemMotorThread);
+  menuPageThreadParameters.addMenuItem(menuItemMotor1ThreadOffset);
+  menuPageThreadParameters.addMenuItem(menuItemMotor1ThreadUseY);
+  menuPageThreadParameters.addMenuItem(menuItemMotor1ThreadDiameter);
+  menuPageThreadParameters.addMenuItem(menuItemMotor1ThreadAngle);
   //Add Sub menu Motor
   menuPageMain.addMenuItem(menuItemMotor);
   menuPageMotor.addMenuItem(menuItemUseMotor);
@@ -332,7 +356,7 @@ void setupMenu() {
   menuPageMotor.addMenuItem(menuItemUseMotorEndLimit);
   menuPageMotor.addMenuItem(menuItemMotorCurrentPos);
   menuPageMotor.addMenuItem(menuItemMotorSpeed);
-  menuPageMotor.addMenuItem(menuItemMotorThread);
+  menuPageMotor.addMenuItem(menuItemThreadParameters); //Sub menu thread parameter
   menuPageMotor.addMenuItem(menuItemButtonSetPosToMax);
   menuPageMotor.addMenuItem(menuItemButtonSetPosToMin);
   menuPageMotor.addMenuItem(menuItemButtonResetCurrentPos);
@@ -662,7 +686,7 @@ void Display_StartScreen()
   {
     u8g2.setFont(u8g2_font_6x12_tr); // choose a suitable font
     u8g2.drawStr(0,55,TEXT_AUTHOR_SOFT);
-    u8g2.drawStr(100,55,TEXT_VERSION_SOFT);   
+    u8g2.drawStr(70,55,TEXT_VERSION_SOFT);   
   } while (u8g2.nextPage()); 
   delay(2000);
   u8g2.firstPage();
@@ -1010,4 +1034,20 @@ void ActionChangeScreen()
 {
   if(eScreenChoose>=SCREEN_END_LIST)eScreenChoose = SCREEN_DRO;
   else eScreenChoose++; 
+}
+void ActionChangeMotor1Offset()
+{
+  if(fMotor1ThreadOffset < 0)fMotor1ThreadOffset = 0.0;
+  if(fMotor1ThreadOffset > 360)fMotor1ThreadOffset = 360.0;   
+}
+void ActionMotor1ThreadUseY()
+{
+}
+void ActionChangeMotor1ThreadDiameter()
+{
+}
+void ActionChangeMotor1ThreadAngle()
+{
+  if(fMotor1ThreadAngle < 0)fMotor1ThreadAngle = 0.0;
+  if(fMotor1ThreadAngle > 70)fMotor1ThreadAngle = 70; 
 }
