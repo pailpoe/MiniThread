@@ -178,7 +178,7 @@ GEMItem menuItemThreadParameters("Thread parameters", menuPageThreadParameters);
 int iMotorThread = 100;
 void ActionMotorChangeThread(); // Forward declaration
 GEMItem menuItemMotorThread("Thread:", iMotorThread,ActionMotorChangeThread);
-float fMotor1ThreadOffset = 0.0;
+float fMotor1ThreadOffset = 180.0;
 void ActionChangeMotor1Offset(); // Forward declaration
 GEMItem menuItemMotor1ThreadOffset("Offset:", fMotor1ThreadOffset,ActionChangeMotor1Offset);
 boolean Motor1ThreadUseY = false;
@@ -558,10 +558,12 @@ void DebugContextLoop()
       u8g2.setFont(u8g2_font_profont10_mr); // choose a suitable font
       CalcMotorParameterForThread();
       char buffer[16];
-      sprintf(buffer,"Numerator:%u",sThreadCalc.Numerator);
+      sprintf(buffer,"Numerator:%ld",sThreadCalc.Numerator);
       u8g2.drawStr(0,0,buffer);
-      sprintf(buffer,"Denominator:%u",sThreadCalc.Denominator);
-      u8g2.drawStr(0,10,buffer);      
+      sprintf(buffer,"Denominator:%ld",sThreadCalc.Denominator);
+      u8g2.drawStr(0,10,buffer);
+      sprintf(buffer,"Offset:%ld",sThreadCalc.Offset);
+      u8g2.drawStr(0,20,buffer);       
   } while (u8g2.nextPage());
   if (key == GEM_KEY_CANCEL) 
   { 
@@ -925,14 +927,15 @@ void ActionUseMotorEndLimit()
 void CalcMotorParameterForThread()
 {
   long lnumber;
+  float OffsetFixe; //Constant offset
   sThreadCalc.Numerator = ConfigDro.Reso_M1 * iMotorThread;  
   sThreadCalc.Denominator = ConfigDro.thread_M1 * ConfigDro.Reso_Z ; 
   lnumber = GCD_Function(sThreadCalc.Numerator,sThreadCalc.Denominator);
   sThreadCalc.Numerator = sThreadCalc.Numerator / lnumber;
   sThreadCalc.Denominator = sThreadCalc.Denominator / lnumber;   
-  //sThreadCalc.Numerator = 16 * iMotorThread;  
-  //sThreadCalc.Denominator = 2400; 
-  sThreadCalc.Offset = Motor1.GetStopPositionMinStep() ;  
+  //Calcul of the offset
+  OffsetFixe = (float)(fMotor1ThreadOffset*iMotorThread*ConfigDro.Reso_M1) /(float)(360*ConfigDro.thread_M1); 
+  sThreadCalc.Offset = Motor1.GetStopPositionMinStep() - (long)OffsetFixe ;  
 }
 void applyMotorMode()
 {
