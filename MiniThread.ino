@@ -660,7 +660,9 @@ void ActionSaveSettingsInFlash()
   Dispatch_Config(&sGeneralConf); 
   //PrintInformationOnScreen("Save in flash");
   //delay(100);  
-  bSettingsNeedToBeSaved = false;  
+  bSettingsNeedToBeSaved = false;
+  Display_Notice_Informations("Settings saved !"); 
+  menu.drawMenu(); //Refresh screen after  
 }
 void ActionRestoreSettingsInFlash()
 {
@@ -668,6 +670,7 @@ void ActionRestoreSettingsInFlash()
   SaveConfigInFlash((tsConfigDro*)&csConfigDefault);
   Restore_Config();
   bSettingsNeedToBeSaved = false;
+  Display_Notice_Informations("Settings restored !");
   menu.drawMenu(); //Refresh screen after 
 }
 
