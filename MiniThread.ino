@@ -102,6 +102,7 @@ typedef struct
 #define MOTOR_MODE_AUTO    2
 #define MOTOR_MODE_LEFT    3
 
+
 // Variables global ******************************************
 tsConfigDro  sGeneralConf;
 boolean     bSettingsNeedToBeSaved = false;
@@ -137,12 +138,12 @@ void Display_UpdateRealTimeData();
 void ActionMotorSpeedUp();
 void ActionMotorSpeedDown();
 void Display_StartScreen(); 
-void ActionRestoreSettingsInFlash(); 
-void ActionSaveSettingsInFlash(); 
+
 void ActionDro(); 
 void ActionDebug(); 
 void applyTool(); 
 
+void NeedToSave();
 void ActionChangeDirX();
 void ActionChangeDirY();
 void ActionChangeDirZ();
@@ -155,6 +156,8 @@ void ActionChangeDiamY();
 void ActionChangeThreadM1();
 void ActionChangeAccelM1();
 void ActionChangeSpeedM1();
+void ActionRestoreSettingsInFlash(); 
+void ActionSaveSettingsInFlash(); 
 
 void ActionChangeRelaticeMode();
 void ActionResetX(); 
@@ -669,6 +672,7 @@ void ActionRestoreSettingsInFlash()
 }
 
 
+
 // ***************************************************************************************
 // ***************************************************************************************
 // *** Usb Serial functions *****************************************************************
@@ -896,65 +900,70 @@ void Display_Notice_Informations(char* str)
 // ***************************************************************************************
 // ***************************************************************************************
 // *** Action functions from menu ********************************************************
-void ActionChangeDirX()
+
+void NeedToSave()
 {
   bSettingsNeedToBeSaved = true;
+}
+void ActionChangeDirX()
+{
+  NeedToSave();  
 }
 void ActionChangeDirY()
 {
-  bSettingsNeedToBeSaved = true;
+  NeedToSave();
 }
 void ActionChangeDirZ()
 {
-  bSettingsNeedToBeSaved = true;
+  NeedToSave();
 }
 void ActionChangeDirM1()
 {
-  bSettingsNeedToBeSaved = true;
+  NeedToSave();
 }
 void ActionChangeResoX()
 {
-  bSettingsNeedToBeSaved = true;
+  NeedToSave();
   if(sGeneralConf.Reso_X < 1)sGeneralConf.Reso_X = 1;
   if(sGeneralConf.Reso_X > 10000)sGeneralConf.Reso_X = 10000;     
 }
 void ActionChangeResoY()
 {
-  bSettingsNeedToBeSaved = true;
+  NeedToSave();
   if(sGeneralConf.Reso_Y < 1)sGeneralConf.Reso_Y = 1;
   if(sGeneralConf.Reso_Y > 10000)sGeneralConf.Reso_Y = 10000;  
 }
 void ActionChangeResoZ()
 {
-  bSettingsNeedToBeSaved = true;
+  NeedToSave();
   if(sGeneralConf.Reso_Z < 1)sGeneralConf.Reso_Z = 1;
   if(sGeneralConf.Reso_Z > 10000)sGeneralConf.Reso_Z = 10000;   
 }
 void ActionChangeResoM1()
 {
-  bSettingsNeedToBeSaved = true;
+  NeedToSave();
   if(sGeneralConf.Reso_M1 < 1)sGeneralConf.Reso_M1 = 1;
   if(sGeneralConf.Reso_M1 > 10000)sGeneralConf.Reso_M1 = 10000;  
 }
 void ActionChangeDiamY()
 {
-  bSettingsNeedToBeSaved = true;
+  NeedToSave();
 }
 void ActionChangeThreadM1()
 {
-  bSettingsNeedToBeSaved = true;
+  NeedToSave();
   if(sGeneralConf.thread_M1 < 1)sGeneralConf.thread_M1 = 1;
   if(sGeneralConf.thread_M1 > 10000)sGeneralConf.thread_M1 = 10000;
 }
 void ActionChangeAccelM1()
 {
-  bSettingsNeedToBeSaved = true;
+  NeedToSave();
   if(sGeneralConf.Accel_M1 < 1.0)sGeneralConf.Accel_M1 = 1.0;
   if(sGeneralConf.Accel_M1 > 500000.0)sGeneralConf.Accel_M1 = 500000.0;
 }
 void ActionChangeSpeedM1()
 {
-  bSettingsNeedToBeSaved = true;
+  NeedToSave();
   if(sGeneralConf.Speed_M1 < 1)sGeneralConf.Speed_M1 = 1;
   if(sGeneralConf.Speed_M1 > 30000)sGeneralConf.Speed_M1 = 30000;
 }
