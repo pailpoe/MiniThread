@@ -123,7 +123,7 @@ int         iMotorThread = 100;
 float       fMotor1ThreadOffset = 0.0;
 boolean     bMotor1ThreadUseY = false;
 float       fMotor1ThreadDiameter = 0.0;
-float       fMotor1ThreadAngle = 30.0;
+float       fMotor1ThreadAngle = 0.0;
 float       fM1ActualSpeed; // Motor Actual Speed
 float       fM1MaxThreadSpeed; // Motor Max spindle speed for thread
 byte        eScreenChoose = SCREEN_DRO;
@@ -1041,19 +1041,11 @@ void applyMotorMode()
   {
     case MOTOR_MODE_LEFT :
       //Left thread
-      if( bUseMotorEndLimit && Motor1.AreYouAtMinPos())
-      {
-        //Need to have end limit and position at min pos to start
-        eMS_Thread = MS_THREAD_WAIT_THE_START;
-        //Use Max speed in the setting
-        Motor1.ChangeMaxSpeed(sGeneralConf.Speed_M1); 
-        //Motor in position mode
-        Motor1.ChangeTheMode(StepperMotor::PositionMode);    
-      }
-      else
-      {
-        bMotorMode = MOTOR_MODE_NO_MODE;  
-      } 
+      eMS_Thread = MS_THREAD_WAIT_THE_START;
+      //Use Max speed in the setting
+      Motor1.ChangeMaxSpeed(sGeneralConf.Speed_M1); 
+      //Motor in position mode
+      Motor1.ChangeTheMode(StepperMotor::PositionMode);    
     break; 
     case MOTOR_MODE_NO_MODE :
     case MOTOR_MODE_MANUAL :
@@ -1169,15 +1161,29 @@ boolean M1_AreYouOkToStartTheThread()
     }   
   } 
   CalcMotorMaxSpeedForThread(); //Check the speed
+  //Check the max speed
   if( fAxeCSpeed >= fM1MaxThreadSpeed)
   {
     result = false;
     Display_Notice_Informations("Reduce spindle speed");     
   }
+  //Check the direction
   if( fAxeCSpeed < 0 )
   {
     result = false;
     Display_Notice_Informations("Spindle wrong dir");     
+  }
+  //Check if endlimit is on
+  if( !bUseMotorEndLimit)
+  {
+    result = false;
+    Display_Notice_Informations("No end limit");     
+  } 
+  //Check if the motor is at min pos
+  if( !Motor1.AreYouAtMinPos())
+  {
+    result = false;
+    Display_Notice_Informations("No at min pos");     
   }   
   return result;
 }
