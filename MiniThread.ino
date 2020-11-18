@@ -104,6 +104,7 @@ typedef struct
 
 // Variables global ******************************************
 tsConfigDro  sGeneralConf;
+boolean     bSettingsNeedToBeSaved = false;
 float       TestFloat = 999.2;
 byte        bToolChoose = 0; //Tool selection
 boolean     bRelativeModeActived = false; //Relative or absolute mode
@@ -141,6 +142,20 @@ void ActionSaveSettingsInFlash();
 void ActionDro(); 
 void ActionDebug(); 
 void applyTool(); 
+
+void ActionChangeDirX();
+void ActionChangeDirY();
+void ActionChangeDirZ();
+void ActionChangeDirM1();
+void ActionChangeResoX();
+void ActionChangeResoY();
+void ActionChangeResoZ();
+void ActionChangeResoM1();
+void ActionChangeDiamY();
+void ActionChangeThreadM1();
+void ActionChangeAccelM1();
+void ActionChangeSpeedM1();
+
 void ActionChangeRelaticeMode();
 void ActionResetX(); 
 void ActionResetY(); 
@@ -180,18 +195,18 @@ void Display_Notice_Informations(char* str);
 //Menu item ******************************************
 GEMPage menuPageSettings("Settings"); // Settings submenu
 GEMItem menuItemMainSettings("Settings", menuPageSettings);
-GEMItem menuItemDirX("X dir:", sGeneralConf.Inverted_X);
-GEMItem menuItemDirY("Y dir:", sGeneralConf.Inverted_Y);
-GEMItem menuItemDirZ("C dir:", sGeneralConf.Inverted_Z);
-GEMItem menuItemDiamY("Y diameter:", sGeneralConf.Diameter_Mode_Y);
-GEMItem menuItemResoX("X step/mm:", sGeneralConf.Reso_X);
-GEMItem menuItemResoY("Y step/mm:", sGeneralConf.Reso_Y);
-GEMItem menuItemResoZ("C step/tr:", sGeneralConf.Reso_Z);
-GEMItem menuItemDirM1("M1 dir:", sGeneralConf.Inverted_M1);
-GEMItem menuItemResoM1("M1 step/tr:", sGeneralConf.Reso_M1);
-GEMItem menuItemThreadM1("M1 thread:", sGeneralConf.thread_M1);
-GEMItem menuItemAccelM1("M1 accel:", sGeneralConf.Accel_M1);
-GEMItem menuItemSpeedM1("M1 speed:", sGeneralConf.Speed_M1);
+GEMItem menuItemDirX("X dir:", sGeneralConf.Inverted_X,ActionChangeDirX);
+GEMItem menuItemDirY("Y dir:", sGeneralConf.Inverted_Y,ActionChangeDirY);
+GEMItem menuItemDirZ("C dir:", sGeneralConf.Inverted_Z,ActionChangeDirZ);
+GEMItem menuItemDiamY("Y diameter:", sGeneralConf.Diameter_Mode_Y,ActionChangeDiamY);
+GEMItem menuItemResoX("X step/mm:", sGeneralConf.Reso_X,ActionChangeResoX);
+GEMItem menuItemResoY("Y step/mm:", sGeneralConf.Reso_Y,ActionChangeResoY);
+GEMItem menuItemResoZ("C step/tr:", sGeneralConf.Reso_Z,ActionChangeResoZ);
+GEMItem menuItemDirM1("M1 dir:", sGeneralConf.Inverted_M1,ActionChangeDirM1);
+GEMItem menuItemResoM1("M1 step/tr:", sGeneralConf.Reso_M1,ActionChangeResoM1);
+GEMItem menuItemThreadM1("M1 thread:", sGeneralConf.thread_M1,ActionChangeThreadM1);
+GEMItem menuItemAccelM1("M1 accel:", sGeneralConf.Accel_M1,ActionChangeAccelM1);
+GEMItem menuItemSpeedM1("M1 speed:", sGeneralConf.Speed_M1,ActionChangeSpeedM1);
 GEMItem menuItemButtonRestoreSettings("Restore settings", ActionRestoreSettingsInFlash);
 GEMItem menuItemButtonSaveSettings("Save settings", ActionSaveSettingsInFlash);
 GEMItem menuItemButtonDro("Return to Screen", ActionDro);
@@ -641,13 +656,15 @@ void ActionSaveSettingsInFlash()
   //Dispatch config to function
   Dispatch_Config(&sGeneralConf); 
   //PrintInformationOnScreen("Save in flash");
-  //delay(100);   
+  //delay(100);  
+  bSettingsNeedToBeSaved = false;  
 }
 void ActionRestoreSettingsInFlash()
 {
   //Save default config in flash
   SaveConfigInFlash((tsConfigDro*)&csConfigDefault);
-  Restore_Config();  
+  Restore_Config();
+  bSettingsNeedToBeSaved = false; 
 }
 
 
@@ -675,6 +692,7 @@ void UsbSerial_Pos()
 // *** Display functions *****************************************************************
 void Display_StartScreen() 
 {
+  u8g2.clear();
   u8g2.firstPage();
   u8g2.setFontPosTop();
   do 
@@ -689,6 +707,7 @@ void Display_StartScreen()
     u8g2.drawStr(70,55,TEXT_VERSION_SOFT);   
   } while (u8g2.nextPage()); 
   delay(2000);
+  u8g2.clear();
   u8g2.firstPage();
   do 
   {
@@ -876,6 +895,68 @@ void Display_Notice_Informations(char* str)
 // ***************************************************************************************
 // ***************************************************************************************
 // *** Action functions from menu ********************************************************
+void ActionChangeDirX()
+{
+  bSettingsNeedToBeSaved = true;
+}
+void ActionChangeDirY()
+{
+  bSettingsNeedToBeSaved = true;
+}
+void ActionChangeDirZ()
+{
+  bSettingsNeedToBeSaved = true;
+}
+void ActionChangeDirM1()
+{
+  bSettingsNeedToBeSaved = true;
+}
+void ActionChangeResoX()
+{
+  bSettingsNeedToBeSaved = true;
+  if(sGeneralConf.Reso_X < 1)sGeneralConf.Reso_X = 1;
+  if(sGeneralConf.Reso_X > 10000)sGeneralConf.Reso_X = 10000;     
+}
+void ActionChangeResoY()
+{
+  bSettingsNeedToBeSaved = true;
+  if(sGeneralConf.Reso_Y < 1)sGeneralConf.Reso_Y = 1;
+  if(sGeneralConf.Reso_Y > 10000)sGeneralConf.Reso_Y = 10000;  
+}
+void ActionChangeResoZ()
+{
+  bSettingsNeedToBeSaved = true;
+  if(sGeneralConf.Reso_Z < 1)sGeneralConf.Reso_Z = 1;
+  if(sGeneralConf.Reso_Z > 10000)sGeneralConf.Reso_Z = 10000;   
+}
+void ActionChangeResoM1()
+{
+  bSettingsNeedToBeSaved = true;
+  if(sGeneralConf.Reso_M1 < 1)sGeneralConf.Reso_M1 = 1;
+  if(sGeneralConf.Reso_M1 > 10000)sGeneralConf.Reso_M1 = 10000;  
+}
+void ActionChangeDiamY()
+{
+  bSettingsNeedToBeSaved = true;
+}
+void ActionChangeThreadM1()
+{
+  bSettingsNeedToBeSaved = true;
+  if(sGeneralConf.thread_M1 < 1)sGeneralConf.thread_M1 = 1;
+  if(sGeneralConf.thread_M1 > 10000)sGeneralConf.thread_M1 = 10000;
+}
+void ActionChangeAccelM1()
+{
+  bSettingsNeedToBeSaved = true;
+  if(sGeneralConf.Accel_M1 < 1.0)sGeneralConf.Accel_M1 = 1.0;
+  if(sGeneralConf.Accel_M1 > 500000.0)sGeneralConf.Accel_M1 = 500000.0;
+}
+void ActionChangeSpeedM1()
+{
+  bSettingsNeedToBeSaved = true;
+  if(sGeneralConf.Speed_M1 < 1)sGeneralConf.Speed_M1 = 1;
+  if(sGeneralConf.Speed_M1 > 30000)sGeneralConf.Speed_M1 = 30000;
+}
 
 void ActionChangeRelaticeMode()
 {  
