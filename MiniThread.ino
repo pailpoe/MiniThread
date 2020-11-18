@@ -664,7 +664,8 @@ void ActionRestoreSettingsInFlash()
   //Save default config in flash
   SaveConfigInFlash((tsConfigDro*)&csConfigDefault);
   Restore_Config();
-  bSettingsNeedToBeSaved = false; 
+  bSettingsNeedToBeSaved = false;
+  menu.drawMenu(); //Refresh screen after 
 }
 
 
