@@ -301,15 +301,21 @@ void Update_Overlfow_Timer4()
 void setup() 
 {
   //Delay  for boot of the screen without problem
-  delay(200);
+  delay(500);
+  /*
   pinMode(PIN_RES_SCR, OUTPUT);  //channel A
   digitalWrite(PIN_RES_SCR,0);
   delay(200);
   digitalWrite(PIN_RES_SCR,1);
   delay(200);
-
+  */
+  u8g2.initDisplay();
+  u8g2.setPowerSave(0);
+  u8g2.clear();
+  u8g2.setDrawColor(1);
+  u8g2.setFontPosTop();
     
-  u8g2.begin();
+  //u8g2.begin();
   //Display start screen
   Display_StartScreen();
   
