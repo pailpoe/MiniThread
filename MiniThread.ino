@@ -75,7 +75,7 @@ const tsConfigDro csConfigDefault = {false,false,false,true,512,512,1200,false,1
 typedef enum
 {
   MS_THREAD_IDLE = 0, //Idle
-  MS_THREAD_WAIT_THE_START = 1, //Wait the action to start
+  MS_THREAD_WAIT_THE_START = 1, //Wait the button to start
   MS_THREAD_WAIT_THE_SPLINDLE_ZERO = 2, // Wait spindle zero
   MS_THREAD_IN_THREAD = 3, // In threat
   MS_THREAD_END_THREAD = 4, // Wait the button to return
@@ -97,10 +97,10 @@ typedef struct
 #define  SCREEN_END_LIST 1
 
 //Motor mode
-#define MOTOR_MODE_NO_MODE 0
-#define MOTOR_MODE_MANUAL  1
-#define MOTOR_MODE_AUTO    2
-#define MOTOR_MODE_LEFT    3
+#define MOTOR_MODE_NO_MODE  0
+#define MOTOR_MODE_MANUAL   1
+#define MOTOR_MODE_AUTO     2
+#define MOTOR_MODE_TH_EXT_N 3
 
 
 // Variables global ******************************************
@@ -156,12 +156,12 @@ void ActionChangeAccelM1();
 void ActionChangeSpeedM1();
 void ActionRestoreSettingsInFlash(); 
 void ActionSaveSettingsInFlash(); 
-
 void ActionChangeRelaticeMode();
 void ActionResetX(); 
 void ActionResetY(); 
 void ActionAxeXPos(); 
 void ActionAxeYPos(); 
+void SetReadOnlyMotorFunctions(boolean state); // true = Read only
 void ActionUseMotor(); 
 void applyMotorMode(); 
 void ActionMotorStopMin(); 
@@ -229,7 +229,7 @@ GEMItem menuItemAxeYPos("Y Pos:", fAxeYPos,ActionAxeYPos);
 GEMPage menuPageMotor("Motor Functions"); // Motor submenu
 GEMItem menuItemMotor("Motor Functions", menuPageMotor);
 GEMItem menuItemUseMotor("Use motor:", bUseMotor,ActionUseMotor);
-SelectOptionByte selectMotorModeOptions[] = {{"NoMode", 0}, {"Manual", 1},{"Auto", 2}, {"TH EX N", 3}};
+SelectOptionByte selectMotorModeOptions[] = {{"NoMode", 0}, {"Manual", 1},{"Auto", 2},{"TH EX N", 3},{"TH EX I", 4}};
 GEMSelect selectMotorMode(sizeof(selectMotorModeOptions)/sizeof(SelectOptionByte), selectMotorModeOptions);
 GEMItem menuItemMotorMode("Motor mode:", bMotorMode, selectMotorMode, applyMotorMode);
 GEMItem menuItemMotorStopMin("Stop Min:", fMotorStopMin,ActionMotorStopMin);
@@ -398,6 +398,9 @@ void setupMenu() {
   menuPageDebug.setParentMenuPage(menuPageMain);
   // Add menu page to menu and set it as current
   menu.setMenuPageCurrent(menuPageMain);
+
+  //Set read only because it's OFF
+  SetReadOnlyMotorFunctions(true);
 }
 void loop() {
   // This loop turn when i'm in the menu !
@@ -491,13 +494,11 @@ void DroContextLoop()
         else Motor1.ChangeMaxSpeed(iMotorSpeed);   
       }    
      } 
-     //**** Left threading mode Key *****
-    if (bMotorMode == MOTOR_MODE_LEFT)
+    if (bMotorMode == MOTOR_MODE_TH_EXT_N)
     {
       switch(eMS_Thread)
       {
         case MS_THREAD_IDLE:
-          //No action here
         break;
         case MS_THREAD_WAIT_THE_START:
           if (key == GEM_KEY_LEFT )
@@ -812,7 +813,7 @@ void Display_M_Informations()
       case MOTOR_MODE_AUTO:
         u8g2.drawStr(57,37,"|AUTO");
       break;
-      case MOTOR_MODE_LEFT:
+      case MOTOR_MODE_TH_EXT_N:
         u8g2.drawStr(57,37,"|THEX N"); 
       break;   
     }
@@ -840,7 +841,7 @@ void Display_Extra_Informations()
   u8g2.setFont(u8g2_font_profont10_mr); // choose a suitable font
   u8g2.drawStr(0,54,selectTool.getSelectedOptionName((byte*)&bToolChoose ));
   //Display thread Mastersate 
-  if (bMotorMode == MOTOR_MODE_LEFT)
+  if (bMotorMode == MOTOR_MODE_TH_EXT_N)
   {
     switch(eMS_Thread)
     {
@@ -993,6 +994,19 @@ void applyTool()
 {
     
 }
+void SetReadOnlyMotorFunctions(boolean state)
+{
+  menuItemMotorMode.setReadonly(state);  
+  menuItemMotorStopMin.setReadonly(state);
+  menuItemMotorStopMax.setReadonly(state);
+  menuItemUseMotorEndLimit.setReadonly(state);
+  menuItemMotorCurrentPos.setReadonly(state);
+  menuItemMotorSpeed.setReadonly(state);
+  menuItemButtonSetPosToMax.setReadonly(state);
+  menuItemButtonSetPosToMin.setReadonly(state);
+  menuItemButtonResetCurrentPos.setReadonly(state);
+  menuItemThreadParameters.setReadonly(state);
+}
 void ActionUseMotor()
 {
   if( bUseMotor == true ) 
@@ -1006,7 +1020,8 @@ void ActionUseMotor()
     Motor1.UseEndLimit(bUseMotorEndLimit);
     Motor1.MotorChangePowerState(true);
     eMS_Thread = MS_THREAD_IDLE;
-    eScreenChoose = SCREEN_MOT1; 
+    eScreenChoose = SCREEN_MOT1;
+    SetReadOnlyMotorFunctions(false); 
   }
   else
   {
@@ -1014,7 +1029,8 @@ void ActionUseMotor()
     bMotorMode = MOTOR_MODE_NO_MODE; 
     Motor1.MotorChangePowerState(false);
     eMS_Thread = MS_THREAD_IDLE;
-    eScreenChoose = SCREEN_DRO;   
+    eScreenChoose = SCREEN_DRO; 
+    SetReadOnlyMotorFunctions(true);   
   }     
 }
 void ActionUseMotorEndLimit()
@@ -1044,8 +1060,7 @@ void applyMotorMode()
 {
   switch (bMotorMode)
   {
-    case MOTOR_MODE_LEFT :
-      //Left thread
+    case MOTOR_MODE_TH_EXT_N :
       eMS_Thread = MS_THREAD_WAIT_THE_START;
       //Use Max speed in the setting
       Motor1.ChangeMaxSpeed(sGeneralConf.Speed_M1); 
