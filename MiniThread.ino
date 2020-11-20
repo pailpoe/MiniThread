@@ -138,11 +138,9 @@ void Display_UpdateRealTimeData();
 void ActionMotorSpeedUp();
 void ActionMotorSpeedDown();
 void Display_StartScreen(); 
-
 void ActionDro(); 
 void ActionDebug(); 
 void applyTool(); 
-
 void NeedToSave();
 void ActionChangeDirX();
 void ActionChangeDirY();
@@ -255,7 +253,7 @@ GEMSelect selectScreenMode(sizeof(selectScreenOptions)/sizeof(SelectOptionByte),
 GEMItem menuItemScreenMode("Screen:", eScreenChoose, selectScreenMode, ActionScreenMode);
 
 //Class instance ******************************************
-U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, PIN_RES_SCR); //Screen
+U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0,/* reset=*/ U8X8_PIN_NONE); //Screen -->external reset (boot problem)
 GEM_u8g2 menu(u8g2,GEM_POINTER_ROW,5,10,10,75); // menu
 QuadDecoder Quad_Y(3,QuadDecoder::LinearEncoder,512,false,false,IT_Timer3_Overflow); //Quad Y with timer 3
 QuadDecoder Quad_Z(2,QuadDecoder::RotaryEncoder,1200,true,false,IT_Timer2_Overflow); //Quad Z with timer 2
@@ -300,15 +298,13 @@ void Update_Overlfow_Timer4()
 // *** setup, loop, ...  *****************************************************************
 void setup() 
 {
-  //Delay  for boot of the screen without problem
-  delay(500);
-  /*
+  //External reset for boot of the screen without problem
   pinMode(PIN_RES_SCR, OUTPUT);  //channel A
   digitalWrite(PIN_RES_SCR,0);
-  delay(200);
+  delay(500);
   digitalWrite(PIN_RES_SCR,1);
-  delay(200);
-  */
+  delay(500);
+ 
   u8g2.initDisplay();
   u8g2.setPowerSave(0);
   u8g2.clear();
