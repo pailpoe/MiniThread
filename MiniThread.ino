@@ -229,7 +229,7 @@ GEMItem menuItemAxeYPos("Y Pos:", fAxeYPos,ActionAxeYPos);
 GEMPage menuPageMotor("Motor Functions"); // Motor submenu
 GEMItem menuItemMotor("Motor Functions", menuPageMotor);
 GEMItem menuItemUseMotor("Use motor:", bUseMotor,ActionUseMotor);
-SelectOptionByte selectMotorModeOptions[] = {{"NoMode", 0}, {"Manual", 1},{"Auto", 2}, {"Left", 3}};
+SelectOptionByte selectMotorModeOptions[] = {{"NoMode", 0}, {"Manual", 1},{"Auto", 2}, {"TH EX N", 3}};
 GEMSelect selectMotorMode(sizeof(selectMotorModeOptions)/sizeof(SelectOptionByte), selectMotorModeOptions);
 GEMItem menuItemMotorMode("Motor mode:", bMotorMode, selectMotorMode, applyMotorMode);
 GEMItem menuItemMotorStopMin("Stop Min:", fMotorStopMin,ActionMotorStopMin);
@@ -807,20 +807,20 @@ void Display_M_Informations()
         u8g2.drawStr(57,37,"|NO");
       break;
       case MOTOR_MODE_MANUAL:
-        u8g2.drawStr(57,37,"|Manual");
+        u8g2.drawStr(57,37,"|MANUAL");
       break;
       case MOTOR_MODE_AUTO:
-        u8g2.drawStr(57,37,"|Auto");
+        u8g2.drawStr(57,37,"|AUTO");
       break;
       case MOTOR_MODE_LEFT:
-        u8g2.drawStr(57,37,"|Left"); 
+        u8g2.drawStr(57,37,"|THEX N"); 
       break;   
     }
     //Motor speed
     //if motor is Left mode, display the speed from the settings (Max speed )
     sprintf(bufferChar,"|%d", (unsigned int)fM1ActualSpeed);
     //sprintf(bufferChar,"|%d",iMotorSpeed);
-    u8g2.drawStr(90,37,bufferChar);    
+    u8g2.drawStr(95,37,bufferChar);    
     
     //End limit 
     sprintf(bufferChar,"%+09.3f <> %+09.3f",fMotorStopMax,fMotorStopMin);
@@ -848,19 +848,19 @@ void Display_Extra_Informations()
         u8g2.drawStr(30,54,"|Idle");
       break;  
       case MS_THREAD_WAIT_THE_START:
-        u8g2.drawStr(30,54,"|Wait left sw");
+        u8g2.drawStr(30,54,"|WAIT START");
       break;  
       case MS_THREAD_WAIT_THE_SPLINDLE_ZERO:
-        u8g2.drawStr(30,54,"|Wait zero s");
+        u8g2.drawStr(30,54,"|WAIT SYNC");
       break;  
       case MS_THREAD_IN_THREAD:
-        u8g2.drawStr(30,54,"|In thread");
+        u8g2.drawStr(30,54,"|IN THREAD");
       break;  
       case MS_THREAD_END_THREAD:
-        u8g2.drawStr(30,54,"|Wait right sw");
+        u8g2.drawStr(30,54,"|WAIT RETURN");
       break;             
       case MS_THREAD_IN_RETURN:
-        u8g2.drawStr(30,54,"|In return");
+        u8g2.drawStr(30,54,"|IN RETURN");
       break;      
     }    
   }
