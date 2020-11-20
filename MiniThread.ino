@@ -101,7 +101,9 @@ typedef struct
 #define MOTOR_MODE_MANUAL   1
 #define MOTOR_MODE_AUTO     2
 #define MOTOR_MODE_TH_EXT_N 3
-
+#define MOTOR_MODE_TH_EXT_I 4
+#define MOTOR_MODE_TH_INT_N 5
+#define MOTOR_MODE_TH_INT_I 6
 
 // Variables global ******************************************
 tsConfigDro  sGeneralConf;
@@ -229,7 +231,7 @@ GEMItem menuItemAxeYPos("Y Pos:", fAxeYPos,ActionAxeYPos);
 GEMPage menuPageMotor("Motor Functions"); // Motor submenu
 GEMItem menuItemMotor("Motor Functions", menuPageMotor);
 GEMItem menuItemUseMotor("Use motor:", bUseMotor,ActionUseMotor);
-SelectOptionByte selectMotorModeOptions[] = {{"NoMode", 0}, {"Manual", 1},{"Auto", 2},{"TH EX N", 3},{"TH EX I", 4}};
+SelectOptionByte selectMotorModeOptions[] = {{"NoMode", 0}, {"MANUAL", 1},{"AUTO", 2},{"TH EX N", 3},{"TH EX I", 4},{"TH IN N", 5},{"TH IN I", 6}};
 GEMSelect selectMotorMode(sizeof(selectMotorModeOptions)/sizeof(SelectOptionByte), selectMotorModeOptions);
 GEMItem menuItemMotorMode("Motor mode:", bMotorMode, selectMotorMode, applyMotorMode);
 GEMItem menuItemMotorStopMin("Stop Min:", fMotorStopMin,ActionMotorStopMin);
@@ -304,23 +306,17 @@ void setup()
   delay(500);
   digitalWrite(PIN_RES_SCR,1);
   delay(500);
- 
   u8g2.initDisplay();
   u8g2.setPowerSave(0);
   u8g2.clear();
   u8g2.setDrawColor(1);
-  u8g2.setFontPosTop();
-    
-  //u8g2.begin();
+  u8g2.setFontPosTop();   
   //Display start screen
-  Display_StartScreen();
-  
+  Display_StartScreen(); 
   //Debug port...
   afio_cfg_debug_ports(AFIO_DEBUG_SW_ONLY); //Only SWD
-
   //USB Serial
-  //Serial.begin(115200); // Ignored by Maple. But needed by boards using hardware serial via a USB to Serial adaptor
-  
+  //Serial.begin(115200); // Ignored by Maple. But needed by boards using hardware serial via a USB to Serial adaptor  
   //Timer 4 for motor control
   MotorControl.pause(); //stop...
   MotorControl.setCompare(TIMER_CH3, 20); //10µs 
@@ -398,7 +394,6 @@ void setupMenu() {
   menuPageDebug.setParentMenuPage(menuPageMain);
   // Add menu page to menu and set it as current
   menu.setMenuPageCurrent(menuPageMain);
-
   //Set read only because it's OFF
   SetReadOnlyMotorFunctions(true);
 }
@@ -494,7 +489,10 @@ void DroContextLoop()
         else Motor1.ChangeMaxSpeed(iMotorSpeed);   
       }    
      } 
-    if (bMotorMode == MOTOR_MODE_TH_EXT_N)
+     if ( bMotorMode == MOTOR_MODE_TH_EXT_N ||
+          bMotorMode == MOTOR_MODE_TH_EXT_I ||
+          bMotorMode == MOTOR_MODE_TH_INT_N ||
+          bMotorMode == MOTOR_MODE_TH_INT_I )
     {
       switch(eMS_Thread)
       {
@@ -815,7 +813,16 @@ void Display_M_Informations()
       break;
       case MOTOR_MODE_TH_EXT_N:
         u8g2.drawStr(57,37,"|THEX N"); 
-      break;   
+      break;
+      case MOTOR_MODE_TH_EXT_I:
+        u8g2.drawStr(57,37,"|THEX I"); 
+      break;
+      case MOTOR_MODE_TH_INT_N:
+        u8g2.drawStr(57,37,"|THIN N"); 
+      break;
+      case MOTOR_MODE_TH_INT_I:
+        u8g2.drawStr(57,37,"|THIN I"); 
+      break;      
     }
     //Motor speed
     //if motor is Left mode, display the speed from the settings (Max speed )
@@ -840,13 +847,16 @@ void Display_Extra_Informations()
   char bufferChar[10];
   u8g2.setFont(u8g2_font_profont10_mr); // choose a suitable font
   u8g2.drawStr(0,54,selectTool.getSelectedOptionName((byte*)&bToolChoose ));
-  //Display thread Mastersate 
-  if (bMotorMode == MOTOR_MODE_TH_EXT_N)
+  //Display thread Masterstate 
+  if (  bMotorMode == MOTOR_MODE_TH_EXT_N ||
+        bMotorMode == MOTOR_MODE_TH_EXT_I ||
+        bMotorMode == MOTOR_MODE_TH_INT_N ||
+        bMotorMode == MOTOR_MODE_TH_INT_I )
   {
     switch(eMS_Thread)
     {
       case MS_THREAD_IDLE:
-        u8g2.drawStr(30,54,"|Idle");
+        u8g2.drawStr(30,54,"|IDLE");
       break;  
       case MS_THREAD_WAIT_THE_START:
         u8g2.drawStr(30,54,"|WAIT START");
@@ -973,7 +983,6 @@ void ActionChangeSpeedM1()
   if(sGeneralConf.Speed_M1 < 1)sGeneralConf.Speed_M1 = 1;
   if(sGeneralConf.Speed_M1 > 30000)sGeneralConf.Speed_M1 = 30000;
 }
-
 void ActionChangeRelaticeMode()
 {  
   if( bRelativeModeActived == true )
@@ -989,10 +998,8 @@ void ActionChangeRelaticeMode()
     //Quad_Z.SetAbsolut();
   }      
 }
-
 void applyTool()
-{
-    
+{    
 }
 void SetReadOnlyMotorFunctions(boolean state)
 {
@@ -1061,6 +1068,9 @@ void applyMotorMode()
   switch (bMotorMode)
   {
     case MOTOR_MODE_TH_EXT_N :
+    case MOTOR_MODE_TH_EXT_I:
+    case MOTOR_MODE_TH_INT_N:
+    case MOTOR_MODE_TH_INT_I:
       eMS_Thread = MS_THREAD_WAIT_THE_START;
       //Use Max speed in the setting
       Motor1.ChangeMaxSpeed(sGeneralConf.Speed_M1); 
@@ -1219,6 +1229,5 @@ boolean M1_AreYouOkToReturnAfterThread()
     }
       
   }
-  return result;  
-  
+  return result;    
 }
