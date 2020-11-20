@@ -1182,13 +1182,25 @@ void ActionChangeMotor1ThreadAngle()
 boolean M1_AreYouOkToStartTheThread()
 {
   boolean result = true;
+  //Check position of Y
   if(bMotor1ThreadUseY == true)
   {
-    if( fAxeYPos > fMotor1ThreadDiameter)
+    if( bMotorMode == MOTOR_MODE_TH_EXT_N || bMotorMode == MOTOR_MODE_TH_EXT_I)
     {
-      result = false;
-      Display_Notice_Informations("Move Y : Y > Dia");     
-    }   
+      if( fAxeYPos > fMotor1ThreadDiameter)
+      {
+        result = false;
+        Display_Notice_Informations("Move Y : Y > Dia");     
+      }    
+    }
+    if( bMotorMode == MOTOR_MODE_TH_INT_N || MOTOR_MODE_TH_INT_I)
+    {
+      if( fAxeYPos < fMotor1ThreadDiameter)
+      {
+        result = false;
+        Display_Notice_Informations("Move Y : Y < Dia");     
+      }    
+    }    
   } 
   CalcMotorMaxSpeedForThread(); //Check the speed
   //Check the max speed
@@ -1198,11 +1210,22 @@ boolean M1_AreYouOkToStartTheThread()
     Display_Notice_Informations("Reduce spindle speed");     
   }
   //Check the direction
-  if( fAxeCSpeed < 0 )
+  if( bMotorMode == MOTOR_MODE_TH_EXT_N || bMotorMode == MOTOR_MODE_TH_INT_N)
   {
-    result = false;
-    Display_Notice_Informations("Spindle wrong dir");     
+    if( fAxeCSpeed < 0 )
+    {
+      result = false;
+      Display_Notice_Informations("Spindle wrong dir");     
+    }      
   }
+  if( bMotorMode == MOTOR_MODE_TH_EXT_I || bMotorMode == MOTOR_MODE_TH_INT_I)
+  {
+    if( fAxeCSpeed > 0 )
+    {
+      result = false;
+      Display_Notice_Informations("Spindle wrong dir");     
+    }       
+  }   
   //Check if endlimit is on
   if( !bUseMotorEndLimit)
   {
@@ -1222,12 +1245,22 @@ boolean M1_AreYouOkToReturnAfterThread()
   boolean result = true;
   if(bMotor1ThreadUseY == true)
   {
-    if( fAxeYPos < fMotor1ThreadDiameter)
+    if( bMotorMode == MOTOR_MODE_TH_EXT_N || bMotorMode == MOTOR_MODE_TH_EXT_I)
     {
-      result = false;
-      Display_Notice_Informations("Move Y : Y < Dia");
+      if( fAxeYPos < fMotor1ThreadDiameter)
+      {
+        result = false;
+        Display_Notice_Informations("Move Y : Y < Dia");
+      }    
     }
-      
+    if( bMotorMode == MOTOR_MODE_TH_INT_N || bMotorMode == MOTOR_MODE_TH_INT_I)
+    {
+      if( fAxeYPos > fMotor1ThreadDiameter)
+      {
+        result = false;
+        Display_Notice_Informations("Move Y : Y > Dia");
+      }   
+    }      
   }
   return result;    
 }
