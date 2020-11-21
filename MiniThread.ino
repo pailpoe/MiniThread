@@ -176,6 +176,8 @@ void ActionSetCurrentToMin();
 void ActionResetCurrentPos(); 
 void ActionMotorChangeThread(); 
 void ActionChangeMotor1Offset(); 
+void ActionIncMotor1Offset();
+void ActionDecMotor1Offset(); 
 void ActionMotor1ThreadUseY();
 void ActionChangeMotor1ThreadDiameter(); 
 void ActionChangeMotor1ThreadAngle(); 
@@ -250,6 +252,8 @@ GEMItem menuItemMotor1ThreadUseY("Use Y:", bMotor1ThreadUseY,ActionMotor1ThreadU
 GEMItem menuItemMotor1ThreadDiameter("Diameter:", fMotor1ThreadDiameter,ActionChangeMotor1ThreadDiameter);
 GEMItem menuItemMotor1ThreadAngle("Angle:", fMotor1ThreadAngle,ActionChangeMotor1ThreadAngle);
 GEMItem menuItemMotor1ThreadInfo("Speed max:", fM1MaxThreadSpeed,true);
+GEMItem menuItemMotorIncOffset("Inc Offset +2°", ActionIncMotor1Offset);
+GEMItem menuItemMotorDecOffset("Dec Offset -2°", ActionDecMotor1Offset);
 SelectOptionByte selectScreenOptions[] = {{"DroXYC", 0}, {"Mot1", 1}, {"Debug", 2}};
 GEMSelect selectScreenMode(sizeof(selectScreenOptions)/sizeof(SelectOptionByte), selectScreenOptions);
 GEMItem menuItemScreenMode("Screen:", eScreenChoose, selectScreenMode, ActionScreenMode);
@@ -316,7 +320,7 @@ void setup()
   //Debug port...
   afio_cfg_debug_ports(AFIO_DEBUG_SW_ONLY); //Only SWD
   //USB Serial
-  //Serial.begin(115200); // Ignored by Maple. But needed by boards using hardware serial via a USB to Serial adaptor  
+  Serial.begin(115200); // Ignored by Maple. But needed by boards using hardware serial via a USB to Serial adaptor  
   //Timer 4 for motor control
   MotorControl.pause(); //stop...
   MotorControl.setCompare(TIMER_CH3, 20); //10µs 
@@ -354,6 +358,8 @@ void setupMenu() {
   menuPageThreadParameters.addMenuItem(menuItemMotor1ThreadUseY);
   menuPageThreadParameters.addMenuItem(menuItemMotor1ThreadDiameter);
   menuPageThreadParameters.addMenuItem(menuItemMotor1ThreadAngle);
+  menuPageThreadParameters.addMenuItem(menuItemMotorIncOffset);
+  menuPageThreadParameters.addMenuItem(menuItemMotorDecOffset);
   //Add Sub menu Motor
   menuPageMain.addMenuItem(menuItemMotor);
   menuPageMotor.addMenuItem(menuItemUseMotor);
@@ -571,7 +577,6 @@ void DebugContextLoop()
   do {
       u8g2.setColorIndex(1);
       u8g2.setFont(u8g2_font_profont10_mr); // choose a suitable font
-      CalcMotorParameterForThread();
       char buffer[16];
       sprintf(buffer,"Numerator:%ld",sThreadCalc.Numerator);
       u8g2.drawStr(0,0,buffer);
@@ -579,7 +584,6 @@ void DebugContextLoop()
       u8g2.drawStr(0,10,buffer);
       sprintf(buffer,"Offset:%ld",sThreadCalc.Offset);
       u8g2.drawStr(0,20,buffer);  
-      CalcMotorMaxSpeedForThread();
       sprintf(buffer,"speed:%f",fM1MaxThreadSpeed);
       u8g2.drawStr(0,30,buffer);  
 
@@ -592,7 +596,6 @@ void DebugContextLoop()
 }
 void DebugContextExit() 
 {
-  Motor1.MotorChangePowerState(false);
   menu.reInit();
   menu.drawMenu();
   menu.clearContext();
@@ -674,27 +677,23 @@ void ActionRestoreSettingsInFlash()
   Display_Notice_Informations("Settings restored !");
   menu.drawMenu(); //Refresh screen after 
 }
-
-
-
 // ***************************************************************************************
 // ***************************************************************************************
 // *** Usb Serial functions *****************************************************************
 void UsbSerial_Pos()
 {
-  /*
+  
   char bufferChar[30];
   if(Serial.isConnected())
   {
     sprintf(bufferChar,"X%0.3f:",fAxeXPos); 
     Serial.print(bufferChar);
-    sprintf(bufferChar,"Y%0.3f",fAxeYPos); 
+    sprintf(bufferChar,"Y%0.3f:",fAxeYPos); 
+    Serial.print(bufferChar);
+    sprintf(bufferChar,"C%0.3f",fAxeCSpeed); 
     Serial.print(bufferChar);
     Serial.print("\n");   
   }
-  */
-
-  //Serial.print(':');
 }
 // ***************************************************************************************
 // ***************************************************************************************
@@ -1044,19 +1043,25 @@ void ActionUseMotorEndLimit()
 {
   Motor1.UseEndLimit(bUseMotorEndLimit);  
 }
-//Returns the greatest common divisor of two integers
 
 void CalcMotorParameterForThread()
 {
-  long lnumber;
+  long lGCD;
   float OffsetFixe; //Constant offset
+  //Calc Numerator and Denominator with simplification
   sThreadCalc.Numerator = sGeneralConf.Reso_M1 * iMotorThread;  
   sThreadCalc.Denominator = sGeneralConf.thread_M1 * sGeneralConf.Reso_Z ; 
-  lnumber = GCD_Function(sThreadCalc.Numerator,sThreadCalc.Denominator);
-  sThreadCalc.Numerator = sThreadCalc.Numerator / lnumber;
-  sThreadCalc.Denominator = sThreadCalc.Denominator / lnumber;   
-  //Calcul of the offset
-  OffsetFixe = (float)(fMotor1ThreadOffset*iMotorThread*sGeneralConf.Reso_M1) /(float)(360*sGeneralConf.thread_M1); 
+  lGCD = GCD_Function(sThreadCalc.Numerator,sThreadCalc.Denominator);
+  sThreadCalc.Numerator = sThreadCalc.Numerator / lGCD;
+  sThreadCalc.Denominator = sThreadCalc.Denominator / lGCD;   
+
+  //If reverse direction
+  if( bMotorMode == MOTOR_MODE_TH_EXT_I || bMotorMode == MOTOR_MODE_TH_INT_I)
+  {
+    sThreadCalc.Numerator = -sThreadCalc.Numerator;
+  }
+  //Calc of the fixe offset
+  OffsetFixe = (float)((360.0 - fMotor1ThreadOffset)*iMotorThread*sGeneralConf.Reso_M1) /(float)(360*sGeneralConf.thread_M1); 
   sThreadCalc.Offset = Motor1.GetStopPositionMinStep() - (long)OffsetFixe ;  
 }
 void CalcMotorMaxSpeedForThread()
@@ -1165,8 +1170,21 @@ void ActionChangeScreen()
 void ActionChangeMotor1Offset()
 {
   if(fMotor1ThreadOffset < 0)fMotor1ThreadOffset = 0.0;
-  if(fMotor1ThreadOffset > 360)fMotor1ThreadOffset = 360.0;   
+  if(fMotor1ThreadOffset > 360)fMotor1ThreadOffset = 360.0; 
+  CalcMotorParameterForThread(); // Recalc the thread parameter 
 }
+void ActionIncMotor1Offset()
+{
+  fMotor1ThreadOffset = fMotor1ThreadOffset+2;
+  if(fMotor1ThreadOffset > 360)fMotor1ThreadOffset = 360.0; 
+  CalcMotorParameterForThread(); // Recalc the thread parameter 
+}
+void ActionDecMotor1Offset()
+{
+  fMotor1ThreadOffset = fMotor1ThreadOffset-2;
+  if(fMotor1ThreadOffset < 0)fMotor1ThreadOffset = 0.0; 
+  CalcMotorParameterForThread(); // Recalc the thread parameter  
+} 
 void ActionMotor1ThreadUseY()
 {
 }
