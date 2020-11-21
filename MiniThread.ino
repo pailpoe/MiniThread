@@ -1047,7 +1047,8 @@ void ActionUseMotorEndLimit()
 void CalcMotorParameterForThread()
 {
   long lGCD;
-  float OffsetFixe; //Constant offset
+  float OffsetFixe = 0.0; //Constant offset
+  float OffsetVariable = 0.0; //variable offset
   //Calc Numerator and Denominator with simplification
   sThreadCalc.Numerator = sGeneralConf.Reso_M1 * iMotorThread;  
   sThreadCalc.Denominator = sGeneralConf.thread_M1 * sGeneralConf.Reso_Z ; 
@@ -1062,7 +1063,24 @@ void CalcMotorParameterForThread()
   }
   //Calc of the fixe offset
   OffsetFixe = (float)((360.0 - fMotor1ThreadOffset)*iMotorThread*sGeneralConf.Reso_M1) /(float)(360*sGeneralConf.thread_M1); 
-  sThreadCalc.Offset = Motor1.GetStopPositionMinStep() - (long)OffsetFixe ;  
+  //Calcul of the variable offset ( depend of the diameter and Y position).
+  if(bMotor1ThreadUseY == true)
+  {
+    if(bMotorMode == MOTOR_MODE_TH_EXT_N || bMotorMode == MOTOR_MODE_TH_EXT_I)
+    {
+      if(fAxeYPos <= fMotor1ThreadDiameter)
+      {
+        OffsetVariable = (float)((fMotor1ThreadDiameter - fAxeYPos)/2.0 * tan(fMotor1ThreadAngle * 0.01745)); //Pi/180 = 0.01745
+        OffsetVariable = OffsetVariable *(float)(sGeneralConf.Reso_M1*100.0/sGeneralConf.thread_M1) ; 
+      }else
+      {
+        OffsetVariable = 0.0;  
+      }          
+    }
+  }
+  //Global offset
+  sThreadCalc.Offset = Motor1.GetStopPositionMinStep() - (long)OffsetFixe + (long)OffsetVariable ; 
+  
 }
 void CalcMotorMaxSpeedForThread()
 {
@@ -1205,19 +1223,19 @@ boolean M1_AreYouOkToStartTheThread()
   {
     if( bMotorMode == MOTOR_MODE_TH_EXT_N || bMotorMode == MOTOR_MODE_TH_EXT_I)
     {
-      if( fAxeYPos > fMotor1ThreadDiameter)
-      {
-        result = false;
-        Display_Notice_Informations("Move Y : Y > Dia");     
-      }    
+//      if( fAxeYPos > fMotor1ThreadDiameter)
+//      {
+//        result = false;
+//        Display_Notice_Informations("Move Y : Y > Dia");     
+//      }    
     }
     if( bMotorMode == MOTOR_MODE_TH_INT_N || MOTOR_MODE_TH_INT_I)
     {
-      if( fAxeYPos < fMotor1ThreadDiameter)
-      {
-        result = false;
-        Display_Notice_Informations("Move Y : Y < Dia");     
-      }    
+//      if( fAxeYPos < fMotor1ThreadDiameter)
+//      {
+//        result = false;
+//        Display_Notice_Informations("Move Y : Y < Dia");     
+//      }    
     }    
   } 
   CalcMotorMaxSpeedForThread(); //Check the speed
