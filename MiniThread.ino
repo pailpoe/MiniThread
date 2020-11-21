@@ -1055,7 +1055,6 @@ void CalcMotorParameterForThread()
   lGCD = GCD_Function(sThreadCalc.Numerator,sThreadCalc.Denominator);
   sThreadCalc.Numerator = sThreadCalc.Numerator / lGCD;
   sThreadCalc.Denominator = sThreadCalc.Denominator / lGCD;   
-
   //If reverse direction
   if( bMotorMode == MOTOR_MODE_TH_EXT_I || bMotorMode == MOTOR_MODE_TH_INT_I)
   {
@@ -1071,6 +1070,17 @@ void CalcMotorParameterForThread()
       if(fAxeYPos <= fMotor1ThreadDiameter)
       {
         OffsetVariable = (float)((fMotor1ThreadDiameter - fAxeYPos)/2.0 * tan(fMotor1ThreadAngle * 0.01745)); //Pi/180 = 0.01745
+        OffsetVariable = OffsetVariable *(float)(sGeneralConf.Reso_M1*100.0/sGeneralConf.thread_M1) ; 
+      }else
+      {
+        OffsetVariable = 0.0;  
+      }          
+    }
+    if(bMotorMode == MOTOR_MODE_TH_INT_N || bMotorMode == MOTOR_MODE_TH_INT_I)
+    {
+      if(fAxeYPos >= fMotor1ThreadDiameter)
+      {
+        OffsetVariable = (float)((fAxeYPos - fMotor1ThreadDiameter)/2.0 * tan(fMotor1ThreadAngle * 0.01745)); //Pi/180 = 0.01745
         OffsetVariable = OffsetVariable *(float)(sGeneralConf.Reso_M1*100.0/sGeneralConf.thread_M1) ; 
       }else
       {
