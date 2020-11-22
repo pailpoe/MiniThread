@@ -18,6 +18,7 @@ Revision        :
 #include "src/StepperMotor/StepperMotor.h"
 #include "src/Various/Splash.h"
 #include "src/Various/Various.h"
+#include "src/Language/Language.h"
 #include <EEPROM.h>
 
 #define TEXT_MAIN_MENU_TITLE "MiniThread 1.0.1 DEV"
@@ -198,8 +199,8 @@ void Display_Debug_Informations();
 void Display_Notice_Informations(char* str);
 
 //Menu item ******************************************
-GEMPage menuPageSettings("Settings"); // Settings submenu
-GEMItem menuItemMainSettings("Settings", menuPageSettings);
+GEMPage menuPageSettings(TEXT_MENU_SETTINGS); // Settings submenu
+GEMItem menuItemMainSettings(TEXT_MENU_SETTINGS, menuPageSettings);
 GEMItem menuItemDirX("X dir:", sGeneralConf.Inverted_X,ActionChangeDirX);
 GEMItem menuItemDirY("Y dir:", sGeneralConf.Inverted_Y,ActionChangeDirY);
 GEMItem menuItemDirZ("C dir:", sGeneralConf.Inverted_Z,ActionChangeDirZ);
@@ -214,14 +215,14 @@ GEMItem menuItemAccelM1("M1 accel:", sGeneralConf.Accel_M1,ActionChangeAccelM1);
 GEMItem menuItemSpeedM1("M1 speed:", sGeneralConf.Speed_M1,ActionChangeSpeedM1);
 GEMItem menuItemButtonRestoreSettings("Restore settings", ActionRestoreSettingsInFlash);
 GEMItem menuItemButtonSaveSettings("Save settings", ActionSaveSettingsInFlash);
-GEMItem menuItemButtonDro("Return to Screen", ActionDro);
+GEMItem menuItemButtonDro(TEXT_MENU_RETURN_SCREEN, ActionDro);
 GEMPage menuPageMain(TEXT_MAIN_MENU_TITLE);
 GEMPage menuPageDebug("Debug tools"); // Debug submenu
 GEMItem menuItemDebug("Debug tools", menuPageDebug);
 GEMItem menuItemButtonDebug("Debug screen", ActionDebug);
 GEMItem menuItemTestFloat("Float:", TestFloat);
-GEMPage menuPageAxe("Axe Functions"); // Axe submenu
-GEMItem menuItemAxe("Axe Functions", menuPageAxe);
+GEMPage menuPageAxe(TEXT_MENU_AXE_FUNCTIONS); // Axe submenu
+GEMItem menuItemAxe(TEXT_MENU_AXE_FUNCTIONS, menuPageAxe);
 SelectOptionByte selectToolOptions[] = {{"Tool_0", 0}, {"Tool_1", 1}, {"Tool_2", 2}, {"Tool_3", 3}, {"Tool_4", 4}, {"Tool_5", 5}};
 GEMSelect selectTool(sizeof(selectToolOptions)/sizeof(SelectOptionByte), selectToolOptions);
 GEMItem menuItemTool("Tool:", bToolChoose, selectTool, applyTool);
@@ -230,8 +231,8 @@ GEMItem menuItemButtonResetX("Set X to zero", ActionResetX);
 GEMItem menuItemButtonResetY("Set Y to zero", ActionResetY);
 GEMItem menuItemAxeXPos("X Pos:", fAxeXPos,ActionAxeXPos);
 GEMItem menuItemAxeYPos("Y Pos:", fAxeYPos,ActionAxeYPos);
-GEMPage menuPageMotor("Motor Functions"); // Motor submenu
-GEMItem menuItemMotor("Motor Functions", menuPageMotor);
+GEMPage menuPageMotor(TEXT_MENU_MOTOR_FUNCTIONS); // Motor submenu
+GEMItem menuItemMotor(TEXT_MENU_MOTOR_FUNCTIONS, menuPageMotor);
 GEMItem menuItemUseMotor("Use motor:", bUseMotor,ActionUseMotor);
 SelectOptionByte selectMotorModeOptions[] = {{"NoMode", 0}, {"MANUAL", 1},{"AUTO", 2},{"TH EX N", 3},{"TH EX I", 4},{"TH IN N", 5},{"TH IN I", 6}};
 GEMSelect selectMotorMode(sizeof(selectMotorModeOptions)/sizeof(SelectOptionByte), selectMotorModeOptions);
@@ -256,7 +257,7 @@ GEMItem menuItemMotorIncOffset("Inc Offset +2°", ActionIncMotor1Offset);
 GEMItem menuItemMotorDecOffset("Dec Offset -2°", ActionDecMotor1Offset);
 SelectOptionByte selectScreenOptions[] = {{"DroXYC", 0}, {"Mot1", 1}, {"Debug", 2}};
 GEMSelect selectScreenMode(sizeof(selectScreenOptions)/sizeof(SelectOptionByte), selectScreenOptions);
-GEMItem menuItemScreenMode("Screen:", eScreenChoose, selectScreenMode, ActionScreenMode);
+GEMItem menuItemScreenMode(TEXT_MENU_ECRAN, eScreenChoose, selectScreenMode, ActionScreenMode);
 
 //Class instance ******************************************
 U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0,/* reset=*/ U8X8_PIN_NONE); //Screen -->external reset (boot problem)
