@@ -4,7 +4,7 @@
 #include <U8g2lib.h>
  
 
-
+#define SNAKE_KEY_NONE    0 
 #define SNAKE_KEY_UP      U8X8_MSG_GPIO_MENU_UP     
 #define SNAKE_KEY_RIGHT   U8X8_MSG_GPIO_MENU_NEXT  
 #define SNAKE_KEY_DOWN    U8X8_MSG_GPIO_MENU_DOWN   
@@ -43,11 +43,8 @@ private:
     inGame,
     gameOver,
   };
-  //button positions and values
-  int leftV = 0;
-  int rightV = 0;
-  int downV = 0;
-  int upV = 0;
+  //Key
+  int KeyCode = 0;
   //snakedirection:
   //0: left
   //1: right

@@ -1,7 +1,7 @@
 /*********************************************************************
 Project Name    :   MiniThread
 Hard revision   :   V1.0
-Soft revision   :   /
+Soft revision   :   1.1.0 Dev
 Description     :   
 Chip            :   STM32F103CBT6
 freq uc         :   72Mhz (use 8Mhz external oscillator with PLL ) 
@@ -19,7 +19,7 @@ Revision        :
 #include "src/Various/Splash.h"
 #include "src/Various/Various.h"
 #include "src/Language/Language.h"
-#include "src/Various/Snake.h"
+#include "src/SnakeGame/Snake.h"
 
 #include <EEPROM.h>
 
