@@ -14,7 +14,7 @@ class Snake
 {
 public:
 	Snake(U8G2& u8g2_);
-  void loop(byte keyCode);
+  void loop(byte key);
   
   
 private:

@@ -214,9 +214,9 @@ void Snake::gameLost()
   state = setupGame;
 }
 
-void Snake::loop(byte keyCode) 
+void Snake::loop(byte key) 
 {
-  KeyCode = keyCode; 
+  KeyCode = key; 
   switch (state)
   {
   case setupGame: gameSetup();
