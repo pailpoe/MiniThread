@@ -19,6 +19,8 @@ Revision        :
 #include "src/Various/Splash.h"
 #include "src/Various/Various.h"
 #include "src/Language/Language.h"
+#include "src/Various/Snake.h"
+
 #include <EEPROM.h>
 
 #define TEXT_MAIN_MENU_TITLE "MiniThread 1.0.1 DEV"
@@ -142,7 +144,11 @@ void ActionMotorSpeedUp();
 void ActionMotorSpeedDown();
 void Display_StartScreen(); 
 void ActionDro(); 
-void ActionDebug(); 
+void ActionDebug();
+void ActionLaunchSnakeGame();
+void SnakeContextEnter();
+void SnakeContextLoop();
+void SnakeContextExit(); 
 void applyTool(); 
 void NeedToSave();
 void ActionChangeDirX();
@@ -215,6 +221,7 @@ GEMItem menuItemAccelM1("M1 accel:", sGeneralConf.Accel_M1,ActionChangeAccelM1);
 GEMItem menuItemSpeedM1("M1 speed:", sGeneralConf.Speed_M1,ActionChangeSpeedM1);
 GEMItem menuItemButtonRestoreSettings("Restore settings", ActionRestoreSettingsInFlash);
 GEMItem menuItemButtonSaveSettings("Save settings", ActionSaveSettingsInFlash);
+GEMItem menuItemButtonSnakeGame("Snake game !", ActionLaunchSnakeGame);
 GEMItem menuItemButtonDro(TEXT_MENU_RETURN_SCREEN, ActionDro);
 GEMPage menuPageMain(TEXT_MAIN_MENU_TITLE);
 GEMPage menuPageDebug("Debug tools"); // Debug submenu
@@ -262,6 +269,7 @@ GEMItem menuItemScreenMode(TEXT_MENU_ECRAN, eScreenChoose, selectScreenMode, Act
 //Class instance ******************************************
 U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0,/* reset=*/ U8X8_PIN_NONE); //Screen -->external reset (boot problem)
 GEM_u8g2 menu(u8g2,GEM_POINTER_ROW,5,10,10,75); // menu
+Snake MySnake(u8g2);
 QuadDecoder Quad_Y(3,QuadDecoder::LinearEncoder,512,false,false,IT_Timer3_Overflow); //Quad Y with timer 3
 QuadDecoder Quad_Z(2,QuadDecoder::RotaryEncoder,1200,true,false,IT_Timer2_Overflow); //Quad Z with timer 2
 QuadDecoder Quad_X(1,QuadDecoder::LinearEncoder,512,false,false,IT_Timer1_Overflow); //Quad X with timer 1
@@ -394,6 +402,8 @@ void setupMenu() {
   menuPageSettings.setParentMenuPage(menuPageMain);
   //Add item screen mode
   menuPageMain.addMenuItem(menuItemScreenMode);
+  //Add snake game button
+  menuPageMain.addMenuItem(menuItemButtonSnakeGame);
   //Add Sub menu Debug
   menuPageMain.addMenuItem(menuItemDebug);
   menuPageDebug.addMenuItem(menuItemTestFloat);
@@ -555,7 +565,41 @@ void DroContextExit()
   menu.drawMenu();
   menu.clearContext();
 }
+
+
+
 // ***************************************************************************************
+// *** Snake game for fun !! context *****************************************************
+
+
+
+void ActionLaunchSnakeGame()
+{
+  menu.context.loop = SnakeContextLoop;
+  menu.context.enter = SnakeContextEnter;
+  menu.context.exit = SnakeContextExit;
+  menu.context.allowExit = false; // Setting to false will require manual exit from the loop
+  menu.context.enter();    
+}
+void SnakeContextEnter()
+{
+  u8g2.clear();//Clear screen
+}
+void SnakeContextLoop() 
+{
+  byte key = customKeypad.getKey();
+  MySnake.loop(key);
+  if (key == GEM_KEY_CANCEL) 
+  { 
+    menu.context.exit();
+  }
+}
+void SnakeContextExit() 
+{
+  menu.reInit();
+  menu.drawMenu();
+  menu.clearContext();
+}
 // ***************************************************************************************
 // *** Debug context *********************************************************************
 void ActionDebug()
