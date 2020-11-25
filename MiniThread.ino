@@ -234,24 +234,24 @@ SelectOptionByte selectToolOptions[] = {{"Tool_0", 0}, {"Tool_1", 1}, {"Tool_2",
 GEMSelect selectTool(sizeof(selectToolOptions)/sizeof(SelectOptionByte), selectToolOptions);
 GEMItem menuItemTool("Tool:", bToolChoose, selectTool, applyTool);
 GEMItem menuItemRelativeMode("Relative:", bRelativeModeActived,ActionChangeRelaticeMode);
-GEMItem menuItemButtonResetX("Set X to zero", ActionResetX);
-GEMItem menuItemButtonResetY("Set Y to zero", ActionResetY);
-GEMItem menuItemAxeXPos("X Pos:", fAxeXPos,ActionAxeXPos);
-GEMItem menuItemAxeYPos("Y Pos:", fAxeYPos,ActionAxeYPos);
+GEMItem menuItemButtonResetX("X = 0", ActionResetX);
+GEMItem menuItemButtonResetY("Y = 0", ActionResetY);
+GEMItem menuItemAxeXPos("X = ? :", fAxeXPos,ActionAxeXPos);
+GEMItem menuItemAxeYPos("Y = ? :", fAxeYPos,ActionAxeYPos);
 GEMPage menuPageMotor(TEXT_MENU_MOTOR_FUNCTIONS); // Motor submenu
 GEMItem menuItemMotor(TEXT_MENU_MOTOR_FUNCTIONS, menuPageMotor);
 GEMItem menuItemUseMotor("Use motor:", bUseMotor,ActionUseMotor);
 SelectOptionByte selectMotorModeOptions[] = {{"NoMode", 0}, {"MANUAL", 1},{"AUTO", 2},{"TH EX N", 3},{"TH EX I", 4},{"TH IN N", 5},{"TH IN I", 6}};
 GEMSelect selectMotorMode(sizeof(selectMotorModeOptions)/sizeof(SelectOptionByte), selectMotorModeOptions);
 GEMItem menuItemMotorMode("Motor mode:", bMotorMode, selectMotorMode, applyMotorMode);
-GEMItem menuItemMotorStopMin("Stop Min:", fMotorStopMin,ActionMotorStopMin);
-GEMItem menuItemMotorStopMax("Stop Max:", fMotorStopMax,ActionMotorStopMax);
+GEMItem menuItemMotorStopMin("M1min = ?:", fMotorStopMin,ActionMotorStopMin);
+GEMItem menuItemMotorStopMax("M1max = ?:", fMotorStopMax,ActionMotorStopMax);
 GEMItem menuItemUseMotorEndLimit("Use limit:", bUseMotorEndLimit,ActionUseMotorEndLimit);
-GEMItem menuItemMotorCurrentPos("CurrentPos:", fMotorCurrentPos,ActionMotorCurrentPos);
+GEMItem menuItemMotorCurrentPos("M1 = ? :", fMotorCurrentPos,ActionMotorCurrentPos);
 GEMItem menuItemMotorSpeed("Speed:", iMotorSpeed,ActionMotorMotorSpeed);
 GEMItem menuItemButtonSetPosToMax("CurrentPos -> Max", ActionSetCurrentToMax);
 GEMItem menuItemButtonSetPosToMin("CurrentPos -> Min", ActionSetCurrentToMin);
-GEMItem menuItemButtonResetCurrentPos("Reset CurrentPos", ActionResetCurrentPos);
+GEMItem menuItemButtonResetCurrentPos("M1 = 0", ActionResetCurrentPos);
 GEMPage menuPageThreadParameters("Thread parameters"); // Thread parameters submenu
 GEMItem menuItemThreadParameters("Thread parameters", menuPageThreadParameters);
 GEMItem menuItemMotorThread("Thread:", iMotorThread,ActionMotorChangeThread);
@@ -328,8 +328,8 @@ void setup()
   //Display start screen
   Display_StartScreen(); 
 
-  MyMsg.DisplayMsg("Test",Msg::Warning,3000);
-  MyMsg.DisplayMsg("Test 2",Msg::Info,3000);
+  //MyMsg.DisplayMsg("Test",Msg::Warning,3000);
+  //MyMsg.DisplayMsg("Test 2",Msg::Info,3000);
   //Debug port...
   afio_cfg_debug_ports(AFIO_DEBUG_SW_ONLY); //Only SWD
   //USB Serial
@@ -361,16 +361,22 @@ void setupMenu() {
   menuPageAxe.addMenuItem(menuItemButtonResetX);
   menuPageAxe.addMenuItem(menuItemButtonResetY);
   menuPageAxe.addMenuItem(menuItemAxeXPos);
+  menuItemAxeXPos.setPrecision(3);
   menuPageAxe.addMenuItem(menuItemAxeYPos);
+  menuItemAxeYPos.setPrecision(3);
   menuPageAxe.setParentMenuPage(menuPageMain);
   //Create sub menu Thread parameter form menu Motor
   menuPageThreadParameters.setParentMenuPage(menuPageMotor);
   menuPageThreadParameters.addMenuItem(menuItemMotorThread);
-  menuPageThreadParameters.addMenuItem(menuItemMotor1ThreadInfo);  
+  menuPageThreadParameters.addMenuItem(menuItemMotor1ThreadInfo);
+  menuItemMotor1ThreadInfo.setPrecision(1);  
   menuPageThreadParameters.addMenuItem(menuItemMotor1ThreadOffset);
+  menuItemMotor1ThreadOffset.setPrecision(2);
   menuPageThreadParameters.addMenuItem(menuItemMotor1ThreadUseY);
   menuPageThreadParameters.addMenuItem(menuItemMotor1ThreadDiameter);
+  menuItemMotor1ThreadDiameter.setPrecision(2);
   menuPageThreadParameters.addMenuItem(menuItemMotor1ThreadAngle);
+  menuItemMotor1ThreadAngle.setPrecision(2);
   menuPageThreadParameters.addMenuItem(menuItemMotorIncOffset);
   menuPageThreadParameters.addMenuItem(menuItemMotorDecOffset);
   //Add Sub menu Motor
@@ -378,9 +384,12 @@ void setupMenu() {
   menuPageMotor.addMenuItem(menuItemUseMotor);
   menuPageMotor.addMenuItem(menuItemMotorMode);
   menuPageMotor.addMenuItem(menuItemMotorStopMin);
+  menuItemMotorStopMin.setPrecision(2);
   menuPageMotor.addMenuItem(menuItemMotorStopMax);
+  menuItemMotorStopMax.setPrecision(2);
   menuPageMotor.addMenuItem(menuItemUseMotorEndLimit);
   menuPageMotor.addMenuItem(menuItemMotorCurrentPos);
+  menuItemMotorCurrentPos.setPrecision(2);
   menuPageMotor.addMenuItem(menuItemMotorSpeed);
   menuPageMotor.addMenuItem(menuItemThreadParameters); //Sub menu thread parameter
   menuPageMotor.addMenuItem(menuItemButtonSetPosToMax);
