@@ -1,8 +1,8 @@
 #ifndef Language_H_
 #define Language_H_
 
-#define UseFrenchForText
-//#define UseEnglishForText
+//#define UseFrenchForText
+#define UseEnglishForText
 
 #ifdef UseEnglishForText
   #define TEXT_MENU_SETTINGS        "Settings"

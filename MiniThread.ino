@@ -20,12 +20,12 @@ Revision        :
 #include "src/Various/Various.h"
 #include "src/Language/Language.h"
 #include "src/SnakeGame/Snake.h"
-
+#include "src/Msg/Msg.h"
 #include <EEPROM.h>
 
-#define TEXT_MAIN_MENU_TITLE "MiniThread 1.0.1 DEV"
+#define TEXT_MAIN_MENU_TITLE "MiniThread 1.1.0 DEV"
 #define TEXT_AUTHOR_SOFT "Pailpoe"
-#define TEXT_VERSION_SOFT "1.0.1 DEV"
+#define TEXT_VERSION_SOFT "1.1.0 DEV"
 
 // IO def ( for quad decoder, define in class !)
 #define PIN_RES_SCR    PB9
@@ -202,7 +202,7 @@ void Display_C_Informations();
 void Display_M_Informations();
 void Display_Extra_Informations();
 void Display_Debug_Informations();
-void Display_Notice_Informations(char* str);
+
 
 //Menu item ******************************************
 GEMPage menuPageSettings(TEXT_MENU_SETTINGS); // Settings submenu
@@ -270,6 +270,7 @@ GEMItem menuItemScreenMode(TEXT_MENU_ECRAN, eScreenChoose, selectScreenMode, Act
 U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0,/* reset=*/ U8X8_PIN_NONE); //Screen -->external reset (boot problem)
 GEM_u8g2 menu(u8g2,GEM_POINTER_ROW,5,10,10,75); // menu
 Snake MySnake(u8g2);
+Msg MyMsg(u8g2);
 QuadDecoder Quad_Y(3,QuadDecoder::LinearEncoder,512,false,false,IT_Timer3_Overflow); //Quad Y with timer 3
 QuadDecoder Quad_Z(2,QuadDecoder::RotaryEncoder,1200,true,false,IT_Timer2_Overflow); //Quad Z with timer 2
 QuadDecoder Quad_X(1,QuadDecoder::LinearEncoder,512,false,false,IT_Timer1_Overflow); //Quad X with timer 1
@@ -326,6 +327,9 @@ void setup()
   u8g2.setFontPosTop();   
   //Display start screen
   Display_StartScreen(); 
+
+  MyMsg.DisplayMsg("Test",Msg::Warning,3000);
+  MyMsg.DisplayMsg("Test 2",Msg::Info,3000);
   //Debug port...
   afio_cfg_debug_ports(AFIO_DEBUG_SW_ONLY); //Only SWD
   //USB Serial
@@ -710,7 +714,7 @@ void ActionSaveSettingsInFlash()
   //PrintInformationOnScreen("Save in flash");
   //delay(100);  
   bSettingsNeedToBeSaved = false;
-  Display_Notice_Informations("Settings saved !"); 
+  MyMsg.DisplayMsg("Settings saved !",Msg::Info,1000);
   menu.drawMenu(); //Refresh screen after  
 }
 void ActionRestoreSettingsInFlash()
@@ -719,7 +723,7 @@ void ActionRestoreSettingsInFlash()
   SaveConfigInFlash((tsConfigDro*)&csConfigDefault);
   Restore_Config();
   bSettingsNeedToBeSaved = false;
-  Display_Notice_Informations("Settings restored !");
+  MyMsg.DisplayMsg("Settings restored !",Msg::Info,1000);
   menu.drawMenu(); //Refresh screen after 
 }
 // ***************************************************************************************
@@ -945,18 +949,7 @@ void Display_Debug_Informations()
   sprintf(bufferChar,"_cmin:%f",Motor1._cmin);
   u8g2.drawStr(0,36,bufferChar);  // write something to the internal memory
 }
-void Display_Notice_Informations(char* str)
-{
-  u8g2.firstPage();
-  u8g2.setFontPosTop();
-  do 
-  {
-    u8g2.drawRFrame(0,0 ,128,64,4);
-    u8g2.setFont(u8g2_font_6x12_tr); // choose a suitable font
-    u8g2.drawStr(3,3,str);
-  } while (u8g2.nextPage());  
-  delay(2000); 
-}
+
 // ***************************************************************************************
 // ***************************************************************************************
 // *** Action functions from menu ********************************************************
@@ -1298,7 +1291,7 @@ boolean M1_AreYouOkToStartTheThread()
   if( fAxeCSpeed >= fM1MaxThreadSpeed)
   {
     result = false;
-    Display_Notice_Informations("Reduce spindle speed");     
+    MyMsg.DisplayMsg("Reduce spindle speed",Msg::Warning,2000);    
   }
   //Check the direction
   if( bMotorMode == MOTOR_MODE_TH_EXT_N || bMotorMode == MOTOR_MODE_TH_INT_N)
@@ -1306,7 +1299,7 @@ boolean M1_AreYouOkToStartTheThread()
     if( fAxeCSpeed < 0 )
     {
       result = false;
-      Display_Notice_Informations("Spindle wrong dir");     
+      MyMsg.DisplayMsg("Spindle wrong dir",Msg::Warning,2000);    
     }      
   }
   if( bMotorMode == MOTOR_MODE_TH_EXT_I || bMotorMode == MOTOR_MODE_TH_INT_I)
@@ -1314,20 +1307,20 @@ boolean M1_AreYouOkToStartTheThread()
     if( fAxeCSpeed > 0 )
     {
       result = false;
-      Display_Notice_Informations("Spindle wrong dir");     
+      MyMsg.DisplayMsg("Spindle wrong dir",Msg::Warning,2000);    
     }       
   }   
   //Check if endlimit is on
   if( !bUseMotorEndLimit)
   {
     result = false;
-    Display_Notice_Informations("No end limit");     
+    MyMsg.DisplayMsg("No end limit",Msg::Warning,2000);   
   } 
   //Check if the motor is at min pos
   if( !Motor1.AreYouAtMinPos())
   {
     result = false;
-    Display_Notice_Informations("No at min pos");     
+    MyMsg.DisplayMsg("No at min pos",Msg::Warning,2000);     
   }   
   return result;
 }
@@ -1341,7 +1334,7 @@ boolean M1_AreYouOkToReturnAfterThread()
       if( fAxeYPos < fMotor1ThreadDiameter)
       {
         result = false;
-        Display_Notice_Informations("Move Y : Y < Dia");
+        MyMsg.DisplayMsg("Move Y : Y < Dia",Msg::Warning,2000);
       }    
     }
     if( bMotorMode == MOTOR_MODE_TH_INT_N || bMotorMode == MOTOR_MODE_TH_INT_I)
@@ -1349,7 +1342,7 @@ boolean M1_AreYouOkToReturnAfterThread()
       if( fAxeYPos > fMotor1ThreadDiameter)
       {
         result = false;
-        Display_Notice_Informations("Move Y : Y > Dia");
+        MyMsg.DisplayMsg("Move Y : Y > Dia",Msg::Warning,2000);
       }   
     }      
   }
