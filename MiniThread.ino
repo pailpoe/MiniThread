@@ -71,8 +71,9 @@ typedef struct
   int  thread_M1;
   float Accel_M1;
   int Speed_M1;
+  int Lang;
 } tsConfigDro;
-const tsConfigDro csConfigDefault = {false,false,false,true,512,512,1200,false,1600,200,60000.0,12000};
+const tsConfigDro csConfigDefault = {false,false,false,true,512,512,1200,false,1600,200,60000.0,12000,1};
 
 //Threading machine state
 typedef enum
@@ -107,6 +108,10 @@ typedef struct
 #define MOTOR_MODE_TH_EXT_I 4
 #define MOTOR_MODE_TH_INT_N 5
 #define MOTOR_MODE_TH_INT_I 6
+
+#define LANG_FR  0
+#define LANG_EN  1
+
 
 // Variables global ******************************************
 tsConfigDro  sGeneralConf;
@@ -163,6 +168,7 @@ void ActionChangeDiamY();
 void ActionChangeThreadM1();
 void ActionChangeAccelM1();
 void ActionChangeSpeedM1();
+void ActionChangeLang();
 void ActionRestoreSettingsInFlash(); 
 void ActionSaveSettingsInFlash(); 
 void ActionChangeRelaticeMode();
@@ -205,8 +211,8 @@ void Display_Debug_Informations();
 
 
 //Menu item ******************************************
-GEMPage menuPageSettings(TEXT_MENU_SETTINGS); // Settings submenu
-GEMItem menuItemMainSettings(TEXT_MENU_SETTINGS, menuPageSettings);
+GEMPage menuPageSettings(TEXT_EN_MENU_SETTINGS); // Settings submenu
+GEMItem menuItemMainSettings(TEXT_EN_MENU_SETTINGS, menuPageSettings);
 GEMItem menuItemDirX("X dir:", sGeneralConf.Inverted_X,ActionChangeDirX);
 GEMItem menuItemDirY("Y dir:", sGeneralConf.Inverted_Y,ActionChangeDirY);
 GEMItem menuItemDirZ("C dir:", sGeneralConf.Inverted_Z,ActionChangeDirZ);
@@ -219,17 +225,20 @@ GEMItem menuItemResoM1("M1 step/tr:", sGeneralConf.Reso_M1,ActionChangeResoM1);
 GEMItem menuItemThreadM1("M1 thread:", sGeneralConf.thread_M1,ActionChangeThreadM1);
 GEMItem menuItemAccelM1("M1 accel:", sGeneralConf.Accel_M1,ActionChangeAccelM1);
 GEMItem menuItemSpeedM1("M1 speed:", sGeneralConf.Speed_M1,ActionChangeSpeedM1);
-GEMItem menuItemButtonRestoreSettings("Restore settings", ActionRestoreSettingsInFlash);
-GEMItem menuItemButtonSaveSettings("Save settings", ActionSaveSettingsInFlash);
+SelectOptionByte selectLangOptions[] = {{"Fr", 0}, {"Eng", 1}};
+GEMSelect selectLang(sizeof(selectLangOptions)/sizeof(SelectOptionByte), selectLangOptions);
+GEMItem menuItemLang("Lang:", sGeneralConf.Lang, selectLang, ActionChangeLang);
+GEMItem menuItemButtonRestoreSettings(TEXT_EN_MENU_RESTORE_SETTINGS, ActionRestoreSettingsInFlash);
+GEMItem menuItemButtonSaveSettings(TEXT_EN_MENU_SAVE_SETTINGS, ActionSaveSettingsInFlash);
 GEMItem menuItemButtonSnakeGame("Snake game !", ActionLaunchSnakeGame);
-GEMItem menuItemButtonDro(TEXT_MENU_RETURN_SCREEN, ActionDro);
+GEMItem menuItemButtonDro(TEXT_EN_MENU_RETURN_SCREEN, ActionDro);
 GEMPage menuPageMain(TEXT_MAIN_MENU_TITLE);
 GEMPage menuPageDebug("Debug tools"); // Debug submenu
 GEMItem menuItemDebug("Debug tools", menuPageDebug);
 GEMItem menuItemButtonDebug("Debug screen", ActionDebug);
 GEMItem menuItemTestFloat("Float:", TestFloat);
-GEMPage menuPageAxe(TEXT_MENU_AXE_FUNCTIONS); // Axe submenu
-GEMItem menuItemAxe(TEXT_MENU_AXE_FUNCTIONS, menuPageAxe);
+GEMPage menuPageAxe(TEXT_EN_MENU_AXE_FUNCTIONS); // Axe submenu
+GEMItem menuItemAxe(TEXT_EN_MENU_AXE_FUNCTIONS, menuPageAxe);
 SelectOptionByte selectToolOptions[] = {{"Tool_0", 0}, {"Tool_1", 1}, {"Tool_2", 2}, {"Tool_3", 3}, {"Tool_4", 4}, {"Tool_5", 5}};
 GEMSelect selectTool(sizeof(selectToolOptions)/sizeof(SelectOptionByte), selectToolOptions);
 GEMItem menuItemTool("Tool:", bToolChoose, selectTool, applyTool);
@@ -238,8 +247,8 @@ GEMItem menuItemButtonResetX("X = 0", ActionResetX);
 GEMItem menuItemButtonResetY("Y = 0", ActionResetY);
 GEMItem menuItemAxeXPos("X = ? :", fAxeXPos,ActionAxeXPos);
 GEMItem menuItemAxeYPos("Y = ? :", fAxeYPos,ActionAxeYPos);
-GEMPage menuPageMotor(TEXT_MENU_MOTOR_FUNCTIONS); // Motor submenu
-GEMItem menuItemMotor(TEXT_MENU_MOTOR_FUNCTIONS, menuPageMotor);
+GEMPage menuPageMotor(TEXT_EN_MENU_MOTOR_FUNCTIONS); // Motor submenu
+GEMItem menuItemMotor(TEXT_EN_MENU_MOTOR_FUNCTIONS, menuPageMotor);
 GEMItem menuItemUseMotor("Use motor:", bUseMotor,ActionUseMotor);
 SelectOptionByte selectMotorModeOptions[] = {{"NoMode", 0}, {"MANUAL", 1},{"AUTO", 2},{"TH EX N", 3},{"TH EX I", 4},{"TH IN N", 5},{"TH IN I", 6}};
 GEMSelect selectMotorMode(sizeof(selectMotorModeOptions)/sizeof(SelectOptionByte), selectMotorModeOptions);
@@ -264,7 +273,7 @@ GEMItem menuItemMotorIncOffset("Inc Offset +2°", ActionIncMotor1Offset);
 GEMItem menuItemMotorDecOffset("Dec Offset -2°", ActionDecMotor1Offset);
 SelectOptionByte selectScreenOptions[] = {{"DroXYC", 0}, {"Mot1", 1}, {"Debug", 2}};
 GEMSelect selectScreenMode(sizeof(selectScreenOptions)/sizeof(SelectOptionByte), selectScreenOptions);
-GEMItem menuItemScreenMode(TEXT_MENU_ECRAN, eScreenChoose, selectScreenMode, ActionScreenMode);
+GEMItem menuItemScreenMode(TEXT_EN_MENU_ECRAN, eScreenChoose, selectScreenMode, ActionScreenMode);
 
 //Class instance ******************************************
 U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0,/* reset=*/ U8X8_PIN_NONE); //Screen -->external reset (boot problem)
@@ -409,7 +418,8 @@ void setupMenu() {
   menuPageSettings.addMenuItem(menuItemResoM1);
   menuPageSettings.addMenuItem(menuItemThreadM1);
   menuPageSettings.addMenuItem(menuItemAccelM1);
-  menuPageSettings.addMenuItem(menuItemSpeedM1);  
+  menuPageSettings.addMenuItem(menuItemSpeedM1); 
+  menuPageSettings.addMenuItem(menuItemLang);
   menuPageSettings.addMenuItem(menuItemButtonRestoreSettings);
   menuPageSettings.addMenuItem(menuItemButtonSaveSettings);
   menuPageSettings.setParentMenuPage(menuPageMain);
@@ -1356,4 +1366,30 @@ boolean M1_AreYouOkToReturnAfterThread()
     }      
   }
   return result;    
+}
+void ActionChangeLang()
+{
+  if(sGeneralConf.Lang == LANG_EN)
+  {
+    //menuPageSettings.setTitle(TEXT_EN_MENU_SETTINGS);
+    menuItemMainSettings.setTitle(TEXT_EN_MENU_SETTINGS);
+    menuItemButtonDro.setTitle(TEXT_EN_MENU_RETURN_SCREEN);
+    menuItemAxe.setTitle(TEXT_EN_MENU_AXE_FUNCTIONS);
+    menuItemMotor.setTitle(TEXT_EN_MENU_MOTOR_FUNCTIONS);  
+    menuItemScreenMode.setTitle(TEXT_EN_MENU_ECRAN);
+    menuItemButtonRestoreSettings.setTitle(TEXT_EN_MENU_RESTORE_SETTINGS);
+    menuItemButtonSaveSettings.setTitle(TEXT_EN_MENU_SAVE_SETTINGS);
+  }  
+  if(sGeneralConf.Lang == LANG_FR)
+  {
+    //menuPageSettings.setTitle(TEXT_FR_MENU_SETTINGS);
+    menuItemMainSettings.setTitle(TEXT_FR_MENU_SETTINGS);        
+    menuItemButtonDro.setTitle(TEXT_FR_MENU_RETURN_SCREEN); 
+    menuItemAxe.setTitle(TEXT_FR_MENU_AXE_FUNCTIONS);
+    menuItemMotor.setTitle(TEXT_FR_MENU_MOTOR_FUNCTIONS);
+    menuItemScreenMode.setTitle(TEXT_FR_MENU_ECRAN); 
+    menuItemButtonRestoreSettings.setTitle(TEXT_FR_MENU_RESTORE_SETTINGS);
+    menuItemButtonSaveSettings.setTitle(TEXT_FR_MENU_SAVE_SETTINGS);  
+  }   
+  
 }
