@@ -894,7 +894,7 @@ void Display_Extra_Informations()
 {
   char bufferChar[10];
   u8g2.setFont(u8g2_font_profont10_mr); // choose a suitable font
-  u8g2.drawStr(0,54,selectTool.getSelectedOptionName((byte*)&bToolChoose ));
+  u8g2.drawStr(0,54,selectToolOptions[bToolChoose].name);
   //Display thread Masterstate 
   if (  bMotorMode == MOTOR_MODE_TH_EXT_N ||
         bMotorMode == MOTOR_MODE_TH_EXT_I ||
