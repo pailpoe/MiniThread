@@ -723,6 +723,7 @@ void Dispatch_Config(tsConfigDro *pConf)
   Motor1.ChangeParameter((unsigned int)((long)(  pConf->Reso_M1*100/pConf->thread_M1)) , pConf->Inverted_M1);
   Motor1.ChangeAcceleration(pConf->Accel_M1);
   CalcMotorMaxSpeedForThread(); 
+  ActionChangeLang();
 }
 void ActionSaveSettingsInFlash()
 {
