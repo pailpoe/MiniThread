@@ -156,6 +156,14 @@ void SnakeContextLoop();
 void SnakeContextExit(); 
 void applyTool(); 
 void NeedToSave();
+
+void ActionShortcutsResetX();
+void ActionShortcutsResetY();
+void ActionShortcutsResetM1();
+void ActionShortcutsSetCurrentToMax();
+void ActionShortcutsSetCurrentToMin();
+void ActionShortcutsM1inManual();
+
 void ActionChangeDirX();
 void ActionChangeDirY();
 void ActionChangeDirZ();
@@ -211,6 +219,16 @@ void Display_Debug_Informations();
 
 
 //Menu item ******************************************
+GEMPage menuPageShortcuts(TEXT_EN_MENU_FAST_FUNCTIONS); // Shortcuts submenu
+GEMItem menuItemShortcuts(TEXT_EN_MENU_FAST_FUNCTIONS, menuPageShortcuts);
+GEMItem menuItemButtonShortcutsResetX("X = 0", ActionShortcutsResetX);
+GEMItem menuItemButtonShortcutsResetY("Y = 0", ActionShortcutsResetY);
+GEMItem menuItemButtonShortcutsResetM1("M1 = 0", ActionShortcutsResetM1);
+GEMItem menuItemButtonShortcutsSetPosToMax("M1max = M1", ActionShortcutsSetCurrentToMax);
+GEMItem menuItemButtonShortcutsSetPosToMin("M1min = M1", ActionShortcutsSetCurrentToMin);
+GEMItem menuItemButtonShortcutsM1inManual(TEXT_EN_MENU_FAST_M1MANU, ActionShortcutsM1inManual);
+
+
 GEMPage menuPageSettings(TEXT_EN_MENU_SETTINGS); // Settings submenu
 GEMItem menuItemMainSettings(TEXT_EN_MENU_SETTINGS, menuPageSettings);
 GEMItem menuItemDirX("X dir:", sGeneralConf.Inverted_X,ActionChangeDirX);
@@ -363,6 +381,15 @@ void setup()
 void setupMenu() {
   // Add menu items to menu page
   menuPageMain.addMenuItem(menuItemButtonDro);
+  //Add Sub menu shortcuts
+  menuPageMain.addMenuItem(menuItemShortcuts);
+  menuPageShortcuts.addMenuItem(menuItemButtonShortcutsResetX);
+  menuPageShortcuts.addMenuItem(menuItemButtonShortcutsResetY);
+  menuPageShortcuts.addMenuItem(menuItemButtonShortcutsResetM1);
+  menuPageShortcuts.addMenuItem(menuItemButtonShortcutsSetPosToMax);
+  menuPageShortcuts.addMenuItem(menuItemButtonShortcutsSetPosToMin);
+  menuPageShortcuts.addMenuItem(menuItemButtonShortcutsM1inManual);
+  menuPageShortcuts.setParentMenuPage(menuPageMain);
   //Add Sub menu Axe
   menuPageMain.addMenuItem(menuItemAxe);
   menuPageAxe.addMenuItem(menuItemTool);
@@ -496,8 +523,38 @@ void DroContextLoop()
       {
         eScreenChoose = SCREEN_MOT1;
         //eScreenChoose = SCREEN_DEBUG;
-        if( customKeypad.isPressed(GEM_KEY_LEFT))Motor1.ChangeTheMode(StepperMotor::SpeedModeUp);
-        if( customKeypad.isPressed(GEM_KEY_RIGHT))Motor1.ChangeTheMode(StepperMotor::SpeedModeDown);
+        if( customKeypad.isPressed(GEM_KEY_LEFT))
+        {
+          Motor1.ChangeTheMode(StepperMotor::SpeedModeUp);
+          if(customKeypad.isPressed(GEM_KEY_UP))
+          {
+            //Move the end limit Max
+            fMotorStopMax += 0.05;
+            ActionMotorStopMax();     
+          }
+          if(customKeypad.isPressed(GEM_KEY_DOWN))
+          {
+            //Move the end limit Max
+            fMotorStopMax -= 0.05;
+            ActionMotorStopMax();     
+          }    
+        }
+        if( customKeypad.isPressed(GEM_KEY_RIGHT))
+        {
+          Motor1.ChangeTheMode(StepperMotor::SpeedModeDown);
+          if(customKeypad.isPressed(GEM_KEY_UP))
+          {
+            //Move the end limit Max
+            fMotorStopMin += 0.05;
+            ActionMotorStopMin();     
+          }
+          if(customKeypad.isPressed(GEM_KEY_DOWN))
+          {
+            //Move the end limit Max
+            fMotorStopMin -= 0.05;
+            ActionMotorStopMin();     
+          }  
+        }
       }
       else Motor1.ChangeTheMode(StepperMotor::NoMode);
       //Fast Speed with OK pressed
@@ -1042,6 +1099,43 @@ void ActionChangeSpeedM1()
   if(sGeneralConf.Speed_M1 < 1)sGeneralConf.Speed_M1 = 1;
   if(sGeneralConf.Speed_M1 > 30000)sGeneralConf.Speed_M1 = 30000;
 }
+
+
+
+
+
+void ActionShortcutsResetX()
+{
+  Quad_X.SetZeroActiveMode();
+  ActionDro();   
+}
+void ActionShortcutsResetY()
+{
+  Quad_Y.SetZeroActiveMode();
+  ActionDro();  
+}
+void ActionShortcutsResetM1()
+{
+  ActionResetCurrentPos();
+  ActionDro(); 
+}
+void ActionShortcutsSetCurrentToMax()
+{
+  ActionSetCurrentToMax();
+  ActionDro();  
+}
+void ActionShortcutsSetCurrentToMin()
+{
+  ActionSetCurrentToMin();
+  ActionDro();  
+}
+void ActionShortcutsM1inManual()
+{
+  bMotorMode = MOTOR_MODE_MANUAL; 
+  applyMotorMode();  
+  ActionDro();  
+}
+
 void ActionChangeRelaticeMode()
 {  
   if( bRelativeModeActived == true )
@@ -1236,12 +1330,10 @@ void ActionResetCurrentPos()
 void ActionResetX()
 {
   Quad_X.SetZeroActiveMode(); 
-  ActionDro();
 }
 void ActionResetY()
 {
-  Quad_Y.SetZeroActiveMode();
-  ActionDro();  
+  Quad_Y.SetZeroActiveMode();  
 }
 void ActionAxeXPos()
 {
@@ -1387,6 +1479,8 @@ void ActionChangeLang()
     menuItemScreenMode.setTitle(TEXT_EN_MENU_ECRAN);
     menuItemButtonRestoreSettings.setTitle(TEXT_EN_MENU_RESTORE_SETTINGS);
     menuItemButtonSaveSettings.setTitle(TEXT_EN_MENU_SAVE_SETTINGS);
+    menuItemShortcuts.setTitle(TEXT_EN_MENU_FAST_FUNCTIONS);
+    menuItemButtonShortcutsM1inManual.setTitle(TEXT_EN_MENU_FAST_M1MANU);
   }  
   if(sGeneralConf.Lang == LANG_FR)
   {
@@ -1397,7 +1491,9 @@ void ActionChangeLang()
     menuItemMotor.setTitle(TEXT_FR_MENU_MOTOR_FUNCTIONS);
     menuItemScreenMode.setTitle(TEXT_FR_MENU_ECRAN); 
     menuItemButtonRestoreSettings.setTitle(TEXT_FR_MENU_RESTORE_SETTINGS);
-    menuItemButtonSaveSettings.setTitle(TEXT_FR_MENU_SAVE_SETTINGS);  
+    menuItemButtonSaveSettings.setTitle(TEXT_FR_MENU_SAVE_SETTINGS); 
+    menuItemShortcuts.setTitle(TEXT_FR_MENU_FAST_FUNCTIONS);
+    menuItemButtonShortcutsM1inManual.setTitle(TEXT_FR_MENU_FAST_M1MANU); 
   }   
   
 }
