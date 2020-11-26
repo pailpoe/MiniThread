@@ -163,6 +163,7 @@ void ActionShortcutsResetM1();
 void ActionShortcutsSetCurrentToMax();
 void ActionShortcutsSetCurrentToMin();
 void ActionShortcutsM1inManual();
+void ActionShortcutsM1inAuto();
 
 void ActionChangeDirX();
 void ActionChangeDirY();
@@ -227,8 +228,7 @@ GEMItem menuItemButtonShortcutsResetM1("M1 = 0", ActionShortcutsResetM1);
 GEMItem menuItemButtonShortcutsSetPosToMax("M1max = M1", ActionShortcutsSetCurrentToMax);
 GEMItem menuItemButtonShortcutsSetPosToMin("M1min = M1", ActionShortcutsSetCurrentToMin);
 GEMItem menuItemButtonShortcutsM1inManual(TEXT_EN_MENU_FAST_M1MANU, ActionShortcutsM1inManual);
-
-
+GEMItem menuItemButtonShortcutsM1inAuto(TEXT_EN_MENU_FAST_M1AUTO, ActionShortcutsM1inAuto);
 GEMPage menuPageSettings(TEXT_EN_MENU_SETTINGS); // Settings submenu
 GEMItem menuItemMainSettings(TEXT_EN_MENU_SETTINGS, menuPageSettings);
 GEMItem menuItemDirX("X dir:", sGeneralConf.Inverted_X,ActionChangeDirX);
@@ -389,6 +389,7 @@ void setupMenu() {
   menuPageShortcuts.addMenuItem(menuItemButtonShortcutsSetPosToMax);
   menuPageShortcuts.addMenuItem(menuItemButtonShortcutsSetPosToMin);
   menuPageShortcuts.addMenuItem(menuItemButtonShortcutsM1inManual);
+  menuPageShortcuts.addMenuItem(menuItemButtonShortcutsM1inAuto);
   menuPageShortcuts.setParentMenuPage(menuPageMain);
   //Add Sub menu Axe
   menuPageMain.addMenuItem(menuItemAxe);
@@ -1135,6 +1136,12 @@ void ActionShortcutsM1inManual()
   applyMotorMode();  
   ActionDro();  
 }
+void ActionShortcutsM1inAuto()
+{
+  bMotorMode = MOTOR_MODE_AUTO; 
+  applyMotorMode();  
+  ActionDro();     
+}
 
 void ActionChangeRelaticeMode()
 {  
@@ -1481,6 +1488,7 @@ void ActionChangeLang()
     menuItemButtonSaveSettings.setTitle(TEXT_EN_MENU_SAVE_SETTINGS);
     menuItemShortcuts.setTitle(TEXT_EN_MENU_FAST_FUNCTIONS);
     menuItemButtonShortcutsM1inManual.setTitle(TEXT_EN_MENU_FAST_M1MANU);
+    menuItemButtonShortcutsM1inAuto.setTitle(TEXT_EN_MENU_FAST_M1AUTO);
   }  
   if(sGeneralConf.Lang == LANG_FR)
   {
@@ -1493,7 +1501,8 @@ void ActionChangeLang()
     menuItemButtonRestoreSettings.setTitle(TEXT_FR_MENU_RESTORE_SETTINGS);
     menuItemButtonSaveSettings.setTitle(TEXT_FR_MENU_SAVE_SETTINGS); 
     menuItemShortcuts.setTitle(TEXT_FR_MENU_FAST_FUNCTIONS);
-    menuItemButtonShortcutsM1inManual.setTitle(TEXT_FR_MENU_FAST_M1MANU); 
+    menuItemButtonShortcutsM1inManual.setTitle(TEXT_FR_MENU_FAST_M1MANU);
+    menuItemButtonShortcutsM1inAuto.setTitle(TEXT_FR_MENU_FAST_M1AUTO); 
   }   
   
 }
