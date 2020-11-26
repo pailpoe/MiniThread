@@ -73,7 +73,7 @@ typedef struct
   int Speed_M1;
   int Lang;
 } tsConfigDro;
-const tsConfigDro csConfigDefault = {false,false,false,true,512,512,1200,false,1600,200,60000.0,12000,1};
+
 
 //Threading machine state
 typedef enum
@@ -112,8 +112,8 @@ typedef struct
 #define LANG_FR  0
 #define LANG_EN  1
 
-
 // Variables global ******************************************
+const tsConfigDro csConfigDefault = {false,false,false,true,512,512,1200,false,1600,200,60000.0,12000,LANG_EN};
 tsConfigDro  sGeneralConf;
 boolean     bSettingsNeedToBeSaved = false;
 float       TestFloat = 999.2;
@@ -245,21 +245,21 @@ GEMItem menuItemTool("Tool:", bToolChoose, selectTool, applyTool);
 GEMItem menuItemRelativeMode("Relative:", bRelativeModeActived,ActionChangeRelaticeMode);
 GEMItem menuItemButtonResetX("X = 0", ActionResetX);
 GEMItem menuItemButtonResetY("Y = 0", ActionResetY);
-GEMItem menuItemAxeXPos("X = ? :", fAxeXPos,ActionAxeXPos);
-GEMItem menuItemAxeYPos("Y = ? :", fAxeYPos,ActionAxeYPos);
+GEMItem menuItemAxeXPos("X = ?", fAxeXPos,ActionAxeXPos);
+GEMItem menuItemAxeYPos("Y = ?", fAxeYPos,ActionAxeYPos);
 GEMPage menuPageMotor(TEXT_EN_MENU_MOTOR_FUNCTIONS); // Motor submenu
 GEMItem menuItemMotor(TEXT_EN_MENU_MOTOR_FUNCTIONS, menuPageMotor);
 GEMItem menuItemUseMotor("Use motor:", bUseMotor,ActionUseMotor);
 SelectOptionByte selectMotorModeOptions[] = {{"NoMode", 0}, {"MANUAL", 1},{"AUTO", 2},{"TH EX N", 3},{"TH EX I", 4},{"TH IN N", 5},{"TH IN I", 6}};
 GEMSelect selectMotorMode(sizeof(selectMotorModeOptions)/sizeof(SelectOptionByte), selectMotorModeOptions);
 GEMItem menuItemMotorMode("Motor mode:", bMotorMode, selectMotorMode, applyMotorMode);
-GEMItem menuItemMotorStopMin("M1min = ?:", fMotorStopMin,ActionMotorStopMin);
-GEMItem menuItemMotorStopMax("M1max = ?:", fMotorStopMax,ActionMotorStopMax);
+GEMItem menuItemMotorStopMin("M1min = ?", fMotorStopMin,ActionMotorStopMin);
+GEMItem menuItemMotorStopMax("M1max = ?", fMotorStopMax,ActionMotorStopMax);
 GEMItem menuItemUseMotorEndLimit("Use limit:", bUseMotorEndLimit,ActionUseMotorEndLimit);
-GEMItem menuItemMotorCurrentPos("M1 = ? :", fMotorCurrentPos,ActionMotorCurrentPos);
+GEMItem menuItemMotorCurrentPos("M1 = ?", fMotorCurrentPos,ActionMotorCurrentPos);
 GEMItem menuItemMotorSpeed("Speed:", iMotorSpeed,ActionMotorMotorSpeed);
-GEMItem menuItemButtonSetPosToMax("CurrentPos -> Max", ActionSetCurrentToMax);
-GEMItem menuItemButtonSetPosToMin("CurrentPos -> Min", ActionSetCurrentToMin);
+GEMItem menuItemButtonSetPosToMax("M1max = M1", ActionSetCurrentToMax);
+GEMItem menuItemButtonSetPosToMin("M1min = M1", ActionSetCurrentToMin);
 GEMItem menuItemButtonResetCurrentPos("M1 = 0", ActionResetCurrentPos);
 GEMPage menuPageThreadParameters("Thread parameters"); // Thread parameters submenu
 GEMItem menuItemThreadParameters("Thread parameters", menuPageThreadParameters);
@@ -759,7 +759,9 @@ void UsbSerial_Pos()
     Serial.print(bufferChar);
     sprintf(bufferChar,"Y%0.3f:",fAxeYPos); 
     Serial.print(bufferChar);
-    sprintf(bufferChar,"C%0.3f",fAxeCSpeed); 
+    sprintf(bufferChar,"C%0.3f:",fAxeCSpeed); 
+    Serial.print(bufferChar);
+    sprintf(bufferChar,"M%0.3f",fMotorCurrentPos); 
     Serial.print(bufferChar);
     Serial.print("\n");   
   }
@@ -1107,6 +1109,7 @@ void CalcMotorParameterForThread()
   long lGCD;
   float OffsetFixe = 0.0; //Constant offset
   float OffsetVariable = 0.0; //variable offset
+  float fTemp = 0.0; // pour calcul du demi pas
   //Calc Numerator and Denominator with simplification
   sThreadCalc.Numerator = sGeneralConf.Reso_M1 * iMotorThread;  
   sThreadCalc.Denominator = sGeneralConf.thread_M1 * sGeneralConf.Reso_Z ; 
@@ -1145,6 +1148,10 @@ void CalcMotorParameterForThread()
         OffsetVariable = 0.0;  
       }          
     }
+    //L'offset variable ne peut pas dépasser le demi pas demandé 
+    fTemp = (float)(sGeneralConf.Reso_M1*iMotorThread /(sGeneralConf.thread_M1 * 2.0)) ; 
+    if( OffsetVariable > fTemp ) OffsetVariable = fTemp;  
+    
   }
   //Global offset
   sThreadCalc.Offset = Motor1.GetStopPositionMinStep() - (long)OffsetFixe + (long)OffsetVariable ; 
