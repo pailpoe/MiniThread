@@ -225,25 +225,25 @@ GEMItem menuItemShortcuts(TEXT_EN_MENU_FAST_FUNCTIONS, menuPageShortcuts);
 GEMItem menuItemButtonShortcutsResetX("X = 0", ActionShortcutsResetX);
 GEMItem menuItemButtonShortcutsResetY("Y = 0", ActionShortcutsResetY);
 GEMItem menuItemButtonShortcutsResetM1("M1 = 0", ActionShortcutsResetM1);
-GEMItem menuItemButtonShortcutsSetPosToMax("M1max = M1", ActionShortcutsSetCurrentToMax);
-GEMItem menuItemButtonShortcutsSetPosToMin("M1min = M1", ActionShortcutsSetCurrentToMin);
+GEMItem menuItemButtonShortcutsSetPosToMax("M1max -> M1", ActionShortcutsSetCurrentToMax);
+GEMItem menuItemButtonShortcutsSetPosToMin("M1min -> M1", ActionShortcutsSetCurrentToMin);
 GEMItem menuItemButtonShortcutsM1inManual(TEXT_EN_MENU_FAST_M1MANU, ActionShortcutsM1inManual);
 GEMItem menuItemButtonShortcutsM1inAuto(TEXT_EN_MENU_FAST_M1AUTO, ActionShortcutsM1inAuto);
 GEMPage menuPageSettings(TEXT_EN_MENU_SETTINGS); // Settings submenu
 GEMItem menuItemMainSettings(TEXT_EN_MENU_SETTINGS, menuPageSettings);
-GEMItem menuItemDirX("X dir:", sGeneralConf.Inverted_X,ActionChangeDirX);
-GEMItem menuItemDirY("Y dir:", sGeneralConf.Inverted_Y,ActionChangeDirY);
-GEMItem menuItemDirZ("C dir:", sGeneralConf.Inverted_Z,ActionChangeDirZ);
-GEMItem menuItemDiamY("Y diameter:", sGeneralConf.Diameter_Mode_Y,ActionChangeDiamY);
-GEMItem menuItemResoX("X step/mm:", sGeneralConf.Reso_X,ActionChangeResoX);
-GEMItem menuItemResoY("Y step/mm:", sGeneralConf.Reso_Y,ActionChangeResoY);
-GEMItem menuItemResoZ("C step/tr:", sGeneralConf.Reso_Z,ActionChangeResoZ);
-GEMItem menuItemDirM1("M1 dir:", sGeneralConf.Inverted_M1,ActionChangeDirM1);
-GEMItem menuItemResoM1("M1 step/tr:", sGeneralConf.Reso_M1,ActionChangeResoM1);
-GEMItem menuItemThreadM1("M1 thread:", sGeneralConf.thread_M1,ActionChangeThreadM1);
-GEMItem menuItemAccelM1("M1 accel:", sGeneralConf.Accel_M1,ActionChangeAccelM1);
-GEMItem menuItemSpeedM1("M1 speed:", sGeneralConf.Speed_M1,ActionChangeSpeedM1);
-SelectOptionByte selectLangOptions[] = {{"Fr", 0}, {"Eng", 1}};
+GEMItem menuItemDirX("X dir", sGeneralConf.Inverted_X,ActionChangeDirX);
+GEMItem menuItemDirY("Y dir", sGeneralConf.Inverted_Y,ActionChangeDirY);
+GEMItem menuItemDirZ("C dir", sGeneralConf.Inverted_Z,ActionChangeDirZ);
+GEMItem menuItemDiamY("Y diameter", sGeneralConf.Diameter_Mode_Y,ActionChangeDiamY);
+GEMItem menuItemResoX("X step/mm", sGeneralConf.Reso_X,ActionChangeResoX);
+GEMItem menuItemResoY("Y step/mm", sGeneralConf.Reso_Y,ActionChangeResoY);
+GEMItem menuItemResoZ("C step/tr", sGeneralConf.Reso_Z,ActionChangeResoZ);
+GEMItem menuItemDirM1("M1 dir", sGeneralConf.Inverted_M1,ActionChangeDirM1);
+GEMItem menuItemResoM1("M1 step/tr", sGeneralConf.Reso_M1,ActionChangeResoM1);
+GEMItem menuItemThreadM1("M1 thread", sGeneralConf.thread_M1,ActionChangeThreadM1);
+GEMItem menuItemAccelM1("M1 accel", sGeneralConf.Accel_M1,ActionChangeAccelM1);
+GEMItem menuItemSpeedM1("M1 speed", sGeneralConf.Speed_M1,ActionChangeSpeedM1);
+SelectOptionByte selectLangOptions[] = {{"Fr", LANG_FR}, {"Eng", LANG_EN}};
 GEMSelect selectLang(sizeof(selectLangOptions)/sizeof(SelectOptionByte), selectLangOptions);
 GEMItem menuItemLang("Lang:", sGeneralConf.Lang, selectLang, ActionChangeLang);
 GEMItem menuItemButtonRestoreSettings(TEXT_EN_MENU_RESTORE_SETTINGS, ActionRestoreSettingsInFlash);
@@ -251,42 +251,42 @@ GEMItem menuItemButtonSaveSettings(TEXT_EN_MENU_SAVE_SETTINGS, ActionSaveSetting
 GEMItem menuItemButtonSnakeGame("Snake game !", ActionLaunchSnakeGame);
 GEMItem menuItemButtonDro(TEXT_EN_MENU_RETURN_SCREEN, ActionDro);
 GEMPage menuPageMain(TEXT_MAIN_MENU_TITLE);
-GEMPage menuPageDebug("Debug tools"); // Debug submenu
-GEMItem menuItemDebug("Debug tools", menuPageDebug);
+GEMPage menuPageDebug(TEXT_EN_MENU_DEBUG); // Debug submenu
+GEMItem menuItemDebug(TEXT_EN_MENU_DEBUG, menuPageDebug);
 GEMItem menuItemButtonDebug("Debug screen", ActionDebug);
-GEMItem menuItemTestFloat("Float:", TestFloat);
+GEMItem menuItemTestFloat("Float", TestFloat);
 GEMPage menuPageAxe(TEXT_EN_MENU_AXE_FUNCTIONS); // Axe submenu
 GEMItem menuItemAxe(TEXT_EN_MENU_AXE_FUNCTIONS, menuPageAxe);
 SelectOptionByte selectToolOptions[] = {{"Tool_0", 0}, {"Tool_1", 1}, {"Tool_2", 2}, {"Tool_3", 3}, {"Tool_4", 4}, {"Tool_5", 5}};
 GEMSelect selectTool(sizeof(selectToolOptions)/sizeof(SelectOptionByte), selectToolOptions);
-GEMItem menuItemTool("Tool:", bToolChoose, selectTool, applyTool);
-GEMItem menuItemRelativeMode("Relative:", bRelativeModeActived,ActionChangeRelaticeMode);
+GEMItem menuItemTool("Tool", bToolChoose, selectTool, applyTool);
+GEMItem menuItemRelativeMode("Relative", bRelativeModeActived,ActionChangeRelaticeMode);
 GEMItem menuItemButtonResetX("X = 0", ActionResetX);
 GEMItem menuItemButtonResetY("Y = 0", ActionResetY);
 GEMItem menuItemAxeXPos("X = ?", fAxeXPos,ActionAxeXPos);
 GEMItem menuItemAxeYPos("Y = ?", fAxeYPos,ActionAxeYPos);
 GEMPage menuPageMotor(TEXT_EN_MENU_MOTOR_FUNCTIONS); // Motor submenu
 GEMItem menuItemMotor(TEXT_EN_MENU_MOTOR_FUNCTIONS, menuPageMotor);
-GEMItem menuItemUseMotor("Use motor:", bUseMotor,ActionUseMotor);
+GEMItem menuItemUseMotor("Enabled:", bUseMotor,ActionUseMotor);
 SelectOptionByte selectMotorModeOptions[] = {{"NoMode", 0}, {"MANUAL", 1},{"AUTO", 2},{"TH EX N", 3},{"TH EX I", 4},{"TH IN N", 5},{"TH IN I", 6}};
 GEMSelect selectMotorMode(sizeof(selectMotorModeOptions)/sizeof(SelectOptionByte), selectMotorModeOptions);
-GEMItem menuItemMotorMode("Motor mode:", bMotorMode, selectMotorMode, applyMotorMode);
+GEMItem menuItemMotorMode("Mode", bMotorMode, selectMotorMode, applyMotorMode);
 GEMItem menuItemMotorStopMin("M1min = ?", fMotorStopMin,ActionMotorStopMin);
 GEMItem menuItemMotorStopMax("M1max = ?", fMotorStopMax,ActionMotorStopMax);
-GEMItem menuItemUseMotorEndLimit("Use limit:", bUseMotorEndLimit,ActionUseMotorEndLimit);
+GEMItem menuItemUseMotorEndLimit("Use limit", bUseMotorEndLimit,ActionUseMotorEndLimit);
 GEMItem menuItemMotorCurrentPos("M1 = ?", fMotorCurrentPos,ActionMotorCurrentPos);
 GEMItem menuItemMotorSpeed("Speed:", iMotorSpeed,ActionMotorMotorSpeed);
-GEMItem menuItemButtonSetPosToMax("M1max = M1", ActionSetCurrentToMax);
-GEMItem menuItemButtonSetPosToMin("M1min = M1", ActionSetCurrentToMin);
+GEMItem menuItemButtonSetPosToMax("M1max -> M1", ActionSetCurrentToMax);
+GEMItem menuItemButtonSetPosToMin("M1min -> M1", ActionSetCurrentToMin);
 GEMItem menuItemButtonResetCurrentPos("M1 = 0", ActionResetCurrentPos);
-GEMPage menuPageThreadParameters("Thread parameters"); // Thread parameters submenu
-GEMItem menuItemThreadParameters("Thread parameters", menuPageThreadParameters);
-GEMItem menuItemMotorThread("Thread:", iMotorThread,ActionMotorChangeThread);
-GEMItem menuItemMotor1ThreadOffset("Offset:", fMotor1ThreadOffset,ActionChangeMotor1Offset);
-GEMItem menuItemMotor1ThreadUseY("Use Y:", bMotor1ThreadUseY,ActionMotor1ThreadUseY);
-GEMItem menuItemMotor1ThreadDiameter("Diameter:", fMotor1ThreadDiameter,ActionChangeMotor1ThreadDiameter);
-GEMItem menuItemMotor1ThreadAngle("Angle:", fMotor1ThreadAngle,ActionChangeMotor1ThreadAngle);
-GEMItem menuItemMotor1ThreadInfo("Speed max:", fM1MaxThreadSpeed,true);
+GEMPage menuPageThreadParameters(TEXT_EN_MENU_THREAD_PARAMETERS); // Thread parameters submenu
+GEMItem menuItemThreadParameters(TEXT_EN_MENU_THREAD_PARAMETERS, menuPageThreadParameters);
+GEMItem menuItemMotorThread("Thread", iMotorThread,ActionMotorChangeThread);
+GEMItem menuItemMotor1ThreadOffset("Offset", fMotor1ThreadOffset,ActionChangeMotor1Offset);
+GEMItem menuItemMotor1ThreadUseY("Use Y", bMotor1ThreadUseY,ActionMotor1ThreadUseY);
+GEMItem menuItemMotor1ThreadDiameter("Diameter", fMotor1ThreadDiameter,ActionChangeMotor1ThreadDiameter);
+GEMItem menuItemMotor1ThreadAngle("Angle", fMotor1ThreadAngle,ActionChangeMotor1ThreadAngle);
+GEMItem menuItemMotor1ThreadInfo("Vmax", fM1MaxThreadSpeed,true);
 GEMItem menuItemMotorIncOffset("Inc Offset +2°", ActionIncMotor1Offset);
 GEMItem menuItemMotorDecOffset("Dec Offset -2°", ActionDecMotor1Offset);
 SelectOptionByte selectScreenOptions[] = {{"DroXYC", 0}, {"Mot1", 1}, {"Debug", 2}};
@@ -1478,7 +1478,7 @@ void ActionChangeLang()
 {
   if(sGeneralConf.Lang == LANG_EN)
   {
-    //menuPageSettings.setTitle(TEXT_EN_MENU_SETTINGS);
+    menuPageSettings.setTitle(TEXT_EN_MENU_SETTINGS);
     menuItemMainSettings.setTitle(TEXT_EN_MENU_SETTINGS);
     menuItemButtonDro.setTitle(TEXT_EN_MENU_RETURN_SCREEN);
     menuItemAxe.setTitle(TEXT_EN_MENU_AXE_FUNCTIONS);
@@ -1487,12 +1487,19 @@ void ActionChangeLang()
     menuItemButtonRestoreSettings.setTitle(TEXT_EN_MENU_RESTORE_SETTINGS);
     menuItemButtonSaveSettings.setTitle(TEXT_EN_MENU_SAVE_SETTINGS);
     menuItemShortcuts.setTitle(TEXT_EN_MENU_FAST_FUNCTIONS);
+    menuPageShortcuts.setTitle(TEXT_EN_MENU_FAST_FUNCTIONS);
     menuItemButtonShortcutsM1inManual.setTitle(TEXT_EN_MENU_FAST_M1MANU);
     menuItemButtonShortcutsM1inAuto.setTitle(TEXT_EN_MENU_FAST_M1AUTO);
+    menuPageAxe.setTitle(TEXT_EN_MENU_AXE_FUNCTIONS);
+    menuPageMotor.setTitle(TEXT_EN_MENU_MOTOR_FUNCTIONS);
+    menuPageDebug.setTitle(TEXT_EN_MENU_DEBUG);
+    menuItemDebug.setTitle(TEXT_EN_MENU_DEBUG);
+    menuPageThreadParameters.setTitle(TEXT_EN_MENU_THREAD_PARAMETERS);
+    menuItemThreadParameters.setTitle(TEXT_EN_MENU_THREAD_PARAMETERS);
   }  
   if(sGeneralConf.Lang == LANG_FR)
   {
-    //menuPageSettings.setTitle(TEXT_FR_MENU_SETTINGS);
+    menuPageSettings.setTitle(TEXT_FR_MENU_SETTINGS);
     menuItemMainSettings.setTitle(TEXT_FR_MENU_SETTINGS);        
     menuItemButtonDro.setTitle(TEXT_FR_MENU_RETURN_SCREEN); 
     menuItemAxe.setTitle(TEXT_FR_MENU_AXE_FUNCTIONS);
@@ -1501,8 +1508,15 @@ void ActionChangeLang()
     menuItemButtonRestoreSettings.setTitle(TEXT_FR_MENU_RESTORE_SETTINGS);
     menuItemButtonSaveSettings.setTitle(TEXT_FR_MENU_SAVE_SETTINGS); 
     menuItemShortcuts.setTitle(TEXT_FR_MENU_FAST_FUNCTIONS);
+    menuPageShortcuts.setTitle(TEXT_FR_MENU_FAST_FUNCTIONS);
     menuItemButtonShortcutsM1inManual.setTitle(TEXT_FR_MENU_FAST_M1MANU);
-    menuItemButtonShortcutsM1inAuto.setTitle(TEXT_FR_MENU_FAST_M1AUTO); 
+    menuItemButtonShortcutsM1inAuto.setTitle(TEXT_FR_MENU_FAST_M1AUTO);
+    menuPageAxe.setTitle(TEXT_FR_MENU_AXE_FUNCTIONS);
+    menuPageMotor.setTitle(TEXT_FR_MENU_MOTOR_FUNCTIONS);
+    menuPageDebug.setTitle(TEXT_FR_MENU_DEBUG);
+    menuItemDebug.setTitle(TEXT_FR_MENU_DEBUG);
+    menuPageThreadParameters.setTitle(TEXT_FR_MENU_THREAD_PARAMETERS);
+    menuItemThreadParameters.setTitle(TEXT_FR_MENU_THREAD_PARAMETERS); 
   }   
   
 }
