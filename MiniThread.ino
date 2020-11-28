@@ -71,7 +71,7 @@ typedef struct
   int  thread_M1;
   float Accel_M1;
   int Speed_M1;
-  int Lang;
+  byte Lang;
 } tsConfigDro;
 
 
@@ -108,9 +108,6 @@ typedef struct
 #define MOTOR_MODE_TH_EXT_I 4
 #define MOTOR_MODE_TH_INT_N 5
 #define MOTOR_MODE_TH_INT_I 6
-
-#define LANG_FR  0
-#define LANG_EN  1
 
 // Variables global ******************************************
 const tsConfigDro csConfigDefault = {false,false,false,true,512,512,1200,false,1600,200,60000.0,12000,LANG_EN};
@@ -156,6 +153,7 @@ void SnakeContextLoop();
 void SnakeContextExit(); 
 void applyTool(); 
 void NeedToSave();
+void ActionUpdateMenuTitle();
 
 void ActionShortcutsResetX();
 void ActionShortcutsResetY();
@@ -220,17 +218,17 @@ void Display_Debug_Informations();
 
 
 //Menu item ******************************************
-GEMPage menuPageShortcuts(TEXT_EN_MENU_FAST_FUNCTIONS); // Shortcuts submenu
-GEMItem menuItemShortcuts(TEXT_EN_MENU_FAST_FUNCTIONS, menuPageShortcuts);
+GEMPage menuPageShortcuts(""); // Shortcuts submenu
+GEMItem menuItemShortcuts("", menuPageShortcuts);
 GEMItem menuItemButtonShortcutsResetX("X = 0", ActionShortcutsResetX);
 GEMItem menuItemButtonShortcutsResetY("Y = 0", ActionShortcutsResetY);
 GEMItem menuItemButtonShortcutsResetM1("M1 = 0", ActionShortcutsResetM1);
 GEMItem menuItemButtonShortcutsSetPosToMax("M1 -> M1_max", ActionShortcutsSetCurrentToMax);
 GEMItem menuItemButtonShortcutsSetPosToMin("M1 -> M1_min", ActionShortcutsSetCurrentToMin);
-GEMItem menuItemButtonShortcutsM1inManual(TEXT_EN_MENU_FAST_M1MANU, ActionShortcutsM1inManual);
-GEMItem menuItemButtonShortcutsM1inAuto(TEXT_EN_MENU_FAST_M1AUTO, ActionShortcutsM1inAuto);
-GEMPage menuPageSettings(TEXT_EN_MENU_SETTINGS); // Settings submenu
-GEMItem menuItemMainSettings(TEXT_EN_MENU_SETTINGS, menuPageSettings);
+GEMItem menuItemButtonShortcutsM1inManual("", ActionShortcutsM1inManual);
+GEMItem menuItemButtonShortcutsM1inAuto("", ActionShortcutsM1inAuto);
+GEMPage menuPageSettings(""); // Settings submenu
+GEMItem menuItemMainSettings("", menuPageSettings);
 GEMItem menuItemDirX("X dir", sGeneralConf.Inverted_X,ActionChangeDirX);
 GEMItem menuItemDirY("Y dir", sGeneralConf.Inverted_Y,ActionChangeDirY);
 GEMItem menuItemDirZ("C dir", sGeneralConf.Inverted_Z,ActionChangeDirZ);
@@ -246,17 +244,17 @@ GEMItem menuItemSpeedM1("M1 speed", sGeneralConf.Speed_M1,ActionChangeSpeedM1);
 SelectOptionByte selectLangOptions[] = {{"Fr", LANG_FR}, {"Eng", LANG_EN}};
 GEMSelect selectLang(sizeof(selectLangOptions)/sizeof(SelectOptionByte), selectLangOptions);
 GEMItem menuItemLang("Lang:", sGeneralConf.Lang, selectLang, ActionChangeLang);
-GEMItem menuItemButtonRestoreSettings(TEXT_EN_MENU_RESTORE_SETTINGS, ActionRestoreSettingsInFlash);
-GEMItem menuItemButtonSaveSettings(TEXT_EN_MENU_SAVE_SETTINGS, ActionSaveSettingsInFlash);
+GEMItem menuItemButtonRestoreSettings("", ActionRestoreSettingsInFlash);
+GEMItem menuItemButtonSaveSettings("", ActionSaveSettingsInFlash);
 GEMItem menuItemButtonSnakeGame("Snake game !", ActionLaunchSnakeGame);
-GEMItem menuItemButtonDro(TEXT_EN_MENU_RETURN_SCREEN, ActionDro);
+GEMItem menuItemButtonDro("", ActionDro);
 GEMPage menuPageMain(TEXT_MAIN_MENU_TITLE);
-GEMPage menuPageDebug(TEXT_EN_MENU_DEBUG); // Debug submenu
-GEMItem menuItemDebug(TEXT_EN_MENU_DEBUG, menuPageDebug);
+GEMPage menuPageDebug(""); // Debug submenu
+GEMItem menuItemDebug("", menuPageDebug);
 GEMItem menuItemButtonDebug("Debug screen", ActionDebug);
 GEMItem menuItemTestFloat("Float", TestFloat);
-GEMPage menuPageAxe(TEXT_EN_MENU_AXE_FUNCTIONS); // Axe submenu
-GEMItem menuItemAxe(TEXT_EN_MENU_AXE_FUNCTIONS, menuPageAxe);
+GEMPage menuPageAxe(""); // Axe submenu
+GEMItem menuItemAxe("", menuPageAxe);
 SelectOptionByte selectToolOptions[] = {{"Tool_0", 0}, {"Tool_1", 1}, {"Tool_2", 2}, {"Tool_3", 3}, {"Tool_4", 4}, {"Tool_5", 5}};
 GEMSelect selectTool(sizeof(selectToolOptions)/sizeof(SelectOptionByte), selectToolOptions);
 GEMItem menuItemTool("Tool", bToolChoose, selectTool, applyTool);
@@ -265,22 +263,22 @@ GEMItem menuItemButtonResetX("X = 0", ActionResetX);
 GEMItem menuItemButtonResetY("Y = 0", ActionResetY);
 GEMItem menuItemAxeXPos("X = ?", fAxeXPos,ActionAxeXPos);
 GEMItem menuItemAxeYPos("Y = ?", fAxeYPos,ActionAxeYPos);
-GEMPage menuPageMotor(TEXT_EN_MENU_MOTOR_FUNCTIONS); // Motor submenu
-GEMItem menuItemMotor(TEXT_EN_MENU_MOTOR_FUNCTIONS, menuPageMotor);
-GEMItem menuItemUseMotor("Enabled:", bUseMotor,ActionUseMotor);
-SelectOptionByte selectMotorModeOptions[] = {{"NoMode", 0}, {"MANUAL", 1},{"AUTO", 2},{"TH EX N", 3},{"TH EX I", 4},{"TH IN N", 5},{"TH IN I", 6}};
+GEMPage menuPageMotor(""); // Motor submenu
+GEMItem menuItemMotor("", menuPageMotor);
+GEMItem menuItemUseMotor("", bUseMotor,ActionUseMotor);
+SelectOptionByte selectMotorModeOptions[] = {{"------", 0}, {"MANU", 1},{"AUTO", 2},{"TH EX N", 3},{"TH EX I", 4},{"TH IN N", 5},{"TH IN I", 6}};
 GEMSelect selectMotorMode(sizeof(selectMotorModeOptions)/sizeof(SelectOptionByte), selectMotorModeOptions);
 GEMItem menuItemMotorMode("Mode", bMotorMode, selectMotorMode, applyMotorMode);
 GEMItem menuItemMotorStopMin("M1_min = ?", fMotorStopMin,ActionMotorStopMin);
 GEMItem menuItemMotorStopMax("M1_max = ?", fMotorStopMax,ActionMotorStopMax);
-GEMItem menuItemUseMotorEndLimit("Use limit", bUseMotorEndLimit,ActionUseMotorEndLimit);
+GEMItem menuItemUseMotorEndLimit("", bUseMotorEndLimit,ActionUseMotorEndLimit);
 GEMItem menuItemMotorCurrentPos("M1 = ?", fMotorCurrentPos,ActionMotorCurrentPos);
-GEMItem menuItemMotorSpeed("Speed:", iMotorSpeed,ActionMotorMotorSpeed);
+GEMItem menuItemMotorSpeed("", iMotorSpeed,ActionMotorMotorSpeed);
 GEMItem menuItemButtonSetPosToMax("M1 -> M1_max", ActionSetCurrentToMax);
 GEMItem menuItemButtonSetPosToMin("M1 -> M1_min", ActionSetCurrentToMin);
 GEMItem menuItemButtonResetCurrentPos("M1 = 0", ActionResetCurrentPos);
-GEMPage menuPageThreadParameters(TEXT_EN_MENU_THREAD_PARAMETERS); // Thread parameters submenu
-GEMItem menuItemThreadParameters(TEXT_EN_MENU_THREAD_PARAMETERS, menuPageThreadParameters);
+GEMPage menuPageThreadParameters(""); // Thread parameters submenu
+GEMItem menuItemThreadParameters("", menuPageThreadParameters);
 GEMItem menuItemMotorThread("Thread", iMotorThread,ActionMotorChangeThread);
 GEMItem menuItemMotor1ThreadOffset("Offset", fMotor1ThreadOffset,ActionChangeMotor1Offset);
 GEMItem menuItemMotor1ThreadUseY("Use Y", bMotor1ThreadUseY,ActionMotor1ThreadUseY);
@@ -291,7 +289,7 @@ GEMItem menuItemMotorIncOffset("Inc Offset +2°", ActionIncMotor1Offset);
 GEMItem menuItemMotorDecOffset("Dec Offset -2°", ActionDecMotor1Offset);
 SelectOptionByte selectScreenOptions[] = {{"DroXYC", 0}, {"Mot1", 1}, {"Debug", 2}};
 GEMSelect selectScreenMode(sizeof(selectScreenOptions)/sizeof(SelectOptionByte), selectScreenOptions);
-GEMItem menuItemScreenMode(TEXT_EN_MENU_ECRAN, eScreenChoose, selectScreenMode, ActionScreenMode);
+GEMItem menuItemScreenMode("", eScreenChoose, selectScreenMode, ActionScreenMode);
 
 //Class instance ******************************************
 U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0,/* reset=*/ U8X8_PIN_NONE); //Screen -->external reset (boot problem)
@@ -341,23 +339,6 @@ void Update_Overlfow_Timer4()
 // *** setup, loop, ...  *****************************************************************
 void setup() 
 {
-  //External reset for boot of the screen without problem
-  pinMode(PIN_RES_SCR, OUTPUT);  //channel A
-  digitalWrite(PIN_RES_SCR,0);
-  delay(500);
-  digitalWrite(PIN_RES_SCR,1);
-  delay(500);
-  u8g2.initDisplay();
-  u8g2.setPowerSave(0);
-  u8g2.clear();
-  u8g2.setDrawColor(1);
-  u8g2.setFontPosTop();   
-  //Display start screen
-  Display_StartScreen(); 
-
-  //MyMsg.DisplayMsg("Test",Msg::Warning,3000);
-  //MyMsg.DisplayMsg("Test 2",Msg::Info,3000);
-  //Debug port...
   afio_cfg_debug_ports(AFIO_DEBUG_SW_ONLY); //Only SWD
   //USB Serial
   Serial.begin(115200); // Ignored by Maple. But needed by boards using hardware serial via a USB to Serial adaptor  
@@ -373,6 +354,21 @@ void setup()
   MotorControl.resume();
   //Restore config  
   Restore_Config();
+
+  //External reset for boot of the screen without problem
+  pinMode(PIN_RES_SCR, OUTPUT);  //channel A
+  digitalWrite(PIN_RES_SCR,0);
+  delay(500);
+  digitalWrite(PIN_RES_SCR,1);
+  delay(500);
+  u8g2.initDisplay();
+  u8g2.setPowerSave(0);
+  u8g2.clear();
+  u8g2.setDrawColor(1);
+  u8g2.setFontPosTop();   
+  //Display start screen
+  Display_StartScreen(); 
+
   // Menu init, setup and draw
   menu.init();
   setupMenu();
@@ -780,7 +776,7 @@ void Dispatch_Config(tsConfigDro *pConf)
   Quad_Z.SetResolution(pConf->Reso_Z);
   Motor1.ChangeParameter((unsigned int)((long)(  pConf->Reso_M1*100/pConf->thread_M1)) , pConf->Inverted_M1);
   Motor1.ChangeAcceleration(pConf->Accel_M1);
-  CalcMotorMaxSpeedForThread(); 
+  CalcMotorMaxSpeedForThread();
   ActionChangeLang();
 }
 void ActionSaveSettingsInFlash()
@@ -792,7 +788,7 @@ void ActionSaveSettingsInFlash()
   //PrintInformationOnScreen("Save in flash");
   //delay(100);  
   bSettingsNeedToBeSaved = false;
-  MyMsg.DisplayMsg("Settings saved !",Msg::Info,1000);
+  MyMsg.DisplayMsg(GetTxt(Id_Msg_Save),Msg::Info,1000);
   menu.drawMenu(); //Refresh screen after  
 }
 void ActionRestoreSettingsInFlash()
@@ -801,7 +797,7 @@ void ActionRestoreSettingsInFlash()
   SaveConfigInFlash((tsConfigDro*)&csConfigDefault);
   Restore_Config();
   bSettingsNeedToBeSaved = false;
-  MyMsg.DisplayMsg("Settings restored !",Msg::Info,1000);
+  MyMsg.DisplayMsg(GetTxt(Id_Msg_Restore),Msg::Info,1000);
   menu.drawMenu(); //Refresh screen after 
 }
 // ***************************************************************************************
@@ -846,13 +842,7 @@ void Display_StartScreen()
   delay(2000);
   u8g2.clear();
   u8g2.firstPage();
-  do 
-  {
-    u8g2.setCursor(0,0);
-    u8g2.drawStr(0,0,"Use this system");
-    u8g2.drawStr(0,10,"at your own risk !");
-  } while (u8g2.nextPage());
-  delay(4000); 
+  MyMsg.DisplayMsg(GetTxt(Id_Msg_Start),Msg::Warning,3000);
 }
 
 void DisplayDrawInformations()
@@ -1475,48 +1465,31 @@ boolean M1_AreYouOkToReturnAfterThread()
   return result;    
 }
 void ActionChangeLang()
+{  
+  ChangeLang(sGeneralConf.Lang); 
+  ActionUpdateMenuTitle();  
+}
+void ActionUpdateMenuTitle()
 {
-  if(sGeneralConf.Lang == LANG_EN)
-  {
-    menuPageSettings.setTitle(TEXT_EN_MENU_SETTINGS);
-    menuItemMainSettings.setTitle(TEXT_EN_MENU_SETTINGS);
-    menuItemButtonDro.setTitle(TEXT_EN_MENU_RETURN_SCREEN);
-    menuItemAxe.setTitle(TEXT_EN_MENU_AXE_FUNCTIONS);
-    menuItemMotor.setTitle(TEXT_EN_MENU_MOTOR_FUNCTIONS);  
-    menuItemScreenMode.setTitle(TEXT_EN_MENU_ECRAN);
-    menuItemButtonRestoreSettings.setTitle(TEXT_EN_MENU_RESTORE_SETTINGS);
-    menuItemButtonSaveSettings.setTitle(TEXT_EN_MENU_SAVE_SETTINGS);
-    menuItemShortcuts.setTitle(TEXT_EN_MENU_FAST_FUNCTIONS);
-    menuPageShortcuts.setTitle(TEXT_EN_MENU_FAST_FUNCTIONS);
-    menuItemButtonShortcutsM1inManual.setTitle(TEXT_EN_MENU_FAST_M1MANU);
-    menuItemButtonShortcutsM1inAuto.setTitle(TEXT_EN_MENU_FAST_M1AUTO);
-    menuPageAxe.setTitle(TEXT_EN_MENU_AXE_FUNCTIONS);
-    menuPageMotor.setTitle(TEXT_EN_MENU_MOTOR_FUNCTIONS);
-    menuPageDebug.setTitle(TEXT_EN_MENU_DEBUG);
-    menuItemDebug.setTitle(TEXT_EN_MENU_DEBUG);
-    menuPageThreadParameters.setTitle(TEXT_EN_MENU_THREAD_PARAMETERS);
-    menuItemThreadParameters.setTitle(TEXT_EN_MENU_THREAD_PARAMETERS);
-  }  
-  if(sGeneralConf.Lang == LANG_FR)
-  {
-    menuPageSettings.setTitle(TEXT_FR_MENU_SETTINGS);
-    menuItemMainSettings.setTitle(TEXT_FR_MENU_SETTINGS);        
-    menuItemButtonDro.setTitle(TEXT_FR_MENU_RETURN_SCREEN); 
-    menuItemAxe.setTitle(TEXT_FR_MENU_AXE_FUNCTIONS);
-    menuItemMotor.setTitle(TEXT_FR_MENU_MOTOR_FUNCTIONS);
-    menuItemScreenMode.setTitle(TEXT_FR_MENU_ECRAN); 
-    menuItemButtonRestoreSettings.setTitle(TEXT_FR_MENU_RESTORE_SETTINGS);
-    menuItemButtonSaveSettings.setTitle(TEXT_FR_MENU_SAVE_SETTINGS); 
-    menuItemShortcuts.setTitle(TEXT_FR_MENU_FAST_FUNCTIONS);
-    menuPageShortcuts.setTitle(TEXT_FR_MENU_FAST_FUNCTIONS);
-    menuItemButtonShortcutsM1inManual.setTitle(TEXT_FR_MENU_FAST_M1MANU);
-    menuItemButtonShortcutsM1inAuto.setTitle(TEXT_FR_MENU_FAST_M1AUTO);
-    menuPageAxe.setTitle(TEXT_FR_MENU_AXE_FUNCTIONS);
-    menuPageMotor.setTitle(TEXT_FR_MENU_MOTOR_FUNCTIONS);
-    menuPageDebug.setTitle(TEXT_FR_MENU_DEBUG);
-    menuItemDebug.setTitle(TEXT_FR_MENU_DEBUG);
-    menuPageThreadParameters.setTitle(TEXT_FR_MENU_THREAD_PARAMETERS);
-    menuItemThreadParameters.setTitle(TEXT_FR_MENU_THREAD_PARAMETERS); 
-  }   
-  
+  menuPageSettings.setTitle(GetTxt(Id_Msg_TEXT_MENU_SETTINGS));
+  menuItemMainSettings.setTitle(GetTxt(Id_Msg_TEXT_MENU_SETTINGS));
+  menuItemButtonDro.setTitle(GetTxt(Id_Msg_TEXT_MENU_RETURN_SCREEN));
+  menuItemAxe.setTitle(GetTxt(Id_Msg_TEXT_MENU_AXE_FUNCTIONS));
+  menuItemMotor.setTitle(GetTxt(Id_Msg_TEXT_MENU_MOTOR_FUNCTIONS));  
+  menuItemScreenMode.setTitle(GetTxt(Id_Msg_TEXT_MENU_ECRAN));
+  menuItemButtonRestoreSettings.setTitle(GetTxt(Id_Msg_TEXT_MENU_RESTORE_SETTINGS) );
+  menuItemButtonSaveSettings.setTitle(GetTxt(Id_Msg_TEXT_MENU_SAVE_SETTINGS));
+  menuItemShortcuts.setTitle(GetTxt(Id_Msg_TEXT_MENU_FAST_FUNCTIONS));
+  menuPageShortcuts.setTitle(GetTxt(Id_Msg_TEXT_MENU_FAST_FUNCTIONS));
+  menuItemButtonShortcutsM1inManual.setTitle(GetTxt(Id_Msg_TEXT_MENU_FAST_M1MANU));
+  menuItemButtonShortcutsM1inAuto.setTitle(GetTxt(Id_Msg_TEXT_MENU_FAST_M1AUTO));
+  menuPageAxe.setTitle(GetTxt(Id_Msg_TEXT_MENU_AXE_FUNCTIONS));
+  menuPageMotor.setTitle(GetTxt(Id_Msg_TEXT_MENU_MOTOR_FUNCTIONS));
+  menuPageDebug.setTitle(GetTxt(Id_Msg_TEXT_MENU_DEBUG));
+  menuItemDebug.setTitle(GetTxt(Id_Msg_TEXT_MENU_DEBUG));
+  menuPageThreadParameters.setTitle(GetTxt(Id_Msg_TEXT_MENU_THREAD_PARAMETERS));
+  menuItemThreadParameters.setTitle(GetTxt(Id_Msg_TEXT_MENU_THREAD_PARAMETERS));
+  menuItemUseMotorEndLimit.setTitle(GetTxt(Id_Msg_TEXT_MENU_MOTORDLIMIT));
+  menuItemUseMotor.setTitle(GetTxt(Id_Msg_TEXT_MENU_MOTORABLED));
+  menuItemMotorSpeed.setTitle(GetTxt(Id_Msg_TEXT_MENU_MOTOR_SPEED));   
 }
