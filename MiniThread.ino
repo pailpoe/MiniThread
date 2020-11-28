@@ -225,8 +225,8 @@ GEMItem menuItemShortcuts(TEXT_EN_MENU_FAST_FUNCTIONS, menuPageShortcuts);
 GEMItem menuItemButtonShortcutsResetX("X = 0", ActionShortcutsResetX);
 GEMItem menuItemButtonShortcutsResetY("Y = 0", ActionShortcutsResetY);
 GEMItem menuItemButtonShortcutsResetM1("M1 = 0", ActionShortcutsResetM1);
-GEMItem menuItemButtonShortcutsSetPosToMax("M1max -> M1", ActionShortcutsSetCurrentToMax);
-GEMItem menuItemButtonShortcutsSetPosToMin("M1min -> M1", ActionShortcutsSetCurrentToMin);
+GEMItem menuItemButtonShortcutsSetPosToMax("M1 -> M1_max", ActionShortcutsSetCurrentToMax);
+GEMItem menuItemButtonShortcutsSetPosToMin("M1 -> M1_min", ActionShortcutsSetCurrentToMin);
 GEMItem menuItemButtonShortcutsM1inManual(TEXT_EN_MENU_FAST_M1MANU, ActionShortcutsM1inManual);
 GEMItem menuItemButtonShortcutsM1inAuto(TEXT_EN_MENU_FAST_M1AUTO, ActionShortcutsM1inAuto);
 GEMPage menuPageSettings(TEXT_EN_MENU_SETTINGS); // Settings submenu
@@ -271,13 +271,13 @@ GEMItem menuItemUseMotor("Enabled:", bUseMotor,ActionUseMotor);
 SelectOptionByte selectMotorModeOptions[] = {{"NoMode", 0}, {"MANUAL", 1},{"AUTO", 2},{"TH EX N", 3},{"TH EX I", 4},{"TH IN N", 5},{"TH IN I", 6}};
 GEMSelect selectMotorMode(sizeof(selectMotorModeOptions)/sizeof(SelectOptionByte), selectMotorModeOptions);
 GEMItem menuItemMotorMode("Mode", bMotorMode, selectMotorMode, applyMotorMode);
-GEMItem menuItemMotorStopMin("M1min = ?", fMotorStopMin,ActionMotorStopMin);
-GEMItem menuItemMotorStopMax("M1max = ?", fMotorStopMax,ActionMotorStopMax);
+GEMItem menuItemMotorStopMin("M1_min = ?", fMotorStopMin,ActionMotorStopMin);
+GEMItem menuItemMotorStopMax("M1_max = ?", fMotorStopMax,ActionMotorStopMax);
 GEMItem menuItemUseMotorEndLimit("Use limit", bUseMotorEndLimit,ActionUseMotorEndLimit);
 GEMItem menuItemMotorCurrentPos("M1 = ?", fMotorCurrentPos,ActionMotorCurrentPos);
 GEMItem menuItemMotorSpeed("Speed:", iMotorSpeed,ActionMotorMotorSpeed);
-GEMItem menuItemButtonSetPosToMax("M1max -> M1", ActionSetCurrentToMax);
-GEMItem menuItemButtonSetPosToMin("M1min -> M1", ActionSetCurrentToMin);
+GEMItem menuItemButtonSetPosToMax("M1 -> M1_max", ActionSetCurrentToMax);
+GEMItem menuItemButtonSetPosToMin("M1 -> M1_min", ActionSetCurrentToMin);
 GEMItem menuItemButtonResetCurrentPos("M1 = 0", ActionResetCurrentPos);
 GEMPage menuPageThreadParameters(TEXT_EN_MENU_THREAD_PARAMETERS); // Thread parameters submenu
 GEMItem menuItemThreadParameters(TEXT_EN_MENU_THREAD_PARAMETERS, menuPageThreadParameters);
@@ -419,15 +419,15 @@ void setupMenu() {
   //Add Sub menu Motor
   menuPageMain.addMenuItem(menuItemMotor);
   menuPageMotor.addMenuItem(menuItemUseMotor);
+  menuPageMotor.addMenuItem(menuItemUseMotorEndLimit);
   menuPageMotor.addMenuItem(menuItemMotorMode);
+  menuPageMotor.addMenuItem(menuItemMotorSpeed); 
+  menuPageMotor.addMenuItem(menuItemMotorCurrentPos);
+  menuItemMotorCurrentPos.setPrecision(2); 
   menuPageMotor.addMenuItem(menuItemMotorStopMin);
   menuItemMotorStopMin.setPrecision(2);
   menuPageMotor.addMenuItem(menuItemMotorStopMax);
   menuItemMotorStopMax.setPrecision(2);
-  menuPageMotor.addMenuItem(menuItemUseMotorEndLimit);
-  menuPageMotor.addMenuItem(menuItemMotorCurrentPos);
-  menuItemMotorCurrentPos.setPrecision(2);
-  menuPageMotor.addMenuItem(menuItemMotorSpeed);
   menuPageMotor.addMenuItem(menuItemThreadParameters); //Sub menu thread parameter
   menuPageMotor.addMenuItem(menuItemButtonSetPosToMax);
   menuPageMotor.addMenuItem(menuItemButtonSetPosToMin);
