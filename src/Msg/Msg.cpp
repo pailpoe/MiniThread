@@ -19,7 +19,7 @@ void  Msg::DisplayMsg(char* Msg_, teTypeMsg eType, unsigned int TimeMs_)
   {
     buffer[uiBufferPos] = 'v';
   }
-  
+  uiBufferPos = 0;
   
   _u8g2.firstPage();
   _u8g2.setFontPosTop();

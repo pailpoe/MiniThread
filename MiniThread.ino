@@ -229,21 +229,21 @@ GEMItem menuItemButtonShortcutsM1inManual("", ActionShortcutsM1inManual);
 GEMItem menuItemButtonShortcutsM1inAuto("", ActionShortcutsM1inAuto);
 GEMPage menuPageSettings(""); // Settings submenu
 GEMItem menuItemMainSettings("", menuPageSettings);
-GEMItem menuItemDirX("X dir", sGeneralConf.Inverted_X,ActionChangeDirX);
-GEMItem menuItemDirY("Y dir", sGeneralConf.Inverted_Y,ActionChangeDirY);
-GEMItem menuItemDirZ("C dir", sGeneralConf.Inverted_Z,ActionChangeDirZ);
-GEMItem menuItemDiamY("Y diameter", sGeneralConf.Diameter_Mode_Y,ActionChangeDiamY);
-GEMItem menuItemResoX("X step/mm", sGeneralConf.Reso_X,ActionChangeResoX);
-GEMItem menuItemResoY("Y step/mm", sGeneralConf.Reso_Y,ActionChangeResoY);
-GEMItem menuItemResoZ("C step/tr", sGeneralConf.Reso_Z,ActionChangeResoZ);
-GEMItem menuItemDirM1("M1 dir", sGeneralConf.Inverted_M1,ActionChangeDirM1);
-GEMItem menuItemResoM1("M1 step/tr", sGeneralConf.Reso_M1,ActionChangeResoM1);
-GEMItem menuItemThreadM1("M1 thread", sGeneralConf.thread_M1,ActionChangeThreadM1);
-GEMItem menuItemAccelM1("M1 accel", sGeneralConf.Accel_M1,ActionChangeAccelM1);
-GEMItem menuItemSpeedM1("M1 speed", sGeneralConf.Speed_M1,ActionChangeSpeedM1);
+GEMItem menuItemDirX("", sGeneralConf.Inverted_X,ActionChangeDirX);
+GEMItem menuItemDirY("", sGeneralConf.Inverted_Y,ActionChangeDirY);
+GEMItem menuItemDirZ("", sGeneralConf.Inverted_Z,ActionChangeDirZ);
+GEMItem menuItemDiamY("", sGeneralConf.Diameter_Mode_Y,ActionChangeDiamY);
+GEMItem menuItemResoX("", sGeneralConf.Reso_X,ActionChangeResoX);
+GEMItem menuItemResoY("", sGeneralConf.Reso_Y,ActionChangeResoY);
+GEMItem menuItemResoZ("", sGeneralConf.Reso_Z,ActionChangeResoZ);
+GEMItem menuItemDirM1("", sGeneralConf.Inverted_M1,ActionChangeDirM1);
+GEMItem menuItemResoM1("", sGeneralConf.Reso_M1,ActionChangeResoM1);
+GEMItem menuItemThreadM1("", sGeneralConf.thread_M1,ActionChangeThreadM1);
+GEMItem menuItemAccelM1("", sGeneralConf.Accel_M1,ActionChangeAccelM1);
+GEMItem menuItemSpeedM1("", sGeneralConf.Speed_M1,ActionChangeSpeedM1);
 SelectOptionByte selectLangOptions[] = {{"Fr", LANG_FR}, {"Eng", LANG_EN}};
 GEMSelect selectLang(sizeof(selectLangOptions)/sizeof(SelectOptionByte), selectLangOptions);
-GEMItem menuItemLang("Lang:", sGeneralConf.Lang, selectLang, ActionChangeLang);
+GEMItem menuItemLang("", sGeneralConf.Lang, selectLang, ActionChangeLang);
 GEMItem menuItemButtonRestoreSettings("", ActionRestoreSettingsInFlash);
 GEMItem menuItemButtonSaveSettings("", ActionSaveSettingsInFlash);
 GEMItem menuItemButtonSnakeGame("Snake game !", ActionLaunchSnakeGame);
@@ -255,10 +255,10 @@ GEMItem menuItemButtonDebug("Debug screen", ActionDebug);
 GEMItem menuItemTestFloat("Float", TestFloat);
 GEMPage menuPageAxe(""); // Axe submenu
 GEMItem menuItemAxe("", menuPageAxe);
-SelectOptionByte selectToolOptions[] = {{"Tool_0", 0}, {"Tool_1", 1}, {"Tool_2", 2}, {"Tool_3", 3}, {"Tool_4", 4}, {"Tool_5", 5}};
+SelectOptionByte selectToolOptions[] = {{"Ref_0", 0}, {"Tool_1", 1}, {"Tool_2", 2}, {"Tool_3", 3}, {"Tool_4", 4}, {"Tool_5", 5}};
 GEMSelect selectTool(sizeof(selectToolOptions)/sizeof(SelectOptionByte), selectToolOptions);
-GEMItem menuItemTool("Tool", bToolChoose, selectTool, applyTool);
-GEMItem menuItemRelativeMode("Relative", bRelativeModeActived,ActionChangeRelaticeMode);
+GEMItem menuItemTool("", bToolChoose, selectTool, applyTool);
+GEMItem menuItemRelativeMode("", bRelativeModeActived,ActionChangeRelaticeMode);
 GEMItem menuItemButtonResetX("X = 0", ActionResetX);
 GEMItem menuItemButtonResetY("Y = 0", ActionResetY);
 GEMItem menuItemAxeXPos("X = ?", fAxeXPos,ActionAxeXPos);
@@ -279,14 +279,14 @@ GEMItem menuItemButtonSetPosToMin("M1 -> M1_min", ActionSetCurrentToMin);
 GEMItem menuItemButtonResetCurrentPos("M1 = 0", ActionResetCurrentPos);
 GEMPage menuPageThreadParameters(""); // Thread parameters submenu
 GEMItem menuItemThreadParameters("", menuPageThreadParameters);
-GEMItem menuItemMotorThread("Thread", iMotorThread,ActionMotorChangeThread);
-GEMItem menuItemMotor1ThreadOffset("Offset", fMotor1ThreadOffset,ActionChangeMotor1Offset);
-GEMItem menuItemMotor1ThreadUseY("Use Y", bMotor1ThreadUseY,ActionMotor1ThreadUseY);
-GEMItem menuItemMotor1ThreadDiameter("Diameter", fMotor1ThreadDiameter,ActionChangeMotor1ThreadDiameter);
-GEMItem menuItemMotor1ThreadAngle("Angle", fMotor1ThreadAngle,ActionChangeMotor1ThreadAngle);
+GEMItem menuItemMotorThread("", iMotorThread,ActionMotorChangeThread);
+GEMItem menuItemMotor1ThreadOffset("", fMotor1ThreadOffset,ActionChangeMotor1Offset);
+GEMItem menuItemMotor1ThreadUseY("", bMotor1ThreadUseY,ActionMotor1ThreadUseY);
+GEMItem menuItemMotor1ThreadDiameter("", fMotor1ThreadDiameter,ActionChangeMotor1ThreadDiameter);
+GEMItem menuItemMotor1ThreadAngle("", fMotor1ThreadAngle,ActionChangeMotor1ThreadAngle);
 GEMItem menuItemMotor1ThreadInfo("Vmax", fM1MaxThreadSpeed,true);
-GEMItem menuItemMotorIncOffset("Inc Offset +2°", ActionIncMotor1Offset);
-GEMItem menuItemMotorDecOffset("Dec Offset -2°", ActionDecMotor1Offset);
+GEMItem menuItemMotorIncOffset("", ActionIncMotor1Offset);
+GEMItem menuItemMotorDecOffset("", ActionDecMotor1Offset);
 SelectOptionByte selectScreenOptions[] = {{"DroXYC", 0}, {"Mot1", 1}, {"Debug", 2}};
 GEMSelect selectScreenMode(sizeof(selectScreenOptions)/sizeof(SelectOptionByte), selectScreenOptions);
 GEMItem menuItemScreenMode("", eScreenChoose, selectScreenMode, ActionScreenMode);
@@ -366,6 +366,15 @@ void setup()
   u8g2.clear();
   u8g2.setDrawColor(1);
   u8g2.setFontPosTop();   
+
+/*
+MyMsg.DisplayMsg(GetTxt(Id_Msg_Warning_SpeedTooHigh),Msg::Warning,3000);
+MyMsg.DisplayMsg(GetTxt(Id_Msg_Warning_WrongDirection),Msg::Warning,3000);
+MyMsg.DisplayMsg(GetTxt(Id_Msg_Warning_NoEndLimit),Msg::Warning,3000);
+MyMsg.DisplayMsg(GetTxt(Id_Msg_Warning_NoAtMinPos),Msg::Warning,3000);
+MyMsg.DisplayMsg(GetTxt(Id_Msg_Warning_YINFDIA),Msg::Warning,3000);
+MyMsg.DisplayMsg(GetTxt(Id_Msg_Warning_YSUPDIA),Msg::Warning,3000);
+*/
   //Display start screen
   Display_StartScreen(); 
 
@@ -924,7 +933,7 @@ void Display_M_Informations()
         u8g2.drawStr(57,37,"|------");
       break;
       case MOTOR_MODE_MANUAL:
-        u8g2.drawStr(57,37,"|MANUAL");
+        u8g2.drawStr(57,37,"|MANU");
       break;
       case MOTOR_MODE_AUTO:
         u8g2.drawStr(57,37,"|AUTO");
@@ -1407,7 +1416,7 @@ boolean M1_AreYouOkToStartTheThread()
   if( fAxeCSpeed >= fM1MaxThreadSpeed)
   {
     result = false;
-    MyMsg.DisplayMsg("Reduce spindle speed",Msg::Warning,2000);    
+    MyMsg.DisplayMsg(GetTxt(Id_Msg_Warning_SpeedTooHigh),Msg::Warning,2000);    
   }
   //Check the direction
   if( bMotorMode == MOTOR_MODE_TH_EXT_N || bMotorMode == MOTOR_MODE_TH_INT_N)
@@ -1415,7 +1424,7 @@ boolean M1_AreYouOkToStartTheThread()
     if( fAxeCSpeed < 0 )
     {
       result = false;
-      MyMsg.DisplayMsg("Spindle wrong dir",Msg::Warning,2000);    
+      MyMsg.DisplayMsg(GetTxt(Id_Msg_Warning_WrongDirection),Msg::Warning,2000);    
     }      
   }
   if( bMotorMode == MOTOR_MODE_TH_EXT_I || bMotorMode == MOTOR_MODE_TH_INT_I)
@@ -1423,20 +1432,20 @@ boolean M1_AreYouOkToStartTheThread()
     if( fAxeCSpeed > 0 )
     {
       result = false;
-      MyMsg.DisplayMsg("Spindle wrong dir",Msg::Warning,2000);    
+      MyMsg.DisplayMsg(GetTxt(Id_Msg_Warning_WrongDirection),Msg::Warning,2000);    
     }       
   }   
   //Check if endlimit is on
   if( !bUseMotorEndLimit)
   {
     result = false;
-    MyMsg.DisplayMsg("No end limit",Msg::Warning,2000);   
+    MyMsg.DisplayMsg(GetTxt(Id_Msg_Warning_NoEndLimit),Msg::Warning,2000);   
   } 
   //Check if the motor is at min pos
   if( !Motor1.AreYouAtMinPos())
   {
     result = false;
-    MyMsg.DisplayMsg("No at min pos",Msg::Warning,2000);     
+    MyMsg.DisplayMsg(GetTxt(Id_Msg_Warning_NoAtMinPos),Msg::Warning,2000);     
   }   
   return result;
 }
@@ -1450,7 +1459,7 @@ boolean M1_AreYouOkToReturnAfterThread()
       if( fAxeYPos < fMotor1ThreadDiameter)
       {
         result = false;
-        MyMsg.DisplayMsg("Move Y : Y < Dia",Msg::Warning,2000);
+        MyMsg.DisplayMsg(GetTxt(Id_Msg_Warning_YINFDIA),Msg::Warning,2000);
       }    
     }
     if( bMotorMode == MOTOR_MODE_TH_INT_N || bMotorMode == MOTOR_MODE_TH_INT_I)
@@ -1458,7 +1467,7 @@ boolean M1_AreYouOkToReturnAfterThread()
       if( fAxeYPos > fMotor1ThreadDiameter)
       {
         result = false;
-        MyMsg.DisplayMsg("Move Y : Y > Dia",Msg::Warning,2000);
+        MyMsg.DisplayMsg(GetTxt(Id_Msg_Warning_YSUPDIA),Msg::Warning,2000);
       }   
     }      
   }
@@ -1491,5 +1500,27 @@ void ActionUpdateMenuTitle()
   menuItemThreadParameters.setTitle(GetTxt(Id_Msg_TEXT_MENU_THREAD_PARAMETERS));
   menuItemUseMotorEndLimit.setTitle(GetTxt(Id_Msg_TEXT_MENU_MOTORDLIMIT));
   menuItemUseMotor.setTitle(GetTxt(Id_Msg_TEXT_MENU_MOTORABLED));
-  menuItemMotorSpeed.setTitle(GetTxt(Id_Msg_TEXT_MENU_MOTOR_SPEED));   
+  menuItemMotorSpeed.setTitle(GetTxt(Id_Msg_TEXT_MENU_MOTOR_SPEED)); 
+  menuItemMotorThread.setTitle(GetTxt(Id_Msg_TEXT_MENU_THREAD_THREAD));
+  menuItemMotor1ThreadOffset.setTitle(GetTxt(Id_Msg_TEXT_MENU_THREAD_OFFSET));
+  menuItemMotor1ThreadUseY.setTitle(GetTxt(Id_Msg_TEXT_MENU_THREAD_USEY));
+  menuItemMotor1ThreadDiameter.setTitle(GetTxt(Id_Msg_TEXT_MENU_THREAD_DIAMETER));
+  menuItemMotor1ThreadAngle.setTitle(GetTxt(Id_Msg_TEXT_MENU_THREAD_ANGLE));
+  menuItemMotorIncOffset.setTitle(GetTxt(Id_Msg_TEXT_MENU_THREAD_INC));
+  menuItemMotorDecOffset.setTitle(GetTxt(Id_Msg_TEXT_MENU_THREAD_DEC));
+  menuItemTool.setTitle(GetTxt(Id_Msg_TEXT_MENU_AXE_TOOL));
+  menuItemRelativeMode.setTitle(GetTxt(Id_Msg_TEXT_MENU_AXE_REL));
+  menuItemDirX.setTitle(GetTxt(Id_Msg_TEXT_MENU_SETTINGS_XDIR));
+  menuItemDirY.setTitle(GetTxt(Id_Msg_TEXT_MENU_SETTINGS_YDIR));
+  menuItemDirZ.setTitle(GetTxt(Id_Msg_TEXT_MENU_SETTINGS_CDIR));
+  menuItemDiamY.setTitle(GetTxt(Id_Msg_TEXT_MENU_SETTINGS_YDIAM));
+  menuItemResoX.setTitle(GetTxt(Id_Msg_TEXT_MENU_SETTINGS_XSTEP));
+  menuItemResoY.setTitle(GetTxt(Id_Msg_TEXT_MENU_SETTINGS_YSTEP));
+  menuItemResoZ.setTitle(GetTxt(Id_Msg_TEXT_MENU_SETTINGS_CSTEP));
+  menuItemDirM1.setTitle(GetTxt(Id_Msg_TEXT_MENU_SETTINGS_M1DIR));
+  menuItemResoM1.setTitle(GetTxt(Id_Msg_TEXT_MENU_SETTINGS_M1STEP));
+  menuItemThreadM1.setTitle(GetTxt(Id_Msg_TEXT_MENU_SETTINGS_M1TH));
+  menuItemAccelM1.setTitle(GetTxt(Id_Msg_TEXT_MENU_SETTINGS_M1ACC));
+  menuItemSpeedM1.setTitle(GetTxt(Id_Msg_TEXT_MENU_SETTINGS_M1SPE));
+  menuItemLang.setTitle(GetTxt(Id_Msg_TEXT_MENU_SETTINGS_M1LAN));
 }
