@@ -921,7 +921,7 @@ void Display_M_Informations()
     switch ( bMotorMode )
     {
       case MOTOR_MODE_NO_MODE:
-        u8g2.drawStr(57,37,"|NO");
+        u8g2.drawStr(57,37,"|------");
       break;
       case MOTOR_MODE_MANUAL:
         u8g2.drawStr(57,37,"|MANUAL");
@@ -951,12 +951,12 @@ void Display_M_Informations()
     //End limit 
     sprintf(bufferChar,"%+09.3f <> %+09.3f",fMotorStopMax,fMotorStopMin);
     if(bUseMotorEndLimit)u8g2.drawStr(13,45,bufferChar);
-    else u8g2.drawStr(13,45," WARNING : No limit");       
+    else u8g2.drawStr(16,45,GetTxt(Id_Msg_Motor_NoEndLimit));       
   }
   else
   {
     u8g2.setFont(u8g2_font_profont10_mr); // choose a suitable font
-    u8g2.drawStr(13,37,"Motor is OFF");   
+    u8g2.drawStr(16,40,GetTxt(Id_Msg_Motor_Disabled));   
   }  
   u8g2.drawRFrame(11,36,116,18,3);    
 }

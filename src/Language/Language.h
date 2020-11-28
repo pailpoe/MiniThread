@@ -28,6 +28,8 @@ typedef enum
     Id_Msg_TEXT_MENU_SAVE_SETTINGS = 17,      
     Id_Msg_TEXT_MENU_RESTORE_SETTINGS = 18,   
     Id_Msg_TEXT_MENU_THREAD_PARAMETERS = 19,
+    Id_Msg_Motor_Disabled = 20,
+    Id_Msg_Motor_NoEndLimit = 21,
 }teMsgId;
 
 typedef struct
@@ -76,7 +78,12 @@ const tsLang sLangData[] =
     { "Restore settings",//Id_Msg_TEXT_MENU_RESTORE_SETTINGS
       "Restaurer"},
     { "Thread parameters",//Id_Msg_TEXT_MENU_RESTORE_SETTINGS
-      "Para. de filetage"}
+      "Para. de filetage"},
+    { "Motor disabled",//Id_Msg_Motor_Disabled
+      "Moteur desactive"},
+    { "No end limits",//Id_Msg_Motor_NoEndLimit
+      "Pas de Fdc"},     
+      
   }; 
 
 
