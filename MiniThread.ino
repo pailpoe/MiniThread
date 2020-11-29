@@ -1,7 +1,6 @@
 /*********************************************************************
 Project Name    :   MiniThread
 Hard revision   :   V1.0
-Soft revision   :   1.1.0 Dev
 Description     :   
 Chip            :   STM32F103CBT6
 freq uc         :   72Mhz (use 8Mhz external oscillator with PLL ) 
@@ -18,13 +17,6 @@ Revision        :
 #include "src/StepperMotor/StepperMotor.h"
 #include "src/Various/Splash.h"
 #include "src/Various/Various.h"
-<<<<<<< HEAD
-#include <EEPROM.h>
-
-#define TEXT_MAIN_MENU_TITLE "MiniThread 1.0.0"
-#define TEXT_AUTHOR_SOFT "Pailpoe"
-#define TEXT_VERSION_SOFT "1.0.0"
-=======
 #include "src/Language/Language.h"
 #include "src/SnakeGame/Snake.h"
 #include "src/Msg/Msg.h"
