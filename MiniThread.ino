@@ -1,7 +1,7 @@
 /*********************************************************************
 Project Name    :   MiniThread
 Hard revision   :   V1.0
-Soft revision   :   /
+Soft revision   :   1.1.0
 Description     :   
 Chip            :   STM32F103CBT6
 freq uc         :   72Mhz (use 8Mhz external oscillator with PLL ) 
@@ -18,11 +18,22 @@ Revision        :
 #include "src/StepperMotor/StepperMotor.h"
 #include "src/Various/Splash.h"
 #include "src/Various/Various.h"
+<<<<<<< HEAD
 #include <EEPROM.h>
 
 #define TEXT_MAIN_MENU_TITLE "MiniThread 1.0.0"
 #define TEXT_AUTHOR_SOFT "Pailpoe"
-#define TEXT_VERSION_SOFT "1.0.0"
+#define TEXT_VERSION_SOFT "1.0.0 "
+=======
+#include "src/Language/Language.h"
+#include "src/SnakeGame/Snake.h"
+#include "src/Msg/Msg.h"
+#include <EEPROM.h>
+
+#define TEXT_MAIN_MENU_TITLE "MiniThread 1.1.0"
+#define TEXT_AUTHOR_SOFT "Pailpoe"
+#define TEXT_VERSION_SOFT "1.1.0"
+>>>>>>> Dev
 
 // IO def ( for quad decoder, define in class !)
 #define PIN_RES_SCR    PB9
@@ -68,8 +79,15 @@ typedef struct
   int  thread_M1;
   float Accel_M1;
   int Speed_M1;
+<<<<<<< HEAD
 } tsConfigDro;
 const tsConfigDro csConfigDefault = {false,false,false,true,512,512,1200,false,1600,200,60000.0,12000};
+=======
+  byte Lang;
+  boolean UseUSBFunctions;
+} tsConfigDro;
+
+>>>>>>> Dev
 
 //Threading machine state
 typedef enum
@@ -106,6 +124,10 @@ typedef struct
 #define MOTOR_MODE_TH_INT_I 6
 
 // Variables global ******************************************
+<<<<<<< HEAD
+=======
+const tsConfigDro csConfigDefault = {false,false,false,true,512,512,1200,false,1600,200,60000.0,12000,LANG_FR,true};
+>>>>>>> Dev
 tsConfigDro  sGeneralConf;
 boolean     bSettingsNeedToBeSaved = false;
 float       TestFloat = 999.2;
@@ -134,6 +156,10 @@ tsThreadCalc sThreadCalc;
 
 // Forward declarations Funtions  ******************************************
 void CalcMotorParameterForThread(); 
+<<<<<<< HEAD
+=======
+void CalcMotorParameterOffsetForThread();
+>>>>>>> Dev
 void CalcMotorMaxSpeedForThread();
 void UsbSerial_Pos(); 
 void Display_UpdateRealTimeData(); 
@@ -141,9 +167,26 @@ void ActionMotorSpeedUp();
 void ActionMotorSpeedDown();
 void Display_StartScreen(); 
 void ActionDro(); 
-void ActionDebug(); 
+void ActionDebug();
+void ActionLaunchSnakeGame();
+void SnakeContextEnter();
+void SnakeContextLoop();
+void SnakeContextExit(); 
 void applyTool(); 
 void NeedToSave();
+<<<<<<< HEAD
+=======
+void ActionUpdateMenuTitle();
+
+void ActionShortcutsResetX();
+void ActionShortcutsResetY();
+void ActionShortcutsResetM1();
+void ActionShortcutsSetCurrentToMax();
+void ActionShortcutsSetCurrentToMin();
+void ActionShortcutsM1inManual();
+void ActionShortcutsM1inAuto();
+
+>>>>>>> Dev
 void ActionChangeDirX();
 void ActionChangeDirY();
 void ActionChangeDirZ();
@@ -156,6 +199,11 @@ void ActionChangeDiamY();
 void ActionChangeThreadM1();
 void ActionChangeAccelM1();
 void ActionChangeSpeedM1();
+<<<<<<< HEAD
+=======
+void ActionChangeLang();
+void ActionChangeUseUSB();
+>>>>>>> Dev
 void ActionRestoreSettingsInFlash(); 
 void ActionSaveSettingsInFlash(); 
 void ActionChangeRelaticeMode();
@@ -197,7 +245,9 @@ void Display_Extra_Informations();
 void Display_Debug_Informations();
 void Display_Notice_Informations(char* str);
 
+
 //Menu item ******************************************
+<<<<<<< HEAD
 GEMPage menuPageSettings("Settings"); // Settings submenu
 GEMItem menuItemMainSettings("Settings", menuPageSettings);
 GEMItem menuItemDirX("X dir:", sGeneralConf.Inverted_X,ActionChangeDirX);
@@ -215,15 +265,49 @@ GEMItem menuItemSpeedM1("M1 speed:", sGeneralConf.Speed_M1,ActionChangeSpeedM1);
 GEMItem menuItemButtonRestoreSettings("Restore settings", ActionRestoreSettingsInFlash);
 GEMItem menuItemButtonSaveSettings("Save settings", ActionSaveSettingsInFlash);
 GEMItem menuItemButtonDro("Return to Screen", ActionDro);
+=======
+GEMPage menuPageShortcuts(""); // Shortcuts submenu
+GEMItem menuItemShortcuts("", menuPageShortcuts);
+GEMItem menuItemButtonShortcutsResetX("X = 0", ActionShortcutsResetX);
+GEMItem menuItemButtonShortcutsResetY("Y = 0", ActionShortcutsResetY);
+GEMItem menuItemButtonShortcutsResetM1("M1 = 0", ActionShortcutsResetM1);
+GEMItem menuItemButtonShortcutsSetPosToMax("M1 -> M1 max", ActionShortcutsSetCurrentToMax);
+GEMItem menuItemButtonShortcutsSetPosToMin("M1 -> M1 min", ActionShortcutsSetCurrentToMin);
+GEMItem menuItemButtonShortcutsM1inManual("", ActionShortcutsM1inManual);
+GEMItem menuItemButtonShortcutsM1inAuto("", ActionShortcutsM1inAuto);
+GEMPage menuPageSettings(""); // Settings submenu
+GEMItem menuItemMainSettings("", menuPageSettings);
+GEMItem menuItemDirX("", sGeneralConf.Inverted_X,ActionChangeDirX);
+GEMItem menuItemDirY("", sGeneralConf.Inverted_Y,ActionChangeDirY);
+GEMItem menuItemDirZ("", sGeneralConf.Inverted_Z,ActionChangeDirZ);
+GEMItem menuItemDiamY("", sGeneralConf.Diameter_Mode_Y,ActionChangeDiamY);
+GEMItem menuItemResoX("", sGeneralConf.Reso_X,ActionChangeResoX);
+GEMItem menuItemResoY("", sGeneralConf.Reso_Y,ActionChangeResoY);
+GEMItem menuItemResoZ("", sGeneralConf.Reso_Z,ActionChangeResoZ);
+GEMItem menuItemDirM1("", sGeneralConf.Inverted_M1,ActionChangeDirM1);
+GEMItem menuItemResoM1("", sGeneralConf.Reso_M1,ActionChangeResoM1);
+GEMItem menuItemThreadM1("", sGeneralConf.thread_M1,ActionChangeThreadM1);
+GEMItem menuItemAccelM1("", sGeneralConf.Accel_M1,ActionChangeAccelM1);
+GEMItem menuItemSpeedM1("", sGeneralConf.Speed_M1,ActionChangeSpeedM1);
+SelectOptionByte selectLangOptions[] = {{"Fr", LANG_FR}, {"Eng", LANG_EN}};
+GEMSelect selectLang(sizeof(selectLangOptions)/sizeof(SelectOptionByte), selectLangOptions);
+GEMItem menuItemLang("", sGeneralConf.Lang, selectLang, ActionChangeLang);
+GEMItem menuItemUseUSB("", sGeneralConf.UseUSBFunctions, ActionChangeUseUSB);
+GEMItem menuItemButtonRestoreSettings("", ActionRestoreSettingsInFlash);
+GEMItem menuItemButtonSaveSettings("", ActionSaveSettingsInFlash);
+GEMItem menuItemButtonSnakeGame("Snake game !", ActionLaunchSnakeGame);
+GEMItem menuItemButtonDro("", ActionDro);
+>>>>>>> Dev
 GEMPage menuPageMain(TEXT_MAIN_MENU_TITLE);
-GEMPage menuPageDebug("Debug tools"); // Debug submenu
-GEMItem menuItemDebug("Debug tools", menuPageDebug);
+GEMPage menuPageDebug(""); // Debug submenu
+GEMItem menuItemDebug("", menuPageDebug);
 GEMItem menuItemButtonDebug("Debug screen", ActionDebug);
-GEMItem menuItemTestFloat("Float:", TestFloat);
-GEMPage menuPageAxe("Axe Functions"); // Axe submenu
-GEMItem menuItemAxe("Axe Functions", menuPageAxe);
-SelectOptionByte selectToolOptions[] = {{"Tool_0", 0}, {"Tool_1", 1}, {"Tool_2", 2}, {"Tool_3", 3}, {"Tool_4", 4}, {"Tool_5", 5}};
+GEMItem menuItemTestFloat("Float", TestFloat);
+GEMPage menuPageAxe(""); // Axe submenu
+GEMItem menuItemAxe("", menuPageAxe);
+SelectOptionByte selectToolOptions[] = {{"Ref_0", 0}, {"Tool_1", 1}, {"Tool_2", 2}, {"Tool_3", 3}, {"Tool_4", 4}, {"Tool_5", 5}};
 GEMSelect selectTool(sizeof(selectToolOptions)/sizeof(SelectOptionByte), selectToolOptions);
+<<<<<<< HEAD
 GEMItem menuItemTool("Tool:", bToolChoose, selectTool, applyTool);
 GEMItem menuItemRelativeMode("Relative:", bRelativeModeActived,ActionChangeRelaticeMode);
 GEMItem menuItemButtonResetX("Set X to zero", ActionResetX);
@@ -254,20 +338,58 @@ GEMItem menuItemMotor1ThreadAngle("Angle:", fMotor1ThreadAngle,ActionChangeMotor
 GEMItem menuItemMotor1ThreadInfo("Speed max:", fM1MaxThreadSpeed,true);
 GEMItem menuItemMotorIncOffset("Inc Offset +2°", ActionIncMotor1Offset);
 GEMItem menuItemMotorDecOffset("Dec Offset -2°", ActionDecMotor1Offset);
+=======
+GEMItem menuItemTool("", bToolChoose, selectTool, applyTool);
+GEMItem menuItemRelativeMode("", bRelativeModeActived,ActionChangeRelaticeMode);
+GEMItem menuItemButtonResetX("X = 0", ActionResetX);
+GEMItem menuItemButtonResetY("Y = 0", ActionResetY);
+GEMItem menuItemAxeXPos("X = ?", fAxeXPos,ActionAxeXPos);
+GEMItem menuItemAxeYPos("Y = ?", fAxeYPos,ActionAxeYPos);
+GEMPage menuPageMotor(""); // Motor submenu
+GEMItem menuItemMotor("", menuPageMotor);
+GEMItem menuItemUseMotor("", bUseMotor,ActionUseMotor);
+SelectOptionByte selectMotorModeOptions[] = {{"------", 0}, {"MANU", 1},{"AUTO", 2},{"TH EX N", 3},{"TH EX I", 4},{"TH IN N", 5},{"TH IN I", 6}};
+GEMSelect selectMotorMode(sizeof(selectMotorModeOptions)/sizeof(SelectOptionByte), selectMotorModeOptions);
+GEMItem menuItemMotorMode("Mode", bMotorMode, selectMotorMode, applyMotorMode);
+GEMItem menuItemMotorStopMin("M1 min = ?", fMotorStopMin,ActionMotorStopMin);
+GEMItem menuItemMotorStopMax("M1 max = ?", fMotorStopMax,ActionMotorStopMax);
+GEMItem menuItemUseMotorEndLimit("", bUseMotorEndLimit,ActionUseMotorEndLimit);
+GEMItem menuItemMotorCurrentPos("M1 = ?", fMotorCurrentPos,ActionMotorCurrentPos);
+GEMItem menuItemMotorSpeed("", iMotorSpeed,ActionMotorMotorSpeed);
+GEMItem menuItemButtonSetPosToMax("M1 -> M1 max", ActionSetCurrentToMax);
+GEMItem menuItemButtonSetPosToMin("M1 -> M1 min", ActionSetCurrentToMin);
+GEMItem menuItemButtonResetCurrentPos("M1 = 0", ActionResetCurrentPos);
+GEMPage menuPageThreadParameters(""); // Thread parameters submenu
+GEMItem menuItemThreadParameters("", menuPageThreadParameters);
+GEMItem menuItemMotorThread("", iMotorThread,ActionMotorChangeThread);
+GEMItem menuItemMotor1ThreadOffset("", fMotor1ThreadOffset,ActionChangeMotor1Offset);
+GEMItem menuItemMotor1ThreadUseY("", bMotor1ThreadUseY,ActionMotor1ThreadUseY);
+GEMItem menuItemMotor1ThreadDiameter("", fMotor1ThreadDiameter,ActionChangeMotor1ThreadDiameter);
+GEMItem menuItemMotor1ThreadAngle("", fMotor1ThreadAngle,ActionChangeMotor1ThreadAngle);
+GEMItem menuItemMotor1ThreadInfo("Vmax", fM1MaxThreadSpeed,true);
+GEMItem menuItemMotorIncOffset("", ActionIncMotor1Offset);
+GEMItem menuItemMotorDecOffset("", ActionDecMotor1Offset);
+GEMPage menuPageProfilParameters(""); // Profil submenu
+GEMItem menuItemProfil("", menuPageProfilParameters);
+>>>>>>> Dev
 SelectOptionByte selectScreenOptions[] = {{"DroXYC", 0}, {"Mot1", 1}, {"Debug", 2}};
 GEMSelect selectScreenMode(sizeof(selectScreenOptions)/sizeof(SelectOptionByte), selectScreenOptions);
-GEMItem menuItemScreenMode("Screen:", eScreenChoose, selectScreenMode, ActionScreenMode);
-
+GEMItem menuItemScreenMode("", eScreenChoose, selectScreenMode, ActionScreenMode);
 //Class instance ******************************************
 U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0,/* reset=*/ U8X8_PIN_NONE); //Screen -->external reset (boot problem)
 GEM_u8g2 menu(u8g2,GEM_POINTER_ROW,5,10,10,75); // menu
+Snake MySnake(u8g2);
+Msg MyMsg(u8g2);
 QuadDecoder Quad_Y(3,QuadDecoder::LinearEncoder,512,false,false,IT_Timer3_Overflow); //Quad Y with timer 3
 QuadDecoder Quad_Z(2,QuadDecoder::RotaryEncoder,1200,true,false,IT_Timer2_Overflow); //Quad Z with timer 2
 QuadDecoder Quad_X(1,QuadDecoder::LinearEncoder,512,false,false,IT_Timer1_Overflow); //Quad X with timer 1
 HardwareTimer MotorControl(4);  //for motor control with timer 4
 StepperMotor Motor1(800,false,PIN_MOT1_STEP,PIN_MOT1_DIR,PIN_MOT1_EN, Update_Overlfow_Timer4);// Motor 1
 Keypad customKeypad ( makeKeymap(hexaKeys), rowPins, colPins, ROWS, COLS); //Keypad
+<<<<<<< HEAD
 
+=======
+>>>>>>> Dev
 //Interrupt handler functions ******************************************
 void IT_Timer1_Overflow(){Quad_X.IT_OverflowHardwareTimer();}
 void IT_Timer3_Overflow(){Quad_Y.IT_OverflowHardwareTimer();}
@@ -304,6 +426,7 @@ void Update_Overlfow_Timer4()
 // *** setup, loop, ...  *****************************************************************
 void setup() 
 {
+<<<<<<< HEAD
   //External reset for boot of the screen without problem
   pinMode(PIN_RES_SCR, OUTPUT);  //channel A
   digitalWrite(PIN_RES_SCR,0);
@@ -321,6 +444,10 @@ void setup()
   afio_cfg_debug_ports(AFIO_DEBUG_SW_ONLY); //Only SWD
   //USB Serial
   Serial.begin(115200); // Ignored by Maple. But needed by boards using hardware serial via a USB to Serial adaptor  
+=======
+  afio_cfg_debug_ports(AFIO_DEBUG_SW_ONLY); //Only SWD
+  Serial.begin(); // USB serial  
+>>>>>>> Dev
   //Timer 4 for motor control
   MotorControl.pause(); //stop...
   MotorControl.setCompare(TIMER_CH3, 20); //10µs 
@@ -333,6 +460,30 @@ void setup()
   MotorControl.resume();
   //Restore config  
   Restore_Config();
+
+  //External reset for boot of the screen without problem
+  pinMode(PIN_RES_SCR, OUTPUT);  //channel A
+  digitalWrite(PIN_RES_SCR,0);
+  delay(500);
+  digitalWrite(PIN_RES_SCR,1);
+  delay(500);
+  u8g2.initDisplay();
+  u8g2.setPowerSave(0);
+  u8g2.clear();
+  u8g2.setDrawColor(1);
+  u8g2.setFontPosTop();   
+
+
+MyMsg.DisplayMsg(GetTxt(Id_Msg_Warning_SpeedTooHigh),Msg::Warning,7000);
+MyMsg.DisplayMsg(GetTxt(Id_Msg_Warning_WrongDirection),Msg::Warning,7000);
+MyMsg.DisplayMsg(GetTxt(Id_Msg_Warning_NoEndLimit),Msg::Warning,7000);
+MyMsg.DisplayMsg(GetTxt(Id_Msg_Warning_NoAtMinPos),Msg::Warning,7000);
+MyMsg.DisplayMsg(GetTxt(Id_Msg_Warning_YINFDIA),Msg::Warning,7000);
+MyMsg.DisplayMsg(GetTxt(Id_Msg_Warning_YSUPDIA),Msg::Warning,7000);
+
+  //Display start screen
+  Display_StartScreen(); 
+
   // Menu init, setup and draw
   menu.init();
   setupMenu();
@@ -341,6 +492,16 @@ void setup()
 void setupMenu() {
   // Add menu items to menu page
   menuPageMain.addMenuItem(menuItemButtonDro);
+  //Add Sub menu shortcuts
+  menuPageMain.addMenuItem(menuItemShortcuts);
+  menuPageShortcuts.addMenuItem(menuItemButtonShortcutsResetX);
+  menuPageShortcuts.addMenuItem(menuItemButtonShortcutsResetY);
+  menuPageShortcuts.addMenuItem(menuItemButtonShortcutsResetM1);
+  menuPageShortcuts.addMenuItem(menuItemButtonShortcutsSetPosToMax);
+  menuPageShortcuts.addMenuItem(menuItemButtonShortcutsSetPosToMin);
+  menuPageShortcuts.addMenuItem(menuItemButtonShortcutsM1inManual);
+  menuPageShortcuts.addMenuItem(menuItemButtonShortcutsM1inAuto);
+  menuPageShortcuts.setParentMenuPage(menuPageMain);
   //Add Sub menu Axe
   menuPageMain.addMenuItem(menuItemAxe);
   menuPageAxe.addMenuItem(menuItemTool);
@@ -348,28 +509,51 @@ void setupMenu() {
   menuPageAxe.addMenuItem(menuItemButtonResetX);
   menuPageAxe.addMenuItem(menuItemButtonResetY);
   menuPageAxe.addMenuItem(menuItemAxeXPos);
+  menuItemAxeXPos.setPrecision(3);
   menuPageAxe.addMenuItem(menuItemAxeYPos);
+  menuItemAxeYPos.setPrecision(3);
   menuPageAxe.setParentMenuPage(menuPageMain);
-  //Create sub menu Thread parameter form menu Motor
+  //Create sub menu Thread parameter for menu Motor
   menuPageThreadParameters.setParentMenuPage(menuPageMotor);
   menuPageThreadParameters.addMenuItem(menuItemMotorThread);
+<<<<<<< HEAD
   menuPageThreadParameters.addMenuItem(menuItemMotor1ThreadInfo);  
+=======
+  menuPageThreadParameters.addMenuItem(menuItemMotor1ThreadInfo);
+  menuItemMotor1ThreadInfo.setPrecision(1);  
+>>>>>>> Dev
   menuPageThreadParameters.addMenuItem(menuItemMotor1ThreadOffset);
+  menuItemMotor1ThreadOffset.setPrecision(2);
   menuPageThreadParameters.addMenuItem(menuItemMotor1ThreadUseY);
   menuPageThreadParameters.addMenuItem(menuItemMotor1ThreadDiameter);
+  menuItemMotor1ThreadDiameter.setPrecision(2);
   menuPageThreadParameters.addMenuItem(menuItemMotor1ThreadAngle);
+<<<<<<< HEAD
   menuPageThreadParameters.addMenuItem(menuItemMotorIncOffset);
   menuPageThreadParameters.addMenuItem(menuItemMotorDecOffset);
+=======
+  menuItemMotor1ThreadAngle.setPrecision(2);
+  menuPageThreadParameters.addMenuItem(menuItemMotorIncOffset);
+  menuPageThreadParameters.addMenuItem(menuItemMotorDecOffset);
+  //Create sub menu Profil parameter for menu Motor  
+  menuPageProfilParameters.setParentMenuPage(menuPageMotor);
+
+ 
+>>>>>>> Dev
   //Add Sub menu Motor
   menuPageMain.addMenuItem(menuItemMotor);
   menuPageMotor.addMenuItem(menuItemUseMotor);
-  menuPageMotor.addMenuItem(menuItemMotorMode);
-  menuPageMotor.addMenuItem(menuItemMotorStopMin);
-  menuPageMotor.addMenuItem(menuItemMotorStopMax);
   menuPageMotor.addMenuItem(menuItemUseMotorEndLimit);
+  menuPageMotor.addMenuItem(menuItemMotorMode);
+  menuPageMotor.addMenuItem(menuItemMotorSpeed); 
   menuPageMotor.addMenuItem(menuItemMotorCurrentPos);
-  menuPageMotor.addMenuItem(menuItemMotorSpeed);
+  menuItemMotorCurrentPos.setPrecision(2); 
+  menuPageMotor.addMenuItem(menuItemMotorStopMin);
+  menuItemMotorStopMin.setPrecision(2);
+  menuPageMotor.addMenuItem(menuItemMotorStopMax);
+  menuItemMotorStopMax.setPrecision(2);
   menuPageMotor.addMenuItem(menuItemThreadParameters); //Sub menu thread parameter
+  menuPageMotor.addMenuItem(menuItemProfil); //Sub menu profil parameter
   menuPageMotor.addMenuItem(menuItemButtonSetPosToMax);
   menuPageMotor.addMenuItem(menuItemButtonSetPosToMin);
   menuPageMotor.addMenuItem(menuItemButtonResetCurrentPos);
@@ -387,12 +571,19 @@ void setupMenu() {
   menuPageSettings.addMenuItem(menuItemResoM1);
   menuPageSettings.addMenuItem(menuItemThreadM1);
   menuPageSettings.addMenuItem(menuItemAccelM1);
-  menuPageSettings.addMenuItem(menuItemSpeedM1);  
+  menuPageSettings.addMenuItem(menuItemSpeedM1); 
+  menuPageSettings.addMenuItem(menuItemLang);
+  menuPageSettings.addMenuItem(menuItemUseUSB);
   menuPageSettings.addMenuItem(menuItemButtonRestoreSettings);
   menuPageSettings.addMenuItem(menuItemButtonSaveSettings);
   menuPageSettings.setParentMenuPage(menuPageMain);
   //Add item screen mode
   menuPageMain.addMenuItem(menuItemScreenMode);
+<<<<<<< HEAD
+=======
+  //Add snake game button
+  menuPageMain.addMenuItem(menuItemButtonSnakeGame);
+>>>>>>> Dev
   //Add Sub menu Debug
   menuPageMain.addMenuItem(menuItemDebug);
   menuPageDebug.addMenuItem(menuItemTestFloat);
@@ -462,8 +653,38 @@ void DroContextLoop()
       {
         eScreenChoose = SCREEN_MOT1;
         //eScreenChoose = SCREEN_DEBUG;
-        if( customKeypad.isPressed(GEM_KEY_LEFT))Motor1.ChangeTheMode(StepperMotor::SpeedModeUp);
-        if( customKeypad.isPressed(GEM_KEY_RIGHT))Motor1.ChangeTheMode(StepperMotor::SpeedModeDown);
+        if( customKeypad.isPressed(GEM_KEY_LEFT))
+        {
+          Motor1.ChangeTheMode(StepperMotor::SpeedModeUp);
+          if(customKeypad.isPressed(GEM_KEY_UP))
+          {
+            //Move the end limit Max
+            fMotorStopMax += 0.05;
+            ActionMotorStopMax();     
+          }
+          if(customKeypad.isPressed(GEM_KEY_DOWN))
+          {
+            //Move the end limit Max
+            fMotorStopMax -= 0.05;
+            ActionMotorStopMax();     
+          }    
+        }
+        if( customKeypad.isPressed(GEM_KEY_RIGHT))
+        {
+          Motor1.ChangeTheMode(StepperMotor::SpeedModeDown);
+          if(customKeypad.isPressed(GEM_KEY_UP))
+          {
+            //Move the end limit Max
+            fMotorStopMin += 0.05;
+            ActionMotorStopMin();     
+          }
+          if(customKeypad.isPressed(GEM_KEY_DOWN))
+          {
+            //Move the end limit Max
+            fMotorStopMin -= 0.05;
+            ActionMotorStopMin();     
+          }  
+        }
       }
       else Motor1.ChangeTheMode(StepperMotor::NoMode);
       //Fast Speed with OK pressed
@@ -555,6 +776,34 @@ void DroContextExit()
   menu.clearContext();
 }
 // ***************************************************************************************
+// *** Snake game for fun !! context *****************************************************
+void ActionLaunchSnakeGame()
+{
+  menu.context.loop = SnakeContextLoop;
+  menu.context.enter = SnakeContextEnter;
+  menu.context.exit = SnakeContextExit;
+  menu.context.allowExit = false; // Setting to false will require manual exit from the loop
+  menu.context.enter();    
+}
+void SnakeContextEnter()
+{
+  u8g2.clear();//Clear screen
+}
+void SnakeContextLoop() 
+{
+  byte key = customKeypad.getKey();
+  MySnake.loop(key);
+  if (key == GEM_KEY_CANCEL) 
+  { 
+    menu.context.exit();
+  }
+}
+void SnakeContextExit() 
+{
+  menu.reInit();
+  menu.drawMenu();
+  menu.clearContext();
+}
 // ***************************************************************************************
 // *** Debug context *********************************************************************
 void ActionDebug()
@@ -600,7 +849,6 @@ void DebugContextExit()
   menu.drawMenu();
   menu.clearContext();
 }
-
 // ***************************************************************************************
 // ***************************************************************************************
 // *** Save / Restore config *************************************************************
@@ -654,7 +902,12 @@ void Dispatch_Config(tsConfigDro *pConf)
   Quad_Z.SetResolution(pConf->Reso_Z);
   Motor1.ChangeParameter((unsigned int)((long)(  pConf->Reso_M1*100/pConf->thread_M1)) , pConf->Inverted_M1);
   Motor1.ChangeAcceleration(pConf->Accel_M1);
+<<<<<<< HEAD
   CalcMotorMaxSpeedForThread(); 
+=======
+  CalcMotorMaxSpeedForThread();
+  ActionChangeLang();
+>>>>>>> Dev
 }
 void ActionSaveSettingsInFlash()
 {
@@ -665,7 +918,11 @@ void ActionSaveSettingsInFlash()
   //PrintInformationOnScreen("Save in flash");
   //delay(100);  
   bSettingsNeedToBeSaved = false;
+<<<<<<< HEAD
   Display_Notice_Informations("Settings saved !"); 
+=======
+  MyMsg.DisplayMsg(GetTxt(Id_Msg_Save),Msg::Info,1000);
+>>>>>>> Dev
   menu.drawMenu(); //Refresh screen after  
 }
 void ActionRestoreSettingsInFlash()
@@ -674,7 +931,11 @@ void ActionRestoreSettingsInFlash()
   SaveConfigInFlash((tsConfigDro*)&csConfigDefault);
   Restore_Config();
   bSettingsNeedToBeSaved = false;
+<<<<<<< HEAD
   Display_Notice_Informations("Settings restored !");
+=======
+  MyMsg.DisplayMsg(GetTxt(Id_Msg_Restore),Msg::Info,1000);
+>>>>>>> Dev
   menu.drawMenu(); //Refresh screen after 
 }
 // ***************************************************************************************
@@ -682,15 +943,24 @@ void ActionRestoreSettingsInFlash()
 // *** Usb Serial functions *****************************************************************
 void UsbSerial_Pos()
 {
+<<<<<<< HEAD
   
+=======
+>>>>>>> Dev
   char bufferChar[30];
-  if(Serial.isConnected())
+  if(Serial.isConnected() && sGeneralConf.UseUSBFunctions)
   {
     sprintf(bufferChar,"X%0.3f:",fAxeXPos); 
     Serial.print(bufferChar);
     sprintf(bufferChar,"Y%0.3f:",fAxeYPos); 
     Serial.print(bufferChar);
+<<<<<<< HEAD
     sprintf(bufferChar,"C%0.3f",fAxeCSpeed); 
+=======
+    sprintf(bufferChar,"C%0.3f:",fAxeCSpeed); 
+    Serial.print(bufferChar);
+    sprintf(bufferChar,"M%0.3f",fMotorCurrentPos); 
+>>>>>>> Dev
     Serial.print(bufferChar);
     Serial.print("\n");   
   }
@@ -717,13 +987,7 @@ void Display_StartScreen()
   delay(2000);
   u8g2.clear();
   u8g2.firstPage();
-  do 
-  {
-    u8g2.setCursor(0,0);
-    u8g2.drawStr(0,0,"Use this system");
-    u8g2.drawStr(0,10,"at your own risk !");
-  } while (u8g2.nextPage());
-  delay(4000); 
+  MyMsg.DisplayMsg(GetTxt(Id_Msg_Start),Msg::Warning,3000);
 }
 
 void DisplayDrawInformations()
@@ -802,10 +1066,14 @@ void Display_M_Informations()
     switch ( bMotorMode )
     {
       case MOTOR_MODE_NO_MODE:
-        u8g2.drawStr(57,37,"|NO");
+        u8g2.drawStr(57,37,"|------");
       break;
       case MOTOR_MODE_MANUAL:
+<<<<<<< HEAD
         u8g2.drawStr(57,37,"|MANUAL");
+=======
+        u8g2.drawStr(57,37,"|MANU");
+>>>>>>> Dev
       break;
       case MOTOR_MODE_AUTO:
         u8g2.drawStr(57,37,"|AUTO");
@@ -832,12 +1100,12 @@ void Display_M_Informations()
     //End limit 
     sprintf(bufferChar,"%+09.3f <> %+09.3f",fMotorStopMax,fMotorStopMin);
     if(bUseMotorEndLimit)u8g2.drawStr(13,45,bufferChar);
-    else u8g2.drawStr(13,45," WARNING : No limit");       
+    else u8g2.drawStr(16,45,GetTxt(Id_Msg_Motor_NoEndLimit));       
   }
   else
   {
     u8g2.setFont(u8g2_font_profont10_mr); // choose a suitable font
-    u8g2.drawStr(13,37,"Motor is OFF");   
+    u8g2.drawStr(16,40,GetTxt(Id_Msg_Motor_Disabled));   
   }  
   u8g2.drawRFrame(11,36,116,18,3);    
 }
@@ -845,7 +1113,11 @@ void Display_Extra_Informations()
 {
   char bufferChar[10];
   u8g2.setFont(u8g2_font_profont10_mr); // choose a suitable font
+<<<<<<< HEAD
   u8g2.drawStr(0,54,selectTool.getSelectedOptionName((byte*)&bToolChoose ));
+=======
+  u8g2.drawStr(0,54,selectToolOptions[bToolChoose].name);
+>>>>>>> Dev
   //Display thread Masterstate 
   if (  bMotorMode == MOTOR_MODE_TH_EXT_N ||
         bMotorMode == MOTOR_MODE_TH_EXT_I ||
@@ -900,6 +1172,7 @@ void Display_Debug_Informations()
   sprintf(bufferChar,"_cmin:%f",Motor1._cmin);
   u8g2.drawStr(0,36,bufferChar);  // write something to the internal memory
 }
+<<<<<<< HEAD
 void Display_Notice_Informations(char* str)
 {
   u8g2.firstPage();
@@ -912,6 +1185,9 @@ void Display_Notice_Informations(char* str)
   } while (u8g2.nextPage());  
   delay(2000); 
 }
+=======
+
+>>>>>>> Dev
 // ***************************************************************************************
 // ***************************************************************************************
 // *** Action functions from menu ********************************************************
@@ -982,6 +1258,53 @@ void ActionChangeSpeedM1()
   if(sGeneralConf.Speed_M1 < 1)sGeneralConf.Speed_M1 = 1;
   if(sGeneralConf.Speed_M1 > 30000)sGeneralConf.Speed_M1 = 30000;
 }
+<<<<<<< HEAD
+=======
+void ActionChangeUseUSB()
+{
+  
+  
+}
+
+void ActionShortcutsResetX()
+{
+  Quad_X.SetZeroActiveMode();
+  ActionDro();   
+}
+void ActionShortcutsResetY()
+{
+  Quad_Y.SetZeroActiveMode();
+  ActionDro();  
+}
+void ActionShortcutsResetM1()
+{
+  ActionResetCurrentPos();
+  ActionDro(); 
+}
+void ActionShortcutsSetCurrentToMax()
+{
+  ActionSetCurrentToMax();
+  ActionDro();  
+}
+void ActionShortcutsSetCurrentToMin()
+{
+  ActionSetCurrentToMin();
+  ActionDro();  
+}
+void ActionShortcutsM1inManual()
+{
+  bMotorMode = MOTOR_MODE_MANUAL; 
+  applyMotorMode();  
+  ActionDro();  
+}
+void ActionShortcutsM1inAuto()
+{
+  bMotorMode = MOTOR_MODE_AUTO; 
+  applyMotorMode();  
+  ActionDro();     
+}
+
+>>>>>>> Dev
 void ActionChangeRelaticeMode()
 {  
   if( bRelativeModeActived == true )
@@ -1012,6 +1335,10 @@ void SetReadOnlyMotorFunctions(boolean state)
   menuItemButtonSetPosToMin.setReadonly(state);
   menuItemButtonResetCurrentPos.setReadonly(state);
   menuItemThreadParameters.setReadonly(state);
+<<<<<<< HEAD
+=======
+  menuItemProfil.setReadonly(state);
+>>>>>>> Dev
 }
 void ActionUseMotor()
 {
@@ -1047,8 +1374,11 @@ void ActionUseMotorEndLimit()
 void CalcMotorParameterForThread()
 {
   long lGCD;
+<<<<<<< HEAD
   float OffsetFixe = 0.0; //Constant offset
   float OffsetVariable = 0.0; //variable offset
+=======
+>>>>>>> Dev
   //Calc Numerator and Denominator with simplification
   sThreadCalc.Numerator = sGeneralConf.Reso_M1 * iMotorThread;  
   sThreadCalc.Denominator = sGeneralConf.thread_M1 * sGeneralConf.Reso_Z ; 
@@ -1060,6 +1390,7 @@ void CalcMotorParameterForThread()
   {
     sThreadCalc.Numerator = -sThreadCalc.Numerator;
   }
+<<<<<<< HEAD
   //Calc of the fixe offset
   OffsetFixe = (float)((360.0 - fMotor1ThreadOffset)*iMotorThread*sGeneralConf.Reso_M1) /(float)(360*sGeneralConf.thread_M1); 
   //Calcul of the variable offset ( depend of the diameter and Y position).
@@ -1095,11 +1426,61 @@ void CalcMotorParameterForThread()
 void CalcMotorMaxSpeedForThread()
 {
   fM1MaxThreadSpeed = (float)(sGeneralConf.Speed_M1*60.0*sGeneralConf.thread_M1/(sGeneralConf.Reso_M1*iMotorThread));  
+=======
+  CalcMotorParameterOffsetForThread();
+>>>>>>> Dev
+}
+void CalcMotorParameterOffsetForThread()
+{
+  float OffsetFixe = 0.0; //Constant offset
+  float OffsetVariable = 0.0; //variable offset
+  float fTemp = 0.0; // pour calcul du demi pas
+  //Calc of the fixe offset
+  OffsetFixe = (float)((360.0 - fMotor1ThreadOffset)*iMotorThread*sGeneralConf.Reso_M1) /(float)(360*sGeneralConf.thread_M1); 
+  //Calcul of the variable offset ( depend of the diameter and Y position).
+  if(bMotor1ThreadUseY == true)
+  {
+<<<<<<< HEAD
+=======
+    if(bMotorMode == MOTOR_MODE_TH_EXT_N || bMotorMode == MOTOR_MODE_TH_EXT_I)
+    {
+      if(fAxeYPos <= fMotor1ThreadDiameter)
+      {
+        OffsetVariable = (float)((fMotor1ThreadDiameter - fAxeYPos)/2.0 * tan(fMotor1ThreadAngle * 0.01745)); //Pi/180 = 0.01745
+        OffsetVariable = OffsetVariable *(float)(sGeneralConf.Reso_M1*100.0/sGeneralConf.thread_M1) ; 
+      }else
+      {
+        OffsetVariable = 0.0;  
+      }          
+    }
+    if(bMotorMode == MOTOR_MODE_TH_INT_N || bMotorMode == MOTOR_MODE_TH_INT_I)
+    {
+      if(fAxeYPos >= fMotor1ThreadDiameter)
+      {
+        OffsetVariable = (float)((fAxeYPos - fMotor1ThreadDiameter)/2.0 * tan(fMotor1ThreadAngle * 0.01745)); //Pi/180 = 0.01745
+        OffsetVariable = OffsetVariable *(float)(sGeneralConf.Reso_M1*100.0/sGeneralConf.thread_M1) ; 
+      }else
+      {
+        OffsetVariable = 0.0;  
+      }          
+    }
+    //L'offset variable ne peut pas dépasser le demi pas demandé 
+    fTemp = (float)(sGeneralConf.Reso_M1*iMotorThread /(sGeneralConf.thread_M1 * 2.0)) ; 
+    if( OffsetVariable > fTemp ) OffsetVariable = fTemp;  
+    
+  }
+  //Global offset
+  sThreadCalc.Offset = Motor1.GetStopPositionMinStep() - (long)OffsetFixe + (long)OffsetVariable ;
+}
+void CalcMotorMaxSpeedForThread()
+{
+  fM1MaxThreadSpeed = (float)(sGeneralConf.Speed_M1*60.0*sGeneralConf.thread_M1/(sGeneralConf.Reso_M1*iMotorThread));  
 }
 void applyMotorMode()
 {
   switch (bMotorMode)
   {
+>>>>>>> Dev
     case MOTOR_MODE_TH_EXT_N :
     case MOTOR_MODE_TH_EXT_I:
     case MOTOR_MODE_TH_INT_N:
@@ -1134,11 +1515,13 @@ void ActionMotorCurrentPos()
 }
 void ActionMotorSpeedUp()
 { //20%
-  iMotorSpeed = iMotorSpeed + iMotorSpeed / 5 ; 
+  if(iMotorSpeed == iMotorSpeed + iMotorSpeed / 5) iMotorSpeed++;
+  else iMotorSpeed = iMotorSpeed + iMotorSpeed / 5 ;   
 }
 void ActionMotorSpeedDown()
-{ //20%
-  iMotorSpeed = iMotorSpeed - iMotorSpeed / 5 ; 
+{ //-20%
+  if(iMotorSpeed == iMotorSpeed - iMotorSpeed / 5) iMotorSpeed--;
+  else iMotorSpeed = iMotorSpeed - iMotorSpeed / 5 ;  
 }
 void ActionMotorMotorSpeed()
 {
@@ -1171,12 +1554,10 @@ void ActionResetCurrentPos()
 void ActionResetX()
 {
   Quad_X.SetZeroActiveMode(); 
-  ActionDro();
 }
 void ActionResetY()
 {
-  Quad_Y.SetZeroActiveMode();
-  ActionDro();  
+  Quad_Y.SetZeroActiveMode();  
 }
 void ActionAxeXPos()
 {
@@ -1198,20 +1579,37 @@ void ActionChangeScreen()
 void ActionChangeMotor1Offset()
 {
   if(fMotor1ThreadOffset < 0)fMotor1ThreadOffset = 0.0;
+<<<<<<< HEAD
   if(fMotor1ThreadOffset > 360)fMotor1ThreadOffset = 360.0; 
   CalcMotorParameterForThread(); // Recalc the thread parameter 
+=======
+  if(fMotor1ThreadOffset > 360)fMotor1ThreadOffset = 360.0;
+  ///Possibility to change the offset durring the threading and spindle off  
+  if(eMS_Thread == MS_THREAD_IN_THREAD && fAxeCSpeed == 0)
+  {
+    CalcMotorParameterOffsetForThread();    
+  } 
+>>>>>>> Dev
 }
 void ActionIncMotor1Offset()
 {
   fMotor1ThreadOffset = fMotor1ThreadOffset+2;
+<<<<<<< HEAD
   if(fMotor1ThreadOffset > 360)fMotor1ThreadOffset = 360.0; 
   CalcMotorParameterForThread(); // Recalc the thread parameter 
+=======
+  ActionChangeMotor1Offset();
+>>>>>>> Dev
 }
 void ActionDecMotor1Offset()
 {
   fMotor1ThreadOffset = fMotor1ThreadOffset-2;
+<<<<<<< HEAD
   if(fMotor1ThreadOffset < 0)fMotor1ThreadOffset = 0.0; 
   CalcMotorParameterForThread(); // Recalc the thread parameter  
+=======
+  ActionChangeMotor1Offset();
+>>>>>>> Dev
 } 
 void ActionMotor1ThreadUseY()
 {
@@ -1253,7 +1651,11 @@ boolean M1_AreYouOkToStartTheThread()
   if( fAxeCSpeed >= fM1MaxThreadSpeed)
   {
     result = false;
+<<<<<<< HEAD
     Display_Notice_Informations("Reduce spindle speed");     
+=======
+    MyMsg.DisplayMsg(GetTxt(Id_Msg_Warning_SpeedTooHigh),Msg::Warning,2000);    
+>>>>>>> Dev
   }
   //Check the direction
   if( bMotorMode == MOTOR_MODE_TH_EXT_N || bMotorMode == MOTOR_MODE_TH_INT_N)
@@ -1261,7 +1663,11 @@ boolean M1_AreYouOkToStartTheThread()
     if( fAxeCSpeed < 0 )
     {
       result = false;
+<<<<<<< HEAD
       Display_Notice_Informations("Spindle wrong dir");     
+=======
+      MyMsg.DisplayMsg(GetTxt(Id_Msg_Warning_WrongDirection),Msg::Warning,2000);    
+>>>>>>> Dev
     }      
   }
   if( bMotorMode == MOTOR_MODE_TH_EXT_I || bMotorMode == MOTOR_MODE_TH_INT_I)
@@ -1269,20 +1675,32 @@ boolean M1_AreYouOkToStartTheThread()
     if( fAxeCSpeed > 0 )
     {
       result = false;
+<<<<<<< HEAD
       Display_Notice_Informations("Spindle wrong dir");     
+=======
+      MyMsg.DisplayMsg(GetTxt(Id_Msg_Warning_WrongDirection),Msg::Warning,2000);    
+>>>>>>> Dev
     }       
   }   
   //Check if endlimit is on
   if( !bUseMotorEndLimit)
   {
     result = false;
+<<<<<<< HEAD
     Display_Notice_Informations("No end limit");     
+=======
+    MyMsg.DisplayMsg(GetTxt(Id_Msg_Warning_NoEndLimit),Msg::Warning,2000);   
+>>>>>>> Dev
   } 
   //Check if the motor is at min pos
   if( !Motor1.AreYouAtMinPos())
   {
     result = false;
+<<<<<<< HEAD
     Display_Notice_Informations("No at min pos");     
+=======
+    MyMsg.DisplayMsg(GetTxt(Id_Msg_Warning_NoAtMinPos),Msg::Warning,2000);     
+>>>>>>> Dev
   }   
   return result;
 }
@@ -1296,7 +1714,11 @@ boolean M1_AreYouOkToReturnAfterThread()
       if( fAxeYPos < fMotor1ThreadDiameter)
       {
         result = false;
+<<<<<<< HEAD
         Display_Notice_Informations("Move Y : Y < Dia");
+=======
+        MyMsg.DisplayMsg(GetTxt(Id_Msg_Warning_YINFDIA),Msg::Warning,2000);
+>>>>>>> Dev
       }    
     }
     if( bMotorMode == MOTOR_MODE_TH_INT_N || bMotorMode == MOTOR_MODE_TH_INT_I)
@@ -1304,9 +1726,70 @@ boolean M1_AreYouOkToReturnAfterThread()
       if( fAxeYPos > fMotor1ThreadDiameter)
       {
         result = false;
+<<<<<<< HEAD
         Display_Notice_Informations("Move Y : Y > Dia");
+=======
+        MyMsg.DisplayMsg(GetTxt(Id_Msg_Warning_YSUPDIA),Msg::Warning,2000);
+>>>>>>> Dev
       }   
     }      
   }
   return result;    
+<<<<<<< HEAD
+=======
+}
+void ActionChangeLang()
+{  
+  ChangeLang(sGeneralConf.Lang); 
+  ActionUpdateMenuTitle();  
+}
+void ActionUpdateMenuTitle()
+{
+  menuPageSettings.setTitle(GetTxt(Id_Msg_TEXT_MENU_SETTINGS));
+  menuItemMainSettings.setTitle(GetTxt(Id_Msg_TEXT_MENU_SETTINGS));
+  menuItemButtonDro.setTitle(GetTxt(Id_Msg_TEXT_MENU_RETURN_SCREEN));
+  menuItemAxe.setTitle(GetTxt(Id_Msg_TEXT_MENU_AXE_FUNCTIONS));
+  menuItemMotor.setTitle(GetTxt(Id_Msg_TEXT_MENU_MOTOR_FUNCTIONS));  
+  menuItemScreenMode.setTitle(GetTxt(Id_Msg_TEXT_MENU_ECRAN));
+  menuItemButtonRestoreSettings.setTitle(GetTxt(Id_Msg_TEXT_MENU_RESTORE_SETTINGS) );
+  menuItemButtonSaveSettings.setTitle(GetTxt(Id_Msg_TEXT_MENU_SAVE_SETTINGS));
+  menuItemShortcuts.setTitle(GetTxt(Id_Msg_TEXT_MENU_FAST_FUNCTIONS));
+  menuPageShortcuts.setTitle(GetTxt(Id_Msg_TEXT_MENU_FAST_FUNCTIONS));
+  menuItemButtonShortcutsM1inManual.setTitle(GetTxt(Id_Msg_TEXT_MENU_FAST_M1MANU));
+  menuItemButtonShortcutsM1inAuto.setTitle(GetTxt(Id_Msg_TEXT_MENU_FAST_M1AUTO));
+  menuPageAxe.setTitle(GetTxt(Id_Msg_TEXT_MENU_AXE_FUNCTIONS));
+  menuPageMotor.setTitle(GetTxt(Id_Msg_TEXT_MENU_MOTOR_FUNCTIONS));
+  menuPageDebug.setTitle(GetTxt(Id_Msg_TEXT_MENU_DEBUG));
+  menuItemDebug.setTitle(GetTxt(Id_Msg_TEXT_MENU_DEBUG));
+  menuPageThreadParameters.setTitle(GetTxt(Id_Msg_TEXT_MENU_THREAD_PARAMETERS));
+  menuItemThreadParameters.setTitle(GetTxt(Id_Msg_TEXT_MENU_THREAD_PARAMETERS));
+  menuItemUseMotorEndLimit.setTitle(GetTxt(Id_Msg_TEXT_MENU_MOTORDLIMIT));
+  menuItemUseMotor.setTitle(GetTxt(Id_Msg_TEXT_MENU_MOTORABLED));
+  menuItemMotorSpeed.setTitle(GetTxt(Id_Msg_TEXT_MENU_MOTOR_SPEED)); 
+  menuItemMotorThread.setTitle(GetTxt(Id_Msg_TEXT_MENU_THREAD_THREAD));
+  menuItemMotor1ThreadOffset.setTitle(GetTxt(Id_Msg_TEXT_MENU_THREAD_OFFSET));
+  menuItemMotor1ThreadUseY.setTitle(GetTxt(Id_Msg_TEXT_MENU_THREAD_USEY));
+  menuItemMotor1ThreadDiameter.setTitle(GetTxt(Id_Msg_TEXT_MENU_THREAD_DIAMETER));
+  menuItemMotor1ThreadAngle.setTitle(GetTxt(Id_Msg_TEXT_MENU_THREAD_ANGLE));
+  menuItemMotorIncOffset.setTitle(GetTxt(Id_Msg_TEXT_MENU_THREAD_INC));
+  menuItemMotorDecOffset.setTitle(GetTxt(Id_Msg_TEXT_MENU_THREAD_DEC));
+  menuItemTool.setTitle(GetTxt(Id_Msg_TEXT_MENU_AXE_TOOL));
+  menuItemRelativeMode.setTitle(GetTxt(Id_Msg_TEXT_MENU_AXE_REL));
+  menuItemDirX.setTitle(GetTxt(Id_Msg_TEXT_MENU_SETTINGS_XDIR));
+  menuItemDirY.setTitle(GetTxt(Id_Msg_TEXT_MENU_SETTINGS_YDIR));
+  menuItemDirZ.setTitle(GetTxt(Id_Msg_TEXT_MENU_SETTINGS_CDIR));
+  menuItemDiamY.setTitle(GetTxt(Id_Msg_TEXT_MENU_SETTINGS_YDIAM));
+  menuItemResoX.setTitle(GetTxt(Id_Msg_TEXT_MENU_SETTINGS_XSTEP));
+  menuItemResoY.setTitle(GetTxt(Id_Msg_TEXT_MENU_SETTINGS_YSTEP));
+  menuItemResoZ.setTitle(GetTxt(Id_Msg_TEXT_MENU_SETTINGS_CSTEP));
+  menuItemDirM1.setTitle(GetTxt(Id_Msg_TEXT_MENU_SETTINGS_M1DIR));
+  menuItemResoM1.setTitle(GetTxt(Id_Msg_TEXT_MENU_SETTINGS_M1STEP));
+  menuItemThreadM1.setTitle(GetTxt(Id_Msg_TEXT_MENU_SETTINGS_M1TH));
+  menuItemAccelM1.setTitle(GetTxt(Id_Msg_TEXT_MENU_SETTINGS_M1ACC));
+  menuItemSpeedM1.setTitle(GetTxt(Id_Msg_TEXT_MENU_SETTINGS_M1SPE));
+  menuItemLang.setTitle(GetTxt(Id_Msg_TEXT_MENU_SETTINGS_M1LAN));
+  menuItemUseUSB.setTitle(GetTxt(Id_Msg_TEXT_MENU_SETTINGS_USB));
+  menuPageProfilParameters.setTitle(GetTxt(Id_Msg_TEXT_MENU_PROFIL)); 
+  menuItemProfil.setTitle(GetTxt(Id_Msg_TEXT_MENU_PROFIL));
+>>>>>>> Dev
 }
