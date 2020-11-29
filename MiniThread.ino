@@ -23,7 +23,7 @@ Revision        :
 
 #define TEXT_MAIN_MENU_TITLE "MiniThread 1.0.0"
 #define TEXT_AUTHOR_SOFT "Pailpoe"
-#define TEXT_VERSION_SOFT "1.0.0 "
+#define TEXT_VERSION_SOFT "1.0.0"
 =======
 #include "src/Language/Language.h"
 #include "src/SnakeGame/Snake.h"
