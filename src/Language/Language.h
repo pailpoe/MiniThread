@@ -59,6 +59,7 @@ typedef enum
     Id_Msg_Warning_NoEndLimit = 48,
     Id_Msg_Warning_NoAtMinPos = 49,
     Id_Msg_TEXT_MENU_SETTINGS_USB = 50,
+    Id_Msg_TEXT_MENU_PROFIL = 51,
 }teMsgId;
 
 typedef struct
@@ -170,6 +171,8 @@ const tsLang sLangData[] =
       "Positionner le moteur\na sa position min"},
     { "USB com.",//Id_Msg_TEXT_MENU_SETTINGS_USB
       "USB com."},
+    { "Profil param.",//Id_Msg_TEXT_MENU_PROFIL
+      "Para. de profil"},
 
   }; 
 
