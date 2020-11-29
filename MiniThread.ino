@@ -140,6 +140,7 @@ tsThreadCalc sThreadCalc;
 
 // Forward declarations Funtions  ******************************************
 void CalcMotorParameterForThread(); 
+void CalcMotorParameterOffsetForThread();
 void CalcMotorMaxSpeedForThread();
 void UsbSerial_Pos(); 
 void Display_UpdateRealTimeData(); 
@@ -1209,9 +1210,6 @@ void ActionUseMotorEndLimit()
 void CalcMotorParameterForThread()
 {
   long lGCD;
-  float OffsetFixe = 0.0; //Constant offset
-  float OffsetVariable = 0.0; //variable offset
-  float fTemp = 0.0; // pour calcul du demi pas
   //Calc Numerator and Denominator with simplification
   sThreadCalc.Numerator = sGeneralConf.Reso_M1 * iMotorThread;  
   sThreadCalc.Denominator = sGeneralConf.thread_M1 * sGeneralConf.Reso_Z ; 
@@ -1223,6 +1221,13 @@ void CalcMotorParameterForThread()
   {
     sThreadCalc.Numerator = -sThreadCalc.Numerator;
   }
+  CalcMotorParameterOffsetForThread();
+}
+void CalcMotorParameterOffsetForThread()
+{
+  float OffsetFixe = 0.0; //Constant offset
+  float OffsetVariable = 0.0; //variable offset
+  float fTemp = 0.0; // pour calcul du demi pas
   //Calc of the fixe offset
   OffsetFixe = (float)((360.0 - fMotor1ThreadOffset)*iMotorThread*sGeneralConf.Reso_M1) /(float)(360*sGeneralConf.thread_M1); 
   //Calcul of the variable offset ( depend of the diameter and Y position).
@@ -1256,8 +1261,7 @@ void CalcMotorParameterForThread()
     
   }
   //Global offset
-  sThreadCalc.Offset = Motor1.GetStopPositionMinStep() - (long)OffsetFixe + (long)OffsetVariable ; 
-  
+  sThreadCalc.Offset = Motor1.GetStopPositionMinStep() - (long)OffsetFixe + (long)OffsetVariable ;
 }
 void CalcMotorMaxSpeedForThread()
 {
@@ -1365,20 +1369,22 @@ void ActionChangeScreen()
 void ActionChangeMotor1Offset()
 {
   if(fMotor1ThreadOffset < 0)fMotor1ThreadOffset = 0.0;
-  if(fMotor1ThreadOffset > 360)fMotor1ThreadOffset = 360.0; 
-  CalcMotorParameterForThread(); // Recalc the thread parameter 
+  if(fMotor1ThreadOffset > 360)fMotor1ThreadOffset = 360.0;
+  ///Possibility to change the offset durring the threading and spindle off  
+  if(eMS_Thread == MS_THREAD_IN_THREAD && fAxeCSpeed == 0)
+  {
+    CalcMotorParameterOffsetForThread();    
+  } 
 }
 void ActionIncMotor1Offset()
 {
   fMotor1ThreadOffset = fMotor1ThreadOffset+2;
-  if(fMotor1ThreadOffset > 360)fMotor1ThreadOffset = 360.0; 
-  CalcMotorParameterForThread(); // Recalc the thread parameter 
+  ActionChangeMotor1Offset();
 }
 void ActionDecMotor1Offset()
 {
   fMotor1ThreadOffset = fMotor1ThreadOffset-2;
-  if(fMotor1ThreadOffset < 0)fMotor1ThreadOffset = 0.0; 
-  CalcMotorParameterForThread(); // Recalc the thread parameter  
+  ActionChangeMotor1Offset();
 } 
 void ActionMotor1ThreadUseY()
 {
