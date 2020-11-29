@@ -23,9 +23,9 @@ Revision        :
 #include "src/Msg/Msg.h"
 #include <EEPROM.h>
 
-#define TEXT_MAIN_MENU_TITLE "MiniThread 1.1.0 DEV"
+#define TEXT_MAIN_MENU_TITLE "MiniThread 1.1.0"
 #define TEXT_AUTHOR_SOFT "Pailpoe"
-#define TEXT_VERSION_SOFT "1.1.0 DEV"
+#define TEXT_VERSION_SOFT "1.1.0"
 
 // IO def ( for quad decoder, define in class !)
 #define PIN_RES_SCR    PB9
@@ -72,6 +72,7 @@ typedef struct
   float Accel_M1;
   int Speed_M1;
   byte Lang;
+  boolean UseUSBFunctions;
 } tsConfigDro;
 
 
@@ -110,7 +111,7 @@ typedef struct
 #define MOTOR_MODE_TH_INT_I 6
 
 // Variables global ******************************************
-const tsConfigDro csConfigDefault = {false,false,false,true,512,512,1200,false,1600,200,60000.0,12000,LANG_EN};
+const tsConfigDro csConfigDefault = {false,false,false,true,512,512,1200,false,1600,200,60000.0,12000,LANG_FR,true};
 tsConfigDro  sGeneralConf;
 boolean     bSettingsNeedToBeSaved = false;
 float       TestFloat = 999.2;
@@ -176,6 +177,7 @@ void ActionChangeThreadM1();
 void ActionChangeAccelM1();
 void ActionChangeSpeedM1();
 void ActionChangeLang();
+void ActionChangeUseUSB();
 void ActionRestoreSettingsInFlash(); 
 void ActionSaveSettingsInFlash(); 
 void ActionChangeRelaticeMode();
@@ -244,6 +246,7 @@ GEMItem menuItemSpeedM1("", sGeneralConf.Speed_M1,ActionChangeSpeedM1);
 SelectOptionByte selectLangOptions[] = {{"Fr", LANG_FR}, {"Eng", LANG_EN}};
 GEMSelect selectLang(sizeof(selectLangOptions)/sizeof(SelectOptionByte), selectLangOptions);
 GEMItem menuItemLang("", sGeneralConf.Lang, selectLang, ActionChangeLang);
+GEMItem menuItemUseUSB("", sGeneralConf.UseUSBFunctions, ActionChangeUseUSB);
 GEMItem menuItemButtonRestoreSettings("", ActionRestoreSettingsInFlash);
 GEMItem menuItemButtonSaveSettings("", ActionSaveSettingsInFlash);
 GEMItem menuItemButtonSnakeGame("Snake game !", ActionLaunchSnakeGame);
@@ -290,7 +293,6 @@ GEMItem menuItemMotorDecOffset("", ActionDecMotor1Offset);
 SelectOptionByte selectScreenOptions[] = {{"DroXYC", 0}, {"Mot1", 1}, {"Debug", 2}};
 GEMSelect selectScreenMode(sizeof(selectScreenOptions)/sizeof(SelectOptionByte), selectScreenOptions);
 GEMItem menuItemScreenMode("", eScreenChoose, selectScreenMode, ActionScreenMode);
-
 //Class instance ******************************************
 U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0,/* reset=*/ U8X8_PIN_NONE); //Screen -->external reset (boot problem)
 GEM_u8g2 menu(u8g2,GEM_POINTER_ROW,5,10,10,75); // menu
@@ -302,7 +304,6 @@ QuadDecoder Quad_X(1,QuadDecoder::LinearEncoder,512,false,false,IT_Timer1_Overfl
 HardwareTimer MotorControl(4);  //for motor control with timer 4
 StepperMotor Motor1(800,false,PIN_MOT1_STEP,PIN_MOT1_DIR,PIN_MOT1_EN, Update_Overlfow_Timer4);// Motor 1
 Keypad customKeypad ( makeKeymap(hexaKeys), rowPins, colPins, ROWS, COLS); //Keypad
-
 //Interrupt handler functions ******************************************
 void IT_Timer1_Overflow(){Quad_X.IT_OverflowHardwareTimer();}
 void IT_Timer3_Overflow(){Quad_Y.IT_OverflowHardwareTimer();}
@@ -340,8 +341,7 @@ void Update_Overlfow_Timer4()
 void setup() 
 {
   afio_cfg_debug_ports(AFIO_DEBUG_SW_ONLY); //Only SWD
-  //USB Serial
-  Serial.begin(115200); // Ignored by Maple. But needed by boards using hardware serial via a USB to Serial adaptor  
+  Serial.begin(); // USB serial  
   //Timer 4 for motor control
   MotorControl.pause(); //stop...
   MotorControl.setCompare(TIMER_CH3, 20); //10µs 
@@ -453,6 +453,7 @@ void setupMenu() {
   menuPageSettings.addMenuItem(menuItemAccelM1);
   menuPageSettings.addMenuItem(menuItemSpeedM1); 
   menuPageSettings.addMenuItem(menuItemLang);
+  menuPageSettings.addMenuItem(menuItemUseUSB);
   menuPageSettings.addMenuItem(menuItemButtonRestoreSettings);
   menuPageSettings.addMenuItem(menuItemButtonSaveSettings);
   menuPageSettings.setParentMenuPage(menuPageMain);
@@ -651,14 +652,8 @@ void DroContextExit()
   menu.drawMenu();
   menu.clearContext();
 }
-
-
-
 // ***************************************************************************************
 // *** Snake game for fun !! context *****************************************************
-
-
-
 void ActionLaunchSnakeGame()
 {
   menu.context.loop = SnakeContextLoop;
@@ -731,7 +726,6 @@ void DebugContextExit()
   menu.drawMenu();
   menu.clearContext();
 }
-
 // ***************************************************************************************
 // ***************************************************************************************
 // *** Save / Restore config *************************************************************
@@ -814,9 +808,8 @@ void ActionRestoreSettingsInFlash()
 // *** Usb Serial functions *****************************************************************
 void UsbSerial_Pos()
 {
-  
   char bufferChar[30];
-  if(Serial.isConnected())
+  if(Serial.isConnected() && sGeneralConf.UseUSBFunctions)
   {
     sprintf(bufferChar,"X%0.3f:",fAxeXPos); 
     Serial.print(bufferChar);
@@ -1099,10 +1092,11 @@ void ActionChangeSpeedM1()
   if(sGeneralConf.Speed_M1 < 1)sGeneralConf.Speed_M1 = 1;
   if(sGeneralConf.Speed_M1 > 30000)sGeneralConf.Speed_M1 = 30000;
 }
-
-
-
-
+void ActionChangeUseUSB()
+{
+  
+  
+}
 
 void ActionShortcutsResetX()
 {
@@ -1299,11 +1293,14 @@ void ActionMotorCurrentPos()
 }
 void ActionMotorSpeedUp()
 { //20%
-  iMotorSpeed = iMotorSpeed + iMotorSpeed / 5 ; 
+  if(iMotorSpeed == iMotorSpeed + iMotorSpeed / 5) iMotorSpeed++;
+  else iMotorSpeed = iMotorSpeed + iMotorSpeed / 5 ;   
 }
 void ActionMotorSpeedDown()
-{ //20%
-  iMotorSpeed = iMotorSpeed - iMotorSpeed / 5 ; 
+{ //-20%
+  if(iMotorSpeed == iMotorSpeed - iMotorSpeed / 5) iMotorSpeed--;
+  else iMotorSpeed = iMotorSpeed - iMotorSpeed / 5 ;  
+
 }
 void ActionMotorMotorSpeed()
 {
@@ -1523,4 +1520,5 @@ void ActionUpdateMenuTitle()
   menuItemAccelM1.setTitle(GetTxt(Id_Msg_TEXT_MENU_SETTINGS_M1ACC));
   menuItemSpeedM1.setTitle(GetTxt(Id_Msg_TEXT_MENU_SETTINGS_M1SPE));
   menuItemLang.setTitle(GetTxt(Id_Msg_TEXT_MENU_SETTINGS_M1LAN));
+  menuItemUseUSB.setTitle(GetTxt(Id_Msg_TEXT_MENU_SETTINGS_USB));
 }

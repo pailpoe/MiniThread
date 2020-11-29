@@ -58,7 +58,7 @@ typedef enum
     Id_Msg_Warning_WrongDirection = 47,
     Id_Msg_Warning_NoEndLimit = 48,
     Id_Msg_Warning_NoAtMinPos = 49,
-    
+    Id_Msg_TEXT_MENU_SETTINGS_USB = 50,
 }teMsgId;
 
 typedef struct
@@ -168,6 +168,8 @@ const tsLang sLangData[] =
       "Activer les fins de\ncourse du moteur"},
     { "No at min pos",//Id_Msg_Warning_NoAtMinPos
       "Positionner le moteur\na sa position min"},
+    { "USB com.",//Id_Msg_TEXT_MENU_SETTINGS_USB
+      "USB com."},
 
   }; 
 
