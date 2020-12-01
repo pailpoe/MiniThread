@@ -11,7 +11,7 @@ Remark          :
 Revision        :
 
 *********************************************************************/
-
+#include "src/Config/Config.h"
 #include "src/GEM/GEM_u8g2.h"
 #include "src/QuadDecoder/QuadDecoder.h"
 #include "src/Keypad/Keypad.h"
@@ -22,27 +22,6 @@ Revision        :
 #include "src/SnakeGame/Snake.h"
 #include "src/Msg/Msg.h"
 #include <EEPROM.h>
-
-#define TEXT_MAIN_MENU_TITLE "MiniThread 1.1.0"
-#define TEXT_AUTHOR_SOFT "Pailpoe"
-#define TEXT_VERSION_SOFT "1.1.0"
-
-// IO def ( for quad decoder, define in class !)
-#define PIN_RES_SCR    PB9
-#define PIN_MOT1_STEP  PA10
-#define PIN_MOT1_DIR   PB15
-#define PIN_MOT1_EN    PA15
-#define PIN_MOT2_STEP  PB13
-#define PIN_MOT2_DIR   PB12
-#define PIN_MOT2_EN    PB14
-#define PIN_SW_LIN_1   PA5
-#define PIN_SW_LIN_2   PA4
-#define PIN_SW_LIN_3   PA3
-#define PIN_SW_LIN_4   PA2
-#define PIN_SW_COL_1   PB0
-#define PIN_SW_COL_2   PB1
-#define PIN_SW_COL_3   PB10
-#define PIN_SW_COL_4   PB11
 
 //Keyboard
 const byte ROWS = 4; //four rows
@@ -56,63 +35,9 @@ char hexaKeys[ROWS][COLS] = {
 byte rowPins[ROWS] = {PIN_SW_LIN_1, PIN_SW_LIN_2, PIN_SW_LIN_3, PIN_SW_LIN_4};
 byte colPins[COLS] = {PIN_SW_COL_1, PIN_SW_COL_2, PIN_SW_COL_3, PIN_SW_COL_4};
 
-//Struct and Enum def  ******************************************
-typedef struct
-{
-  boolean Inverted_X;  
-  boolean Inverted_Y;
-  boolean Inverted_Z;
-  boolean Diameter_Mode_Y;
-  int  Reso_X;
-  int  Reso_Y;
-  int  Reso_Z;
-  boolean Inverted_M1;
-  int  Reso_M1;
-  int  thread_M1;
-  float Accel_M1;
-  int Speed_M1;
-  byte Lang;
-  boolean UseUSBFunctions;
-} tsConfigDro;
-
-
-//Threading machine state
-typedef enum
-{
-  MS_THREAD_IDLE = 0, //Idle
-  MS_THREAD_WAIT_THE_START = 1, //Wait the button to start
-  MS_THREAD_WAIT_THE_SPLINDLE_ZERO = 2, // Wait spindle zero
-  MS_THREAD_IN_THREAD = 3, // In threat
-  MS_THREAD_END_THREAD = 4, // Wait the button to return
-  MS_THREAD_IN_RETURN = 5 // In return
-} teMS_ThreadingMode;
-
-//Parameter for the thread
-typedef struct
-{
-  long Numerator;
-  long Denominator;
-  long Offset;  
-} tsThreadCalc;
-
-//Screen choose
-#define  SCREEN_DRO 0
-#define  SCREEN_MOT1 1
-#define  SCREEN_DEBUG 2
-#define  SCREEN_END_LIST 1
-
-//Motor mode
-#define MOTOR_MODE_NO_MODE  0
-#define MOTOR_MODE_MANUAL   1
-#define MOTOR_MODE_AUTO     2
-#define MOTOR_MODE_TH_EXT_N 3
-#define MOTOR_MODE_TH_EXT_I 4
-#define MOTOR_MODE_TH_INT_N 5
-#define MOTOR_MODE_TH_INT_I 6
-
 // Variables global ******************************************
 const tsConfigDro csConfigDefault = {false,false,false,true,512,512,1200,false,1600,200,60000.0,12000,LANG_FR,true};
-tsConfigDro  sGeneralConf;
+tsConfigDro sGeneralConf;
 boolean     bSettingsNeedToBeSaved = false;
 float       TestFloat = 999.2;
 byte        bToolChoose = 0; //Tool selection
@@ -135,28 +60,29 @@ float       fMotor1ThreadAngle = 0.0;
 float       fM1ActualSpeed; // Motor Actual Speed
 float       fM1MaxThreadSpeed; // Motor Max spindle speed for thread
 byte        eScreenChoose = SCREEN_DRO;
-teMS_ThreadingMode  eMS_Thread = MS_THREAD_IDLE;
-tsThreadCalc sThreadCalc; 
+teMS_ThreadingMode eMS_Thread = MS_THREAD_IDLE;
+teMS_ProfilMode eMS_Profil = MS_PROFIL_IDLE;
+tsThreadCalc sThreadCalc;
+tsProfilData sProfilData;  
 
 // Forward declarations Funtions  ******************************************
 void CalcMotorParameterForThread(); 
 void CalcMotorParameterOffsetForThread();
 void CalcMotorMaxSpeedForThread();
-void UsbSerial_Pos(); 
-void Display_UpdateRealTimeData(); 
+void CalcMotorParameterForProfil(); 
+void Fct_UsbSerial_Pos(); 
+
 void ActionMotorSpeedUp();
 void ActionMotorSpeedDown();
-void Display_StartScreen(); 
+
 void ActionDro(); 
 void ActionDebug();
 void ActionLaunchSnakeGame();
 void SnakeContextEnter();
 void SnakeContextLoop();
 void SnakeContextExit(); 
-void applyTool(); 
+void ActionChangeTool(); 
 void NeedToSave();
-void ActionUpdateMenuTitle();
-
 void ActionShortcutsResetX();
 void ActionShortcutsResetY();
 void ActionShortcutsResetM1();
@@ -164,7 +90,6 @@ void ActionShortcutsSetCurrentToMax();
 void ActionShortcutsSetCurrentToMin();
 void ActionShortcutsM1inManual();
 void ActionShortcutsM1inAuto();
-
 void ActionChangeDirX();
 void ActionChangeDirY();
 void ActionChangeDirZ();
@@ -181,14 +106,14 @@ void ActionChangeLang();
 void ActionChangeUseUSB();
 void ActionRestoreSettingsInFlash(); 
 void ActionSaveSettingsInFlash(); 
-void ActionChangeRelaticeMode();
+void ActionChangeRelativeMode();
 void ActionResetX(); 
 void ActionResetY(); 
 void ActionAxeXPos(); 
 void ActionAxeYPos(); 
 void SetReadOnlyMotorFunctions(boolean state); // true = Read only
 void ActionUseMotor(); 
-void applyMotorMode(); 
+void ActionChangeMotorMode(); 
 void ActionMotorStopMin(); 
 void ActionMotorStopMax(); 
 void ActionUseMotorEndLimit(); 
@@ -206,12 +131,17 @@ void ActionChangeMotor1ThreadDiameter();
 void ActionChangeMotor1ThreadAngle(); 
 boolean M1_AreYouOkToStartTheThread();
 boolean M1_AreYouOkToReturnAfterThread();
+boolean M1_AreYouOkToStartTheProfil();
 void ActionScreenMode(); 
 void ActionChangeScreen();
 void IT_Timer1_Overflow(); 
 void IT_Timer2_Overflow(); 
 void IT_Timer3_Overflow(); 
 void Update_Overlfow_Timer4();
+
+void Display_UpdateRealTimeData(); 
+void Display_StartScreen();
+void Display_WorkingScreen(); 
 void Display_X_Informations(); 
 void Display_Y_Informations();
 void Display_C_Informations();
@@ -219,6 +149,7 @@ void Display_M_Informations();
 void Display_Extra_Informations();
 void Display_Debug_Informations();
 
+void FctUpdateMenuTitle();
 
 //Menu item ******************************************
 GEMPage menuPageShortcuts(""); // Shortcuts submenu
@@ -261,8 +192,8 @@ GEMPage menuPageAxe(""); // Axe submenu
 GEMItem menuItemAxe("", menuPageAxe);
 SelectOptionByte selectToolOptions[] = {{"Ref_0", 0}, {"Tool_1", 1}, {"Tool_2", 2}, {"Tool_3", 3}, {"Tool_4", 4}, {"Tool_5", 5}};
 GEMSelect selectTool(sizeof(selectToolOptions)/sizeof(SelectOptionByte), selectToolOptions);
-GEMItem menuItemTool("", bToolChoose, selectTool, applyTool);
-GEMItem menuItemRelativeMode("", bRelativeModeActived,ActionChangeRelaticeMode);
+GEMItem menuItemTool("", bToolChoose, selectTool, ActionChangeTool);
+GEMItem menuItemRelativeMode("", bRelativeModeActived,ActionChangeRelativeMode);
 GEMItem menuItemButtonResetX("X = 0", ActionResetX);
 GEMItem menuItemButtonResetY("Y = 0", ActionResetY);
 GEMItem menuItemAxeXPos("X = ?", fAxeXPos,ActionAxeXPos);
@@ -270,9 +201,16 @@ GEMItem menuItemAxeYPos("Y = ?", fAxeYPos,ActionAxeYPos);
 GEMPage menuPageMotor(""); // Motor submenu
 GEMItem menuItemMotor("", menuPageMotor);
 GEMItem menuItemUseMotor("", bUseMotor,ActionUseMotor);
-SelectOptionByte selectMotorModeOptions[] = {{"------", 0}, {"MANU", 1},{"AUTO", 2},{"TH EX N", 3},{"TH EX I", 4},{"TH IN N", 5},{"TH IN I", 6}};
+SelectOptionByte selectMotorModeOptions[] = { {"------",  MOTOR_MODE_NO_MODE},
+                                              {"MANU",    MOTOR_MODE_MANUAL},
+                                              {"AUTO",    MOTOR_MODE_AUTO},
+                                              {"TH EX N", MOTOR_MODE_TH_EXT_N},
+                                              {"TH EX I", MOTOR_MODE_TH_EXT_I},
+                                              {"TH IN N", MOTOR_MODE_TH_INT_N},
+                                              {"TH IN I", MOTOR_MODE_TH_INT_I},
+                                              {"PROFIL",  MOTOR_MODE_PROFIL}};
 GEMSelect selectMotorMode(sizeof(selectMotorModeOptions)/sizeof(SelectOptionByte), selectMotorModeOptions);
-GEMItem menuItemMotorMode("Mode", bMotorMode, selectMotorMode, applyMotorMode);
+GEMItem menuItemMotorMode("Mode", bMotorMode, selectMotorMode, ActionChangeMotorMode);
 GEMItem menuItemMotorStopMin("M1 min = ?", fMotorStopMin,ActionMotorStopMin);
 GEMItem menuItemMotorStopMax("M1 max = ?", fMotorStopMax,ActionMotorStopMax);
 GEMItem menuItemUseMotorEndLimit("", bUseMotorEndLimit,ActionUseMotorEndLimit);
@@ -293,7 +231,7 @@ GEMItem menuItemMotorIncOffset("", ActionIncMotor1Offset);
 GEMItem menuItemMotorDecOffset("", ActionDecMotor1Offset);
 GEMPage menuPageProfilParameters(""); // Profil submenu
 GEMItem menuItemProfil("", menuPageProfilParameters);
-SelectOptionByte selectScreenOptions[] = {{"DroXYC", 0}, {"Mot1", 1}, {"Debug", 2}};
+SelectOptionByte selectScreenOptions[] = {{"DroXYC", SCREEN_DRO}, {"Mot1", SCREEN_MOT1}, {"Debug", SCREEN_DEBUG}};
 GEMSelect selectScreenMode(sizeof(selectScreenOptions)/sizeof(SelectOptionByte), selectScreenOptions);
 GEMItem menuItemScreenMode("", eScreenChoose, selectScreenMode, ActionScreenMode);
 //Class instance ******************************************
@@ -322,6 +260,29 @@ void IT_Timer2_Overflow()
 //Timer 4 overflow for Step motor
 void handler_Timer4_overflow()
 { 
+  long ltest;
+  long lposy;
+  long temp,temp2;
+  //Test Profil
+  if(eMS_Profil == MS_PROFIL_IN_PROFIL)
+  {
+    ltest = sProfilData.OffsetX;
+    lposy = Quad_Y.GetValueLong();     
+    if(lposy >= sProfilData.DiamStartY && lposy < sProfilData.DiamEndY )
+    {
+      temp = (sProfilData.DiamEndY - sProfilData.DiamStartY);
+      temp2 = lposy - sProfilData.DiamStartY;
+      temp = temp - sqrt( (temp*temp)- (temp2*temp2)); 
+      ltest += temp;   
+    }
+    else if (lposy >= sProfilData.DiamEndY)
+    {
+      ltest += sProfilData.DiamEndY - sProfilData.DiamStartY;    
+    }
+ 
+    Motor1.ChangeTargetPositionStep (ltest);
+  } 
+  
   if(eMS_Thread == MS_THREAD_IN_THREAD)
   {
     Motor1.ChangeTargetPositionStep ((Quad_Z.GetValueLong()*sThreadCalc.Numerator ) / sThreadCalc.Denominator + sThreadCalc.Offset );
@@ -601,7 +562,49 @@ void DroContextLoop()
         if(customKeypad.isPressed(GEM_KEY_OK))Motor1.ChangeMaxSpeed(sGeneralConf.Speed_M1);
         else Motor1.ChangeMaxSpeed(iMotorSpeed);   
       }    
-     } 
+     }
+     //**** Profil mode ***** 
+     if( bMotorMode == MOTOR_MODE_PROFIL )
+     {
+        switch(eMS_Profil)
+        {
+          case MS_PROFIL_IDLE:
+          break;
+          case MS_PROFIL_WAIT_THE_START:
+            if (key == GEM_KEY_LEFT )
+            {
+              if(M1_AreYouOkToStartTheProfil() == true)
+              {
+                CalcMotorParameterForProfil();
+                eMS_Profil = MS_PROFIL_IN_PROFIL;   
+                
+              }
+            } 
+          break;
+          case MS_PROFIL_IN_PROFIL:
+            if( fAxeYPos > fMotor1ThreadDiameter)
+            {
+              eMS_Profil = MS_PROFIL_END_PROFIL;   
+            } 
+          break; 
+          case MS_PROFIL_END_PROFIL:
+            if (/*key == GEM_KEY_RIGHT*/1 )
+            {
+              eMS_Profil = MS_PROFIL_IN_RETURN;
+              Motor1.ChangeTheMode(StepperMotor::SpeedModeDown);
+              sProfilData.Count ++;              
+            }
+          break; 
+          case MS_PROFIL_IN_RETURN:
+            if ( Motor1.AreYouAtMinPos() )
+            {
+              eMS_Profil = MS_PROFIL_WAIT_THE_START;
+              Motor1.ChangeTheMode(StepperMotor::PositionMode);    
+            }  
+          break;        
+        }
+     }
+     //**** Threading mode *****  
      if ( bMotorMode == MOTOR_MODE_TH_EXT_N ||
           bMotorMode == MOTOR_MODE_TH_EXT_I ||
           bMotorMode == MOTOR_MODE_TH_INT_N ||
@@ -651,8 +654,8 @@ void DroContextLoop()
         break;   
       }
     }     
-    DisplayDrawInformations();
-    UsbSerial_Pos();   
+    Display_WorkingScreen();
+    Fct_UsbSerial_Pos();   
   }
 }
 void DroContextExit() 
@@ -815,7 +818,7 @@ void ActionRestoreSettingsInFlash()
 // ***************************************************************************************
 // ***************************************************************************************
 // *** Usb Serial functions *****************************************************************
-void UsbSerial_Pos()
+void Fct_UsbSerial_Pos()
 {
   char bufferChar[30];
   if(Serial.isConnected() && sGeneralConf.UseUSBFunctions)
@@ -856,7 +859,7 @@ void Display_StartScreen()
   MyMsg.DisplayMsg(GetTxt(Id_Msg_Start),Msg::Warning,3000);
 }
 
-void DisplayDrawInformations()
+void Display_WorkingScreen()
 {
   u8g2.firstPage();
   u8g2.setFontPosTop();
@@ -1135,17 +1138,17 @@ void ActionShortcutsSetCurrentToMin()
 void ActionShortcutsM1inManual()
 {
   bMotorMode = MOTOR_MODE_MANUAL; 
-  applyMotorMode();  
+  ActionChangeMotorMode();  
   ActionDro();  
 }
 void ActionShortcutsM1inAuto()
 {
   bMotorMode = MOTOR_MODE_AUTO; 
-  applyMotorMode();  
+  ActionChangeMotorMode();  
   ActionDro();     
 }
 
-void ActionChangeRelaticeMode()
+void ActionChangeRelativeMode()
 {  
   if( bRelativeModeActived == true )
   {
@@ -1160,7 +1163,7 @@ void ActionChangeRelaticeMode()
     //Quad_Z.SetAbsolut();
   }      
 }
-void applyTool()
+void ActionChangeTool()
 {    
 }
 void SetReadOnlyMotorFunctions(boolean state)
@@ -1268,15 +1271,25 @@ void CalcMotorMaxSpeedForThread()
 {
   fM1MaxThreadSpeed = (float)(sGeneralConf.Speed_M1*60.0*sGeneralConf.thread_M1/(sGeneralConf.Reso_M1*iMotorThread));  
 }
-void applyMotorMode()
+void ActionChangeMotorMode()
 {
   switch (bMotorMode)
   {
+    case MOTOR_MODE_PROFIL:
+      eMS_Thread = MS_THREAD_IDLE;
+      eMS_Profil = MS_PROFIL_WAIT_THE_START;
+      //Use Max speed in the setting
+      Motor1.ChangeMaxSpeed(sGeneralConf.Speed_M1);
+      //Motor in position mode
+      Motor1.ChangeTheMode(StepperMotor::PositionMode); 
+      sProfilData.Count = 1;      
+    break;
     case MOTOR_MODE_TH_EXT_N :
     case MOTOR_MODE_TH_EXT_I:
     case MOTOR_MODE_TH_INT_N:
     case MOTOR_MODE_TH_INT_I:
       eMS_Thread = MS_THREAD_WAIT_THE_START;
+      eMS_Profil = MS_PROFIL_IDLE;
       //Use Max speed in the setting
       Motor1.ChangeMaxSpeed(sGeneralConf.Speed_M1); 
       //Motor in position mode
@@ -1484,12 +1497,30 @@ boolean M1_AreYouOkToReturnAfterThread()
   }
   return result;    
 }
+boolean M1_AreYouOkToStartTheProfil()
+{
+  boolean result = true;
+  //Check end limit  
+  if( !bUseMotorEndLimit)
+  {
+    result = false;
+    MyMsg.DisplayMsg(GetTxt(Id_Msg_Warning_NoEndLimit),Msg::Warning,2000);   
+  } 
+  //Check if the motor is at min pos
+  if( !Motor1.AreYouAtMinPos())
+  {
+    result = false;
+    MyMsg.DisplayMsg(GetTxt(Id_Msg_Warning_NoAtMinPos),Msg::Warning,2000);     
+  }  
+
+  return result;
+}
 void ActionChangeLang()
 {  
   ChangeLang(sGeneralConf.Lang); 
-  ActionUpdateMenuTitle();  
+  FctUpdateMenuTitle();  
 }
-void ActionUpdateMenuTitle()
+void FctUpdateMenuTitle()
 {
   menuPageSettings.setTitle(GetTxt(Id_Msg_TEXT_MENU_SETTINGS));
   menuItemMainSettings.setTitle(GetTxt(Id_Msg_TEXT_MENU_SETTINGS));
@@ -1537,4 +1568,30 @@ void ActionUpdateMenuTitle()
   menuItemUseUSB.setTitle(GetTxt(Id_Msg_TEXT_MENU_SETTINGS_USB));
   menuPageProfilParameters.setTitle(GetTxt(Id_Msg_TEXT_MENU_PROFIL)); 
   menuItemProfil.setTitle(GetTxt(Id_Msg_TEXT_MENU_PROFIL));
+}
+
+void CalcMotorParameterForProfil()
+{
+  sProfilData.OffsetX = Motor1.GetStopPositionMinStep();   
+  sProfilData.DiamEndY =(long)(fMotor1ThreadDiameter * 512.0);
+  sProfilData.DiamStartY = (long)(fMotor1ThreadDiameter * 512.0 - (float)(sProfilData.Count*300.0));  
+/*
+   u8g2.firstPage();
+  do {
+      u8g2.setColorIndex(1);
+      u8g2.setFont(u8g2_font_profont10_mr); // choose a suitable font
+      char buffer[16];
+      sprintf(buffer,"DiamStartY:%ld",sProfilData.DiamStartY);
+      u8g2.drawStr(0,0,buffer);
+      sprintf(buffer,"DiamEndY:%ld",sProfilData.DiamEndY);
+      u8g2.drawStr(0,10,buffer);
+      sprintf(buffer,"PosY:%ld",Quad_Y.GetValueLong());
+      u8g2.drawStr(0,20,buffer);  
+      //sprintf(buffer,"speed:%f",fM1MaxThreadSpeed);
+      //u8g2.drawStr(0,30,buffer);  
+
+           
+  } while (u8g2.nextPage());
+  delay(5000);
+  */
 }
