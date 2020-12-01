@@ -75,7 +75,16 @@ void Fct_UsbSerial_Pos();
 void ActionMotorSpeedUp();
 void ActionMotorSpeedDown();
 
-void ActionDro(); 
+void ActionLaunchWorkingScreen();
+void WorkingSreenContextLoop();
+void WorkingSreenContextLoop_Manu(char key);
+void WorkingSreenContextLoop_Auto(char key);
+void WorkingSreenContextLoop_Thread(char key);
+void WorkingSreenContextLoop_Profil(char key);
+
+void WorkingSreenContextEnter();
+void WorkingSreenContextExit(); 
+
 void ActionDebug();
 void ActionLaunchSnakeGame();
 void SnakeContextEnter();
@@ -182,7 +191,7 @@ GEMItem menuItemUseUSB("", sGeneralConf.UseUSBFunctions, ActionChangeUseUSB);
 GEMItem menuItemButtonRestoreSettings("", ActionRestoreSettingsInFlash);
 GEMItem menuItemButtonSaveSettings("", ActionSaveSettingsInFlash);
 GEMItem menuItemButtonSnakeGame("Snake game !", ActionLaunchSnakeGame);
-GEMItem menuItemButtonDro("", ActionDro);
+GEMItem menuItemButtonDro("", ActionLaunchWorkingScreen);
 GEMPage menuPageMain(TEXT_MAIN_MENU_TITLE);
 GEMPage menuPageDebug(""); // Debug submenu
 GEMItem menuItemDebug("", menuPageDebug);
@@ -266,7 +275,7 @@ void handler_Timer4_overflow()
   //Test Profil
   if(eMS_Profil == MS_PROFIL_IN_PROFIL)
   {
-    ltest = sProfilData.OffsetX;
+    ltest = sProfilData.OffsetX; //Pos motor
     lposy = Quad_Y.GetValueLong();     
     if(lposy >= sProfilData.DiamStartY && lposy < sProfilData.DiamEndY )
     {
@@ -346,9 +355,11 @@ MyMsg.DisplayMsg(GetTxt(Id_Msg_Warning_YSUPDIA),Msg::Warning,7000);
   // Menu init, setup and draw
   menu.init();
   setupMenu();
-  ActionDro(); //Start with dro screen
+  ActionLaunchWorkingScreen(); //Start with dro screen
 }
-void setupMenu() {
+void setupMenu() 
+{
+  
   // Add menu items to menu page
   menuPageMain.addMenuItem(menuItemButtonDro);
   //Add Sub menu shortcuts
@@ -451,19 +462,19 @@ void loop() {
 }
 // ***************************************************************************************
 // ***************************************************************************************
-// *** DRO main context ******************************************************************
-void ActionDro() {
-  menu.context.loop = DroContextLoop;
-  menu.context.enter = DroContextEnter;
-  menu.context.exit = DroContextExit;
+// *** Working  main context ******************************************************************
+void ActionLaunchWorkingScreen() {
+  menu.context.loop = WorkingSreenContextLoop;
+  menu.context.enter = WorkingSreenContextEnter;
+  menu.context.exit = WorkingSreenContextExit;
   menu.context.allowExit = false; // Setting to false will require manual exit from the loop
   menu.context.enter();
 }
-void DroContextEnter() {
+void WorkingSreenContextEnter() {
   // Clear sreen
   u8g2.clear();
 }
-void DroContextLoop() 
+void WorkingSreenContextLoop() 
 {
   byte key = customKeypad.getKey();
   if (key == GEM_KEY_CANCEL) 
@@ -471,9 +482,28 @@ void DroContextLoop()
     // Exit Dro screen if GEM_KEY_CANCEL key was pressed
     menu.context.exit();
   } else 
-  {
-    if( bMotorMode == MOTOR_MODE_MANUAL || bMotorMode == MOTOR_MODE_AUTO )
+  { 
+    // Ok key for change the screen only when the motor is not in speed mode
+    if(key == GEM_KEY_OK && (Motor1.ReturnTheMode()!=StepperMotor::SpeedModeUp))
     {
+      if(key == GEM_KEY_OK && (Motor1.ReturnTheMode()!=StepperMotor::SpeedModeDown))
+      {
+        ActionChangeScreen();
+      }  
+    }
+    WorkingSreenContextLoop_Manu(key);
+    WorkingSreenContextLoop_Auto(key);
+    WorkingSreenContextLoop_Profil(key);
+    WorkingSreenContextLoop_Thread(key);   
+    Display_WorkingScreen();
+    Fct_UsbSerial_Pos();   
+  }
+}
+void WorkingSreenContextLoop_Manu(char key)
+{
+    if( bMotorMode == MOTOR_MODE_MANUAL)
+    {
+      
       if(key == GEM_KEY_UP)
       {
         ActionMotorSpeedUp();
@@ -484,18 +514,6 @@ void DroContextLoop()
         ActionMotorSpeedDown(); 
         ActionMotorMotorSpeed();  
       }
-    } 
-    // Ok key for change the screen only when the motor is not in speed mode
-    if(key == GEM_KEY_OK && (Motor1.ReturnTheMode()!=StepperMotor::SpeedModeUp))
-    {
-      if(key == GEM_KEY_OK && (Motor1.ReturnTheMode()!=StepperMotor::SpeedModeDown))
-      {
-        ActionChangeScreen();
-      }  
-    }
-    //**** Manual mode Key *****
-    if( bMotorMode == MOTOR_MODE_MANUAL)
-    {
       if( customKeypad.isPressed(GEM_KEY_LEFT) || customKeypad.isPressed(GEM_KEY_RIGHT))
       {
         eScreenChoose = SCREEN_MOT1;
@@ -540,125 +558,138 @@ void DroContextLoop()
         if(customKeypad.isPressed(GEM_KEY_OK))Motor1.ChangeMaxSpeed(sGeneralConf.Speed_M1);
         else Motor1.ChangeMaxSpeed(iMotorSpeed);   
       } 
-    }
-    //**** Auto mode Key *****
-    if (bMotorMode == MOTOR_MODE_AUTO)
-    {
-      if (key == GEM_KEY_LEFT ) 
-      {
-        eScreenChoose = SCREEN_MOT1;
-        if( Motor1.ReturnTheMode() == StepperMotor::NoMode ) Motor1.ChangeTheMode(StepperMotor::SpeedModeUp);
-        else Motor1.ChangeTheMode(StepperMotor::NoMode);      
-      }  
-      if (key == GEM_KEY_RIGHT ) 
-      { 
-        eScreenChoose = SCREEN_MOT1;
-        if( Motor1.ReturnTheMode() == StepperMotor::NoMode ) Motor1.ChangeTheMode(StepperMotor::SpeedModeDown);
-        else Motor1.ChangeTheMode(StepperMotor::NoMode);  
-      }
-      //Fast Speed with OK pressed
-      if(Motor1.ReturnTheMode()!=StepperMotor::SpeedModeUp || Motor1.ReturnTheMode()!=StepperMotor::SpeedModeDown)
-      {
-        if(customKeypad.isPressed(GEM_KEY_OK))Motor1.ChangeMaxSpeed(sGeneralConf.Speed_M1);
-        else Motor1.ChangeMaxSpeed(iMotorSpeed);   
-      }    
-     }
-     //**** Profil mode ***** 
-     if( bMotorMode == MOTOR_MODE_PROFIL )
-     {
-        switch(eMS_Profil)
-        {
-          case MS_PROFIL_IDLE:
-          break;
-          case MS_PROFIL_WAIT_THE_START:
-            if (key == GEM_KEY_LEFT )
-            {
-              if(M1_AreYouOkToStartTheProfil() == true)
-              {
-                CalcMotorParameterForProfil();
-                eMS_Profil = MS_PROFIL_IN_PROFIL;   
-                
-              }
-            } 
-          break;
-          case MS_PROFIL_IN_PROFIL:
-            if( fAxeYPos > fMotor1ThreadDiameter)
-            {
-              eMS_Profil = MS_PROFIL_END_PROFIL;   
-            } 
-          break; 
-          case MS_PROFIL_END_PROFIL:
-            if (/*key == GEM_KEY_RIGHT*/1 )
-            {
-              eMS_Profil = MS_PROFIL_IN_RETURN;
-              Motor1.ChangeTheMode(StepperMotor::SpeedModeDown);
-              sProfilData.Count ++;              
-            }
-          break; 
-          case MS_PROFIL_IN_RETURN:
-            if ( Motor1.AreYouAtMinPos() )
-            {
-              eMS_Profil = MS_PROFIL_WAIT_THE_START;
-              Motor1.ChangeTheMode(StepperMotor::PositionMode);    
-            }  
-          break;        
-        }
-     }
-     //**** Threading mode *****  
-     if ( bMotorMode == MOTOR_MODE_TH_EXT_N ||
-          bMotorMode == MOTOR_MODE_TH_EXT_I ||
-          bMotorMode == MOTOR_MODE_TH_INT_N ||
-          bMotorMode == MOTOR_MODE_TH_INT_I )
-    {
-      switch(eMS_Thread)
-      {
-        case MS_THREAD_IDLE:
-        break;
-        case MS_THREAD_WAIT_THE_START:
-          if (key == GEM_KEY_LEFT )
-          {
-            if(M1_AreYouOkToStartTheThread() == true)
-            {
-              //Calcul the motor parameter for Thread before start
-              CalcMotorParameterForThread();
-              eMS_Thread = MS_THREAD_WAIT_THE_SPLINDLE_ZERO;                
-            }
-          }   
-        break;
-        case MS_THREAD_WAIT_THE_SPLINDLE_ZERO:
-          //No action here
-        break;
-        case MS_THREAD_IN_THREAD:
-          if ( Motor1.AreYouAtMaxPos() )
-          {
-            eMS_Thread = MS_THREAD_END_THREAD;
-            Motor1.ChangeTheMode(StepperMotor::NoMode);    
-          }   
-        break;
-        case MS_THREAD_END_THREAD:
-          if (key == GEM_KEY_RIGHT )
-          {
-            if(M1_AreYouOkToReturnAfterThread() == true)
-            {
-              eMS_Thread = MS_THREAD_IN_RETURN;
-              Motor1.ChangeTheMode(StepperMotor::SpeedModeDown);              
-            }
-          }
-        break;
-        case MS_THREAD_IN_RETURN:
-          if ( Motor1.AreYouAtMinPos() )
-          {
-            eMS_Thread = MS_THREAD_WAIT_THE_START;
-            Motor1.ChangeTheMode(StepperMotor::PositionMode);    
-          }          
-        break;   
-      }
-    }     
-    Display_WorkingScreen();
-    Fct_UsbSerial_Pos();   
-  }
+    }  
 }
-void DroContextExit() 
+void WorkingSreenContextLoop_Auto(char key)
+{
+  if (bMotorMode == MOTOR_MODE_AUTO)
+  {
+    if(key == GEM_KEY_UP)
+    {
+      ActionMotorSpeedUp();
+      ActionMotorMotorSpeed();
+    }
+    if(key == GEM_KEY_DOWN)
+    {
+      ActionMotorSpeedDown(); 
+      ActionMotorMotorSpeed();  
+    }
+    if (key == GEM_KEY_LEFT ) 
+    {
+      eScreenChoose = SCREEN_MOT1;
+      if( Motor1.ReturnTheMode() == StepperMotor::NoMode ) Motor1.ChangeTheMode(StepperMotor::SpeedModeUp);
+      else Motor1.ChangeTheMode(StepperMotor::NoMode);      
+    }  
+    if (key == GEM_KEY_RIGHT ) 
+    { 
+      eScreenChoose = SCREEN_MOT1;
+      if( Motor1.ReturnTheMode() == StepperMotor::NoMode ) Motor1.ChangeTheMode(StepperMotor::SpeedModeDown);
+      else Motor1.ChangeTheMode(StepperMotor::NoMode);  
+    }
+    //Fast Speed with OK pressed
+    if(Motor1.ReturnTheMode()!=StepperMotor::SpeedModeUp || Motor1.ReturnTheMode()!=StepperMotor::SpeedModeDown)
+    {
+      if(customKeypad.isPressed(GEM_KEY_OK))Motor1.ChangeMaxSpeed(sGeneralConf.Speed_M1);
+      else Motor1.ChangeMaxSpeed(iMotorSpeed);   
+    }    
+   }  
+}
+void WorkingSreenContextLoop_Thread(char key)
+{ 
+ if ( bMotorMode == MOTOR_MODE_TH_EXT_N ||
+      bMotorMode == MOTOR_MODE_TH_EXT_I ||
+      bMotorMode == MOTOR_MODE_TH_INT_N ||
+      bMotorMode == MOTOR_MODE_TH_INT_I )
+{
+  switch(eMS_Thread)
+  {
+    case MS_THREAD_IDLE:
+    break;
+    case MS_THREAD_WAIT_THE_START:
+      if (key == GEM_KEY_LEFT )
+      {
+        if(M1_AreYouOkToStartTheThread() == true)
+        {
+          //Calcul the motor parameter for Thread before start
+          CalcMotorParameterForThread();
+          eMS_Thread = MS_THREAD_WAIT_THE_SPLINDLE_ZERO;                
+        }
+      }   
+    break;
+    case MS_THREAD_WAIT_THE_SPLINDLE_ZERO:
+      //No action here
+    break;
+    case MS_THREAD_IN_THREAD:
+      if ( Motor1.AreYouAtMaxPos() )
+      {
+        eMS_Thread = MS_THREAD_END_THREAD;
+        Motor1.ChangeTheMode(StepperMotor::NoMode);    
+      }   
+    break;
+    case MS_THREAD_END_THREAD:
+      if (key == GEM_KEY_RIGHT )
+      {
+        if(M1_AreYouOkToReturnAfterThread() == true)
+        {
+          eMS_Thread = MS_THREAD_IN_RETURN;
+          Motor1.ChangeTheMode(StepperMotor::SpeedModeDown);              
+        }
+      }
+    break;
+    case MS_THREAD_IN_RETURN:
+      if ( Motor1.AreYouAtMinPos() )
+      {
+        eMS_Thread = MS_THREAD_WAIT_THE_START;
+        Motor1.ChangeTheMode(StepperMotor::PositionMode);    
+      }          
+    break;   
+  }
+}  
+}
+void WorkingSreenContextLoop_Profil(char key)
+{
+ if( bMotorMode == MOTOR_MODE_PROFIL )
+ {
+    switch(eMS_Profil)
+    {
+      case MS_PROFIL_IDLE:
+      break;
+      case MS_PROFIL_WAIT_THE_START:
+        if (key == GEM_KEY_LEFT )
+        {
+          if(M1_AreYouOkToStartTheProfil() == true)
+          {
+            CalcMotorParameterForProfil();
+            eMS_Profil = MS_PROFIL_IN_PROFIL;   
+            
+          }
+        } 
+      break;
+      case MS_PROFIL_IN_PROFIL:
+        if( fAxeYPos > fMotor1ThreadDiameter)
+        {
+          eMS_Profil = MS_PROFIL_END_PROFIL;   
+        } 
+      break; 
+      case MS_PROFIL_END_PROFIL:
+        if (/*key == GEM_KEY_RIGHT*/1 )
+        {
+          eMS_Profil = MS_PROFIL_IN_RETURN;
+          Motor1.ChangeTheMode(StepperMotor::SpeedModeDown);
+          sProfilData.Count ++;              
+        }
+      break; 
+      case MS_PROFIL_IN_RETURN:
+        if ( Motor1.AreYouAtMinPos() )
+        {
+          eMS_Profil = MS_PROFIL_WAIT_THE_START;
+          Motor1.ChangeTheMode(StepperMotor::PositionMode);    
+        }  
+      break;        
+    }
+ }  
+}
+void WorkingSreenContextExit() 
 {
   menu.reInit();
   menu.drawMenu();
@@ -1105,47 +1136,44 @@ void ActionChangeSpeedM1()
   if(sGeneralConf.Speed_M1 > 30000)sGeneralConf.Speed_M1 = 30000;
 }
 void ActionChangeUseUSB()
-{
-  
-  
+{ 
 }
-
 void ActionShortcutsResetX()
 {
   Quad_X.SetZeroActiveMode();
-  ActionDro();   
+  ActionLaunchWorkingScreen();   
 }
 void ActionShortcutsResetY()
 {
   Quad_Y.SetZeroActiveMode();
-  ActionDro();  
+  ActionLaunchWorkingScreen();  
 }
 void ActionShortcutsResetM1()
 {
   ActionResetCurrentPos();
-  ActionDro(); 
+  ActionLaunchWorkingScreen(); 
 }
 void ActionShortcutsSetCurrentToMax()
 {
   ActionSetCurrentToMax();
-  ActionDro();  
+  ActionLaunchWorkingScreen();  
 }
 void ActionShortcutsSetCurrentToMin()
 {
   ActionSetCurrentToMin();
-  ActionDro();  
+  ActionLaunchWorkingScreen();  
 }
 void ActionShortcutsM1inManual()
 {
   bMotorMode = MOTOR_MODE_MANUAL; 
   ActionChangeMotorMode();  
-  ActionDro();  
+  ActionLaunchWorkingScreen();  
 }
 void ActionShortcutsM1inAuto()
 {
   bMotorMode = MOTOR_MODE_AUTO; 
   ActionChangeMotorMode();  
-  ActionDro();     
+  ActionLaunchWorkingScreen();     
 }
 
 void ActionChangeRelativeMode()
@@ -1193,6 +1221,7 @@ void ActionUseMotor()
     Motor1.UseEndLimit(bUseMotorEndLimit);
     Motor1.MotorChangePowerState(true);
     eMS_Thread = MS_THREAD_IDLE;
+    eMS_Profil = MS_PROFIL_IDLE;
     eScreenChoose = SCREEN_MOT1;
     SetReadOnlyMotorFunctions(false); 
   }
@@ -1202,6 +1231,7 @@ void ActionUseMotor()
     bMotorMode = MOTOR_MODE_NO_MODE; 
     Motor1.MotorChangePowerState(false);
     eMS_Thread = MS_THREAD_IDLE;
+    eMS_Profil = MS_PROFIL_IDLE;
     eScreenChoose = SCREEN_DRO; 
     SetReadOnlyMotorFunctions(true);   
   }     
@@ -1300,6 +1330,7 @@ void ActionChangeMotorMode()
     case MOTOR_MODE_AUTO :
     default:
       eMS_Thread = MS_THREAD_IDLE;
+      eMS_Profil = MS_PROFIL_IDLE;
       ActionMotorMotorSpeed();
       Motor1.ChangeTheMode(StepperMotor::NoMode);  
     break;
@@ -1405,7 +1436,7 @@ void ActionMotor1ThreadUseY()
 }
 void ActionChangeMotor1ThreadDiameter()
 {
-  if(fMotor1ThreadDiameter<0) fMotor1ThreadDiameter = -fMotor1ThreadDiameter;
+  if(fMotor1ThreadDiameter<0) fMotor1ThreadDiameter = - fMotor1ThreadDiameter;
 }
 void ActionChangeMotor1ThreadAngle()
 {
@@ -1497,24 +1528,7 @@ boolean M1_AreYouOkToReturnAfterThread()
   }
   return result;    
 }
-boolean M1_AreYouOkToStartTheProfil()
-{
-  boolean result = true;
-  //Check end limit  
-  if( !bUseMotorEndLimit)
-  {
-    result = false;
-    MyMsg.DisplayMsg(GetTxt(Id_Msg_Warning_NoEndLimit),Msg::Warning,2000);   
-  } 
-  //Check if the motor is at min pos
-  if( !Motor1.AreYouAtMinPos())
-  {
-    result = false;
-    MyMsg.DisplayMsg(GetTxt(Id_Msg_Warning_NoAtMinPos),Msg::Warning,2000);     
-  }  
 
-  return result;
-}
 void ActionChangeLang()
 {  
   ChangeLang(sGeneralConf.Lang); 
@@ -1594,4 +1608,22 @@ void CalcMotorParameterForProfil()
   } while (u8g2.nextPage());
   delay(5000);
   */
+}
+boolean M1_AreYouOkToStartTheProfil()
+{
+  boolean result = true;
+  //Check end limit  
+  if( !bUseMotorEndLimit)
+  {
+    result = false;
+    MyMsg.DisplayMsg(GetTxt(Id_Msg_Warning_NoEndLimit),Msg::Warning,2000);   
+  } 
+  //Check if the motor is at min pos
+  if( !Motor1.AreYouAtMinPos())
+  {
+    result = false;
+    MyMsg.DisplayMsg(GetTxt(Id_Msg_Warning_NoAtMinPos),Msg::Warning,2000);     
+  }  
+
+  return result;
 }
