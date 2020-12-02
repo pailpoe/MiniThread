@@ -60,6 +60,16 @@ float       fMotor1ThreadAngle = 0.0;
 float       fM1ActualSpeed; // Motor Actual Speed
 float       fM1MaxThreadSpeed; // Motor Max spindle speed for thread
 byte        eScreenChoose = SCREEN_DRO;
+
+byte        eProfilChoose = PROFIL_MODE_CONE ;
+byte        eProfilDirection = PROFIL_LEFT ;
+byte        eProfilPosition = PROFIL_EXT ;
+float       fProfilDiameter = 0.0;
+float       fProfilDiameterReturn = 30.0;
+float       fProfilAngle = 45.0;
+float       fProfilLenght = 0.0;
+float       fProfilRayon = 5.0;
+
 teMS_ThreadingMode eMS_Thread = MS_THREAD_IDLE;
 teMS_ProfilMode eMS_Profil = MS_PROFIL_IDLE;
 tsThreadCalc sThreadCalc;
@@ -81,7 +91,6 @@ void WorkingSreenContextLoop_Manu(char key);
 void WorkingSreenContextLoop_Auto(char key);
 void WorkingSreenContextLoop_Thread(char key);
 void WorkingSreenContextLoop_Profil(char key);
-
 void WorkingSreenContextEnter();
 void WorkingSreenContextExit(); 
 
@@ -141,6 +150,16 @@ void ActionChangeMotor1ThreadAngle();
 boolean M1_AreYouOkToStartTheThread();
 boolean M1_AreYouOkToReturnAfterThread();
 boolean M1_AreYouOkToStartTheProfil();
+
+void ActionProfilMode();
+void ActionProfilDirection();
+void ActionProfilPosition();
+void ActionProfilDiameter();
+void ActionProfilDiameterReturn();
+void ActionProfilAngle();
+void ActionProfilLenght();
+void ActionProfilRayon();
+
 void ActionScreenMode(); 
 void ActionChangeScreen();
 void IT_Timer1_Overflow(); 
@@ -240,6 +259,23 @@ GEMItem menuItemMotorIncOffset("", ActionIncMotor1Offset);
 GEMItem menuItemMotorDecOffset("", ActionDecMotor1Offset);
 GEMPage menuPageProfilParameters(""); // Profil submenu
 GEMItem menuItemProfil("", menuPageProfilParameters);
+SelectOptionByte selectProfilOptions[] = {{"CONE", PROFIL_MODE_CONE},{"SPHERE", PROFIL_MODE_SPHERE}};
+GEMSelect selectProfilMode(sizeof(selectProfilOptions)/sizeof(SelectOptionByte), selectProfilOptions);
+GEMItem menuItemProfilMode("", eProfilChoose, selectProfilMode, ActionProfilMode);
+SelectOptionByte selectProfilDirectionOptions[] = {{"LEFT", PROFIL_LEFT},{"RIGHT", PROFIL_RIGHT}};
+GEMSelect selectProfilDirection(sizeof(selectProfilDirectionOptions)/sizeof(SelectOptionByte), selectProfilDirectionOptions);
+GEMItem menuItemProfilDirection("", eProfilDirection, selectProfilDirection, ActionProfilDirection);
+SelectOptionByte selectProfilPositionOptions[] = {{"EXT", PROFIL_EXT},{"INT", PROFIL_INT}};
+GEMSelect selectProfilPosition(sizeof(selectProfilPositionOptions)/sizeof(SelectOptionByte), selectProfilPositionOptions);
+GEMItem menuItemProfilPosition("", eProfilPosition, selectProfilPosition, ActionProfilPosition);
+
+GEMItem menuItemProfilDiameter("", fProfilDiameter,ActionProfilDiameter);
+GEMItem menuItemProfilDiameterReturn("", fProfilDiameterReturn,ActionProfilDiameterReturn);
+GEMItem menuItemProfilAngle("", fProfilAngle,ActionProfilAngle);
+GEMItem menuItemProfilLenght("", fProfilLenght,ActionProfilLenght);
+GEMItem menuItemProfilRayon("", fProfilRayon,ActionProfilRayon);
+
+
 SelectOptionByte selectScreenOptions[] = {{"DroXYC", SCREEN_DRO}, {"Mot1", SCREEN_MOT1}, {"Debug", SCREEN_DEBUG}};
 GEMSelect selectScreenMode(sizeof(selectScreenOptions)/sizeof(SelectOptionByte), selectScreenOptions);
 GEMItem menuItemScreenMode("", eScreenChoose, selectScreenMode, ActionScreenMode);
@@ -399,8 +435,20 @@ void setupMenu()
   menuPageThreadParameters.addMenuItem(menuItemMotorDecOffset);
   //Create sub menu Profil parameter for menu Motor  
   menuPageProfilParameters.setParentMenuPage(menuPageMotor);
-
- 
+  menuPageProfilParameters.addMenuItem(menuItemProfilMode);
+  menuPageProfilParameters.addMenuItem(menuItemProfilDirection);
+  menuPageProfilParameters.addMenuItem(menuItemProfilPosition);
+  menuPageProfilParameters.addMenuItem(menuItemProfilDiameter);
+  menuItemProfilDiameter.setPrecision(2);
+  menuPageProfilParameters.addMenuItem(menuItemProfilDiameterReturn);
+  menuItemProfilDiameterReturn.setPrecision(2);
+  menuPageProfilParameters.addMenuItem(menuItemProfilAngle);
+  menuItemProfilAngle.setPrecision(2);
+  menuPageProfilParameters.addMenuItem(menuItemProfilLenght);
+  menuItemProfilLenght.setPrecision(2);
+  menuPageProfilParameters.addMenuItem(menuItemProfilRayon);
+  menuItemProfilRayon.setPrecision(2);
+  
   //Add Sub menu Motor
   menuPageMain.addMenuItem(menuItemMotor);
   menuPageMotor.addMenuItem(menuItemUseMotor);
@@ -1582,6 +1630,15 @@ void FctUpdateMenuTitle()
   menuItemUseUSB.setTitle(GetTxt(Id_Msg_TEXT_MENU_SETTINGS_USB));
   menuPageProfilParameters.setTitle(GetTxt(Id_Msg_TEXT_MENU_PROFIL)); 
   menuItemProfil.setTitle(GetTxt(Id_Msg_TEXT_MENU_PROFIL));
+  menuItemProfilMode.setTitle(GetTxt(Id_Msg_TEXT_MENU_PROFIL_MODE));
+  menuItemProfilDirection.setTitle(GetTxt(Id_Msg_TEXT_MENU_PROFIL_DIRECTION));
+  menuItemProfilPosition.setTitle(GetTxt(Id_Msg_TEXT_MENU_PROFIL_POSITION));
+  menuItemProfilDiameter.setTitle(GetTxt(Id_Msg_TEXT_MENU_PROFIL_DIAM));
+  menuItemProfilDiameterReturn.setTitle(GetTxt(Id_Msg_TEXT_MENU_PROFIL_DIA_RETURN));
+  menuItemProfilAngle.setTitle(GetTxt(Id_Msg_TEXT_MENU_PROFIL_ANGLE));
+  menuItemProfilLenght.setTitle(GetTxt(Id_Msg_TEXT_MENU_PROFIL_LENGHT));
+  menuItemProfilRayon.setTitle(GetTxt(Id_Msg_TEXT_MENU_PROFIL_RAYON));
+  
 }
 
 void CalcMotorParameterForProfil()
@@ -1626,4 +1683,34 @@ boolean M1_AreYouOkToStartTheProfil()
   }  
 
   return result;
+}
+
+void ActionProfilMode()
+{ 
+}
+void ActionProfilDirection()
+{
+}
+void ActionProfilPosition()
+{
+}
+void ActionProfilDiameter()
+{
+  if(fProfilDiameter < 0) fProfilDiameter = -fProfilDiameter;  
+}
+void ActionProfilDiameterReturn()
+{
+  if(fProfilDiameterReturn < 0) fProfilDiameterReturn = -fProfilDiameterReturn;   
+}
+void ActionProfilAngle()
+{
+  if(fProfilAngle < 0) fProfilAngle = 0;   
+}
+void ActionProfilLenght()
+{
+  if(fProfilLenght < 0) fProfilLenght = 0;    
+}
+void ActionProfilRayon()
+{
+  if(fProfilRayon < 0) fProfilRayon = 0; 
 }

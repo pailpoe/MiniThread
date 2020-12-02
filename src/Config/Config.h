@@ -39,6 +39,20 @@
 #define MOTOR_MODE_TH_INT_I 6
 #define MOTOR_MODE_PROFIL   7
 
+//Profil mode 
+#define PROFIL_MODE_CONE    0
+#define PROFIL_MODE_SPHERE  1
+
+//Profil Direction 
+#define PROFIL_LEFT   0
+#define PROFIL_RIGHT  1
+
+//Profil Position 
+#define PROFIL_EXT   0
+#define PROFIL_INT   1
+
+
+
 //Data backup structure 
 typedef struct
 {

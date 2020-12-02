@@ -60,6 +60,15 @@ typedef enum
     Id_Msg_Warning_NoAtMinPos = 49,
     Id_Msg_TEXT_MENU_SETTINGS_USB = 50,
     Id_Msg_TEXT_MENU_PROFIL = 51,
+    Id_Msg_TEXT_MENU_PROFIL_MODE = 52, 
+    Id_Msg_TEXT_MENU_PROFIL_DIRECTION = 53,
+    Id_Msg_TEXT_MENU_PROFIL_POSITION = 54, 
+    
+    Id_Msg_TEXT_MENU_PROFIL_DIAM = 55, 
+    Id_Msg_TEXT_MENU_PROFIL_DIA_RETURN = 56, 
+    Id_Msg_TEXT_MENU_PROFIL_ANGLE = 57,
+    Id_Msg_TEXT_MENU_PROFIL_RAYON = 58, 
+    Id_Msg_TEXT_MENU_PROFIL_LENGHT = 59,     
 }teMsgId;
 
 typedef struct
@@ -173,6 +182,22 @@ const tsLang sLangData[] =
       "USB com."},
     { "Profil param.",//Id_Msg_TEXT_MENU_PROFIL
       "Para. de profil"},
+    { "Profil",//Id_Msg_TEXT_MENU_PROFIL_MODE
+      "Profil"},
+    { "Direction",//Id_Msg_TEXT_MENU_PROFIL_DIRECTION
+      "Direction"},
+    { "Position",//Id_Msg_TEXT_MENU_PROFIL_POSITION
+      "Position"},
+    { "Diameter",//Id_Msg_TEXT_MENU_PROFIL_DIAM
+      "Diametre"},
+    { "Dia. ret",//Id_Msg_TEXT_MENU_PROFIL_DIA_RETURN
+      "Dia. ret"},  
+    { "Angle",//Id_Msg_TEXT_MENU_PROFIL_ANGLE
+      "Angle"},  
+    { "Radius",//Id_Msg_TEXT_MENU_PROFIL_RAYON
+      "Rayon"},  
+    { "Lenght",//Id_Msg_TEXT_MENU_PROFIL_LENGHT
+      "Longueur"},        
 
   }; 
 
