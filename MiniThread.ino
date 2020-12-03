@@ -64,7 +64,7 @@ byte        eScreenChoose = SCREEN_DRO;
 byte        eProfilChoose = PROFIL_MODE_CONE ;
 byte        eProfilDirection = PROFIL_LEFT ;
 byte        eProfilPosition = PROFIL_EXT ;
-float       fProfilPasse = 0.1;
+float       fProfilPasse = 0.1; // Sur rayon
 float       fProfilDiameter = 20.0;
 float       fProfilDiameterReturn = 22.0;
 float       fProfilAngle = 45.0;
@@ -363,14 +363,10 @@ void setup()
   u8g2.setDrawColor(1);
   u8g2.setFontPosTop();   
 
-/*
-MyMsg.DisplayMsg(GetTxt(Id_Msg_Warning_SpeedTooHigh),Msg::Warning,7000);
-MyMsg.DisplayMsg(GetTxt(Id_Msg_Warning_WrongDirection),Msg::Warning,7000);
-MyMsg.DisplayMsg(GetTxt(Id_Msg_Warning_NoEndLimit),Msg::Warning,7000);
-MyMsg.DisplayMsg(GetTxt(Id_Msg_Warning_NoAtMinPos),Msg::Warning,7000);
-MyMsg.DisplayMsg(GetTxt(Id_Msg_Warning_YINFDIA),Msg::Warning,7000);
-MyMsg.DisplayMsg(GetTxt(Id_Msg_Warning_YSUPDIA),Msg::Warning,7000);
-*/
+
+  //FctInitParameterForProfil();
+
+
 
   //Display start screen
   Display_StartScreen(); 
@@ -708,22 +704,35 @@ void WorkingSreenContextLoop_Profil(char key)
         } 
       break; 
       case MS_PROFIL_END_PROFIL:
-        if (/*key == GEM_KEY_RIGHT*/1 )
-        {
-          eMS_Profil = MS_PROFIL_IN_RETURN;
-          Motor1.ChangeMaxSpeed(sGeneralConf.Speed_M1);
-          Motor1.ChangeTheMode(StepperMotor::SpeedModeDown);             
-        }
+        //Return to back lash position : Min Position
+        Motor1.ChangeStopPositionMinStep(sProfilData.BackLashPosX);
+        eMS_Profil = MS_PROFIL_IN_RETURN;
+        Motor1.ChangeMaxSpeed(sGeneralConf.Speed_M1);
+        Motor1.ChangeTheMode(StepperMotor::SpeedModeDown);             
       break; 
       case MS_PROFIL_IN_RETURN:
         if ( Motor1.AreYouAtMinPos() )
         {
+          //At backlah position, go to start position
+          Motor1.ChangeStopPositionMaxStep(sProfilData.StartPositionX);
+          eMS_Profil = MS_PROFIL_BACKASH;
+          Motor1.ChangeTheMode(StepperMotor::SpeedModeUp);    
+        }  
+      break; 
+      case MS_PROFIL_BACKASH:
+        if ( Motor1.AreYouAtMaxPos() )
+        {
+          //At Start position
           FctCalcNewPasseForProfil();
           eMS_Profil = MS_PROFIL_WAIT_THE_START;
+          Motor1.ChangeStopPositionMinStep(sProfilData.StartPositionX);
+          Motor1.ChangeStopPositionMaxStep(sProfilData.EndPositionX);
           Motor1.ChangeMaxSpeed(iMotorSpeed);
           Motor1.ChangeTheMode(StepperMotor::PositionMode);    
-        }  
-      break;        
+        } 
+      break;
+      case MS_PROFIL_END:
+      break;
     }
  }  
 }
@@ -1110,14 +1119,44 @@ void Display_Extra_Informations()
 }
 void Display_UpdateRealTimeData()
 {
-  fMotorCurrentPos = Motor1.GetPositionReal();
-  fM1ActualSpeed = Motor1.GetMaxSpeed(); 
   fAxeXPos = Quad_X.GetValue();
   fAxeYPos = Quad_Y.GetValue();
-  fAxeCSpeed = (float)Quad_Z.GiveMeTheSpeed();     
+  fAxeCSpeed = (float)Quad_Z.GiveMeTheSpeed();
+  if( bUseMotor == true ) 
+  {
+    fMotorStopMin = Motor1.GetStopPositionMin();
+    fMotorStopMax = Motor1.GetStopPositionMax();
+    fMotorCurrentPos = Motor1.GetPositionReal();
+    fM1ActualSpeed = Motor1.GetMaxSpeed(); 
+  }     
 }
 void Display_Debug_Informations()
 {
+
+
+    u8g2.setFont(u8g2_font_profont10_mr); // choose a suitable font
+    char buffer[30];
+    sprintf(buffer,"StartPositionX:%ld",sProfilData.StartPositionX);
+    u8g2.drawStr(0,0,buffer);
+    sprintf(buffer,"EndPositionX:%ld",sProfilData.EndPositionX);
+    u8g2.drawStr(0,10,buffer);
+    sprintf(buffer,"DiamEndProfilY:%ld",sProfilData.DiamEndProfilY);
+    u8g2.drawStr(0,20,buffer);  
+    sprintf(buffer,"DiamStartProfilY:%ld",sProfilData.DiamStartProfilY);
+    u8g2.drawStr(0,30,buffer);  
+
+    //Y pos
+    sprintf(buffer,"Y:%ld",Quad_Y.GetValueLong());
+    u8g2.drawStr(0,40,buffer);
+    //M1 pos
+    sprintf(buffer,"M1:%ld",Motor1.GetPositionStep());
+    u8g2.drawStr(64,40,buffer);    
+
+    
+    //sprintf(buffer,"Den:%ld",sProfilData.Denominator);
+    //u8g2.drawStr(0,50,buffer);  
+
+  /*
   char bufferChar[30];
   u8g2.setFont(u8g2_font_profont10_mr); // choose a suitable font
   u8g2.drawStr(0,0,"Debug page !");
@@ -1129,6 +1168,7 @@ void Display_Debug_Informations()
   u8g2.drawStr(0,27,bufferChar);  // write something to the internal memory
   sprintf(bufferChar,"_cmin:%f",Motor1._cmin);
   u8g2.drawStr(0,36,bufferChar);  // write something to the internal memory
+  */
 }
 
 // ***************************************************************************************
@@ -1659,6 +1699,7 @@ void FctInitParameterForProfil()
   float ftemp;
   long ltemp;
   long lGCD;
+  float fBackLash = 3.0;
   eMS_Thread = MS_THREAD_IDLE;
   eMS_Profil = MS_PROFIL_WAIT_THE_START;
   Motor1.ChangeMaxSpeed(iMotorSpeed);
@@ -1679,21 +1720,24 @@ void FctInitParameterForProfil()
   //Prof x start and end
   if(eProfilDirection == PROFIL_LEFT)
   {
-    sProfilData.StartPositionX = Motor1.GetStopPositionMinStep();
+    sProfilData.StartPositionX = Motor1.GetPositionStep();
     sProfilData.EndPositionX = sProfilData.StartPositionX + ltemp; 
+    //Backlash position
+    ftemp = (float)( fBackLash * sGeneralConf.Reso_M1); 
+    ltemp = (long)(ftemp * 100 / sGeneralConf.thread_M1); 
+    sProfilData.BackLashPosX = sProfilData.StartPositionX - ltemp;  
   }
   else
   {
-    sProfilData.StartPositionX = Motor1.GetStopPositionMaxStep();
-    sProfilData.EndPositionX = sProfilData.StartPositionX - ltemp;   
+    sProfilData.StartPositionX = Motor1.GetPositionStep();
+    sProfilData.EndPositionX = sProfilData.StartPositionX - ltemp;
+    ftemp = (float)( fBackLash * sGeneralConf.Reso_M1); 
+    ltemp = (long)(ftemp * 100 / sGeneralConf.thread_M1); 
+    sProfilData.BackLashPosX = sProfilData.StartPositionX - ltemp;     
   }
-  //Save the end limit for the backlash compensation
-  if(eProfilDirection == PROFIL_LEFT) sProfilData.EndLimitBackupX = Motor1.GetStopPositionMaxStep(); 
-  else sProfilData.EndLimitBackupX = Motor1.GetStopPositionMinStep(); 
-
   //Diamètre de retour
   sProfilData.DiamReturnY = (long)(fProfilDiameterReturn * (long)sGeneralConf.Reso_Y);
-  //Diamètre de fin du profil ( le plus à l'exterieur
+  //Diamètre de fin du profil ( le plus à l'exterieur )
   sProfilData.DiamEndProfilY = (long)(fProfilDiameter * (long)sGeneralConf.Reso_Y);
   //Diamètre min en exterieur et Max en interieur
   if( eProfilChoose == PROFIL_MODE_SPHERE ) 
@@ -1712,63 +1756,70 @@ void FctInitParameterForProfil()
   {
     if(eProfilPosition == PROFIL_EXT)
     {
-      ftemp = fProfilDiameter - 2 * fProfilLenght * tan(fProfilAngle * 0.01745); //Pi/180 = 0.01745 ; 
+      ftemp = fProfilDiameter - 2.0 * fProfilLenght * tan(fProfilAngle * 0.01745); //Pi/180 = 0.01745 ; 
     }
     else
     {
-      ftemp = fProfilDiameter + 2 * fProfilLenght * tan(fProfilAngle * 0.01745); //Pi/180 = 0.01745 ;   
+      ftemp = fProfilDiameter + 2.0 * fProfilLenght * tan(fProfilAngle * 0.01745); //Pi/180 = 0.01745 ;   
     }      
     sProfilData.DiamStartProfilY = (long)(ftemp * (long)sGeneralConf.Reso_Y); 
   }
-  //Calcul de position y de démarrage
+  //La position y de démarrage est sur le diam max de retour
   sProfilData.DiamInProfilY = sProfilData.DiamReturnY; 
-  //Calcul numerator / denominator
+  //Calcul numerator / denominator for M = f(Y)
   sProfilData.Numerator = sGeneralConf.Reso_M1 * 100;  
   sProfilData.Denominator = sGeneralConf.thread_M1 * sGeneralConf.Reso_Y ; 
   lGCD = GCD_Function(sProfilData.Numerator,sProfilData.Denominator);
-  sProfilData.Numerator = sThreadCalc.Numerator / lGCD;
-  sProfilData.Denominator = sThreadCalc.Denominator / lGCD;
+  sProfilData.Numerator = sProfilData.Numerator / lGCD;
+  sProfilData.Denominator = sProfilData.Denominator / lGCD;
+
+  //Move the end limit
+  if(eProfilDirection == PROFIL_LEFT)
+  {
+    Motor1.ChangeStopPositionMinStep(sProfilData.StartPositionX);
+    Motor1.ChangeStopPositionMaxStep(sProfilData.EndPositionX);  
+  }
+  else
+  {
+    Motor1.ChangeStopPositionMinStep(sProfilData.EndPositionX);
+    Motor1.ChangeStopPositionMaxStep(sProfilData.StartPositionX);       
+  }
 
 
   //Calcul the first pass
   FctCalcNewPasseForProfil();
   
-/*
-   u8g2.firstPage();
-  do {
-      u8g2.setColorIndex(1);
-      u8g2.setFont(u8g2_font_profont10_mr); // choose a suitable font
-      char buffer[16];
-      sprintf(buffer,"StartPositionX:%ld",sProfilData.StartPositionX);
-      u8g2.drawStr(0,0,buffer);
-      sprintf(buffer,"EndPositionX:%ld",sProfilData.EndPositionX);
-      u8g2.drawStr(0,10,buffer);
-      sprintf(buffer,"DiamEndProfilY:%ld",sProfilData.DiamEndProfilY);
-      u8g2.drawStr(0,20,buffer);  
-      sprintf(buffer,"DiamStartProfilY:%ld",sProfilData.DiamStartProfilY);
-      u8g2.drawStr(0,30,buffer);  
-
-           
-  } while (u8g2.nextPage());
-  delay(5000);
-*/    
+  
 }
 void FctProfilCalcNewTarget()
 {
   long lMotorPos;
   long lposy;
-  long temp,temp2;
+  long DeltaR;
+  long Deltad;
+  long Offset;
+  float temp;
 
   lMotorPos = sProfilData.StartPositionX; //Pos motor
   lposy = Quad_Y.GetValueLong(); // Y pos 
 
-   
+  //For Ext !!
   if(lposy >= sProfilData.DiamInProfilY && lposy < sProfilData.DiamEndProfilY )
   {
-    temp = (sProfilData.DiamEndProfilY - sProfilData.DiamInProfilY);
-    temp2 = lposy - sProfilData.DiamInProfilY;
-    temp = temp - sqrt( (temp*temp)- (temp2*temp2)); 
-    lMotorPos += temp;   
+    //Position dans le profil.
+    DeltaR = (sProfilData.DiamEndProfilY - sProfilData.DiamInProfilY) / 2;
+    Deltad =(lposy - sProfilData.DiamInProfilY) / 2;
+    if( eProfilChoose == PROFIL_MODE_SPHERE ) 
+    {
+      Offset = (DeltaR - sqrt( (DeltaR*DeltaR)- (Deltad*Deltad)));   
+    }
+    if( eProfilChoose == PROFIL_MODE_CONE ) 
+    {
+      temp = (float)(Deltad / tan(fProfilAngle * 0.01745));
+      Offset = (long)(temp); 
+    }
+    Offset = Offset * sProfilData.Numerator / sProfilData.Denominator; 
+    lMotorPos += Offset;   
   }
   //En dehors du profil, on va tout droit
   else if (lposy >= sProfilData.DiamEndProfilY)
@@ -1787,12 +1838,12 @@ void FctCalcNewPasseForProfil()
   //Calcul des passes...
   if(eProfilPosition == PROFIL_EXT)
   {
-    sProfilData.DiamInProfilY = sProfilData.DiamReturnY - (sProfilData.Count*200.0);
+    sProfilData.DiamInProfilY = sProfilData.DiamReturnY - (sProfilData.Count*400);
     if(sProfilData.DiamInProfilY <= sProfilData.DiamStartProfilY)sProfilData.DiamInProfilY = sProfilData.DiamStartProfilY;      
   }
   else
   {
-    sProfilData.DiamInProfilY = sProfilData.DiamReturnY + (sProfilData.Count*200.0);
+    sProfilData.DiamInProfilY = sProfilData.DiamReturnY + (sProfilData.Count*400);
     if(sProfilData.DiamInProfilY >= sProfilData.DiamStartProfilY)sProfilData.DiamInProfilY = sProfilData.DiamStartProfilY;    
   } 
 }

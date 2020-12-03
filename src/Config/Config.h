@@ -89,7 +89,8 @@ typedef enum
   MS_PROFIL_IN_PROFIL = 3,      // In Profil
   MS_PROFIL_END_PROFIL = 4,     // Wait the button to return
   MS_PROFIL_IN_RETURN = 5,      // In return
-  MS_PROFIL_END = 6             // End
+    MS_PROFIL_BACKASH = 6,      // Backlash conpensation
+  MS_PROFIL_END = 7             // End
 } teMS_ProfilMode;
 
 //Struct for the thread mode
@@ -109,7 +110,7 @@ typedef struct
   long DiamReturnY; 
   long StartPositionX;
   long EndPositionX;
-  long EndLimitBackupX;
+  long BackLashPosX;
   unsigned int Count;
   long Numerator;
   long Denominator;
