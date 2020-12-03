@@ -103,10 +103,16 @@ typedef struct
 //Struct for the profil mode
 typedef struct
 {
-  long DiamStartY;
-  long DiamEndY;
-  long OffsetX;
-  unsigned int Count;  
+  long DiamInProfilY;
+  long DiamStartProfilY;
+  long DiamEndProfilY;
+  long DiamReturnY; 
+  long StartPositionX;
+  long EndPositionX;
+  long EndLimitBackupX;
+  unsigned int Count;
+  long Numerator;
+  long Denominator;
 } tsProfilData;
  
     

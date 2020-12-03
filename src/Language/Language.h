@@ -62,13 +62,13 @@ typedef enum
     Id_Msg_TEXT_MENU_PROFIL = 51,
     Id_Msg_TEXT_MENU_PROFIL_MODE = 52, 
     Id_Msg_TEXT_MENU_PROFIL_DIRECTION = 53,
-    Id_Msg_TEXT_MENU_PROFIL_POSITION = 54, 
-    
+    Id_Msg_TEXT_MENU_PROFIL_POSITION = 54,  
     Id_Msg_TEXT_MENU_PROFIL_DIAM = 55, 
     Id_Msg_TEXT_MENU_PROFIL_DIA_RETURN = 56, 
     Id_Msg_TEXT_MENU_PROFIL_ANGLE = 57,
     Id_Msg_TEXT_MENU_PROFIL_RAYON = 58, 
-    Id_Msg_TEXT_MENU_PROFIL_LENGHT = 59,     
+    Id_Msg_TEXT_MENU_PROFIL_LENGHT = 59,
+    Id_Msg_TEXT_MENU_PROFIL_PASSE = 60,
 }teMsgId;
 
 typedef struct
@@ -197,7 +197,9 @@ const tsLang sLangData[] =
     { "Radius",//Id_Msg_TEXT_MENU_PROFIL_RAYON
       "Rayon"},  
     { "Lenght",//Id_Msg_TEXT_MENU_PROFIL_LENGHT
-      "Longueur"},        
+      "Longueur"},   
+    { "Deep",//Id_Msg_TEXT_MENU_PROFIL_PASSE
+      "Passe"},      
 
   }; 
 
