@@ -340,7 +340,7 @@ void setup()
   Serial.begin(); // USB serial  
   //Timer 4 for motor control
   MotorControl.pause(); //stop...
-  MotorControl.setCompare(TIMER_CH3, 20); //10µs 
+  MotorControl.setCompare(TIMER_CH3, 20); //20µs 
   MotorControl.setChannel3Mode(TIMER_OUTPUT_COMPARE);
   MotorControl.setPrescaleFactor(72); // 72Mhz, 1 = 1µs
   MotorControl.setOverflow(100); // default value 100µs overflow
@@ -679,63 +679,7 @@ void WorkingSreenContextLoop_Thread(char key)
   }
 }  
 }
-void WorkingSreenContextLoop_Profil(char key)
-{
- if( bMotorMode == MOTOR_MODE_PROFIL )
- {
-    switch(eMS_Profil)
-    {
-      case MS_PROFIL_IDLE:
-      break;
-      case MS_PROFIL_WAIT_THE_START:
-        if (/*key == GEM_KEY_LEFT*/1 )
-        {
-          if(M1_AreYouOkToStartTheProfil() == true)
-          {
-            //FctCalcNewPasseForProfil();
-            eMS_Profil = MS_PROFIL_IN_PROFIL;      
-          }
-        } 
-      break;
-      case MS_PROFIL_IN_PROFIL:
-        if( fAxeYPos > fProfilDiameterReturn)
-        {
-          eMS_Profil = MS_PROFIL_END_PROFIL;   
-        } 
-      break; 
-      case MS_PROFIL_END_PROFIL:
-        //Return to back lash position : Min Position
-        Motor1.ChangeStopPositionMinStep(sProfilData.BackLashPosX);
-        eMS_Profil = MS_PROFIL_IN_RETURN;
-        Motor1.ChangeMaxSpeed(sGeneralConf.Speed_M1);
-        Motor1.ChangeTheMode(StepperMotor::SpeedModeDown);             
-      break; 
-      case MS_PROFIL_IN_RETURN:
-        if ( Motor1.AreYouAtMinPos() )
-        {
-          //At backlah position, go to start position
-          Motor1.ChangeStopPositionMaxStep(sProfilData.StartPositionX);
-          eMS_Profil = MS_PROFIL_BACKASH;
-          Motor1.ChangeTheMode(StepperMotor::SpeedModeUp);    
-        }  
-      break; 
-      case MS_PROFIL_BACKASH:
-        if ( Motor1.AreYouAtMaxPos() )
-        {
-          //At Start position
-          FctCalcNewPasseForProfil();
-          eMS_Profil = MS_PROFIL_WAIT_THE_START;
-          Motor1.ChangeStopPositionMinStep(sProfilData.StartPositionX);
-          Motor1.ChangeStopPositionMaxStep(sProfilData.EndPositionX);
-          Motor1.ChangeMaxSpeed(iMotorSpeed);
-          Motor1.ChangeTheMode(StepperMotor::PositionMode);    
-        } 
-      break;
-      case MS_PROFIL_END:
-      break;
-    }
- }  
-}
+
 void WorkingSreenContextExit() 
 {
   menu.reInit();
@@ -901,6 +845,9 @@ void Fct_UsbSerial_Pos()
   char bufferChar[30];
   if(Serial.isConnected() && sGeneralConf.UseUSBFunctions)
   {
+
+if ( eMS_Profil == MS_PROFIL_IN_PROFIL)
+{
     sprintf(bufferChar,"X%0.3f:",fAxeXPos); 
     Serial.print(bufferChar);
     sprintf(bufferChar,"Y%0.3f:",fAxeYPos); 
@@ -909,7 +856,13 @@ void Fct_UsbSerial_Pos()
     Serial.print(bufferChar);
     sprintf(bufferChar,"M%0.3f",fMotorCurrentPos); 
     Serial.print(bufferChar);
-    Serial.print("\n");   
+    Serial.print("\n");    
+  
+  
+}
+
+    
+ 
   }
 }
 // ***************************************************************************************
@@ -1694,12 +1647,66 @@ void FctUpdateMenuTitle()
 }
 
 //Profil *********************************************************
+void WorkingSreenContextLoop_Profil(char key)
+{
+ if( bMotorMode == MOTOR_MODE_PROFIL )
+ {
+    switch(eMS_Profil)
+    {
+      case MS_PROFIL_IDLE:
+      break;
+      case MS_PROFIL_WAIT_THE_START:
+        if(M1_AreYouOkToStartTheProfil() == true)
+        {
+          //FctCalcNewPasseForProfil();
+          eMS_Profil = MS_PROFIL_IN_PROFIL;      
+        }
+      break;
+      case MS_PROFIL_IN_PROFIL:
+        if( fAxeYPos > fProfilDiameterReturn)
+        {
+          eMS_Profil = MS_PROFIL_END_PROFIL;   
+        } 
+      break; 
+      case MS_PROFIL_END_PROFIL:
+        //Return to back lash position : Min Position
+        Motor1.ChangeStopPositionMinStep(sProfilData.BackLashPosX);
+        eMS_Profil = MS_PROFIL_IN_RETURN;
+        Motor1.ChangeMaxSpeed(sGeneralConf.Speed_M1);
+        Motor1.ChangeTheMode(StepperMotor::SpeedModeDown);             
+      break; 
+      case MS_PROFIL_IN_RETURN:
+        if ( Motor1.AreYouAtMinPos() )
+        {
+          //At backlah position, go to start position
+          Motor1.ChangeStopPositionMaxStep(sProfilData.StartPositionX);
+          eMS_Profil = MS_PROFIL_BACKASH;
+          Motor1.ChangeTheMode(StepperMotor::SpeedModeUp);    
+        }  
+      break; 
+      case MS_PROFIL_BACKASH:
+        if ( Motor1.AreYouAtMaxPos() )
+        {
+          //At Start position
+          FctCalcNewPasseForProfil();
+          eMS_Profil = MS_PROFIL_WAIT_THE_START;
+          Motor1.ChangeStopPositionMinStep(sProfilData.StartPositionX);
+          Motor1.ChangeStopPositionMaxStep(sProfilData.EndPositionX);
+          Motor1.ChangeMaxSpeed(iMotorSpeed);
+          Motor1.ChangeTheMode(StepperMotor::PositionMode);    
+        } 
+      break;
+      case MS_PROFIL_END:
+      break;
+    }
+ }  
+}
 void FctInitParameterForProfil()
 {
   float ftemp;
   long ltemp;
   long lGCD;
-  float fBackLash = 3.0;
+  float fBackLash = 1.0;
   eMS_Thread = MS_THREAD_IDLE;
   eMS_Profil = MS_PROFIL_WAIT_THE_START;
   Motor1.ChangeMaxSpeed(iMotorSpeed);
@@ -1784,12 +1791,8 @@ void FctInitParameterForProfil()
     Motor1.ChangeStopPositionMinStep(sProfilData.EndPositionX);
     Motor1.ChangeStopPositionMaxStep(sProfilData.StartPositionX);       
   }
-
-
   //Calcul the first pass
-  FctCalcNewPasseForProfil();
-  
-  
+  FctCalcNewPasseForProfil();  
 }
 void FctProfilCalcNewTarget()
 {
