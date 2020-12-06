@@ -1793,6 +1793,7 @@ void Fct_PROFIL_InitParameter()
   Motor1.ChangeMaxSpeed(iMotorSpeed);
   Motor1.ChangeTheMode(StepperMotor::PositionMode); 
   sProfilData.Count = 0; // Pass count
+  sProfilData.LastPasse = false;
   //Passe
   sProfilData.Passe = (long)(fProfilPasse * (long)sGeneralConf.Reso_Y * 2 );
   //Profil lenght
@@ -1939,17 +1940,30 @@ void Fct_PROFIL_CalcNewTarget()
 }
 void Fct_PROFIL_CalcNewPasse()
 {
-  //Passe +1
-  sProfilData.Count ++;
-  if(eProfilPosition == PROFIL_EXT)
+  if(sProfilData.LastPasse == false)
   {
-    sProfilData.DiamInProfilY = sProfilData.DiamReturnY - (sProfilData.Count*sProfilData.Passe);
-    if(sProfilData.DiamInProfilY <= sProfilData.DiamStartProfilY)sProfilData.DiamInProfilY = sProfilData.DiamStartProfilY;      
-  }
-  else
+    sProfilData.Count ++;
+    if(eProfilPosition == PROFIL_EXT)
+    {
+      sProfilData.DiamInProfilY = sProfilData.DiamReturnY - (sProfilData.Count*sProfilData.Passe);
+      if(sProfilData.DiamInProfilY <= sProfilData.DiamStartProfilY)
+      {
+        sProfilData.DiamInProfilY = sProfilData.DiamStartProfilY;
+        sProfilData.LastPasse = true;
+      }
+    }
+    else
+    {
+      sProfilData.DiamInProfilY = sProfilData.DiamReturnY + (sProfilData.Count*sProfilData.Passe);
+      if(sProfilData.DiamInProfilY >= sProfilData.DiamStartProfilY)
+      {
+        sProfilData.DiamInProfilY = sProfilData.DiamStartProfilY;    
+        sProfilData.LastPasse = true;
+      }  
+    }       
+  }else
   {
-    sProfilData.DiamInProfilY = sProfilData.DiamReturnY + (sProfilData.Count*sProfilData.Passe);
-    if(sProfilData.DiamInProfilY >= sProfilData.DiamStartProfilY)sProfilData.DiamInProfilY = sProfilData.DiamStartProfilY;    
+    //On repasse sur la dernière passe mais on peut !
   }
   //End limit
   bUseMotorEndLimit = true;

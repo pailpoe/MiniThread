@@ -2,9 +2,9 @@
 #define Config_h   
 #include <Arduino.h>
 
-#define TEXT_MAIN_MENU_TITLE "MiniThread 1.1.0"
+#define TEXT_MAIN_MENU_TITLE "MiniThread 1.2.0"
 #define TEXT_AUTHOR_SOFT "Pailpoe"
-#define TEXT_VERSION_SOFT "1.1.0"
+#define TEXT_VERSION_SOFT "1.2.0"
 
 // IO def ( for quad decoder, define in class !)
 #define PIN_RES_SCR    PB9
@@ -115,6 +115,7 @@ typedef struct
   long BackLashPosX;
   long Passe; //sur le rayon !
   unsigned int Count;
+  boolean LastPasse; 
   long Numerator;
   long Denominator;
 } tsProfilData;
