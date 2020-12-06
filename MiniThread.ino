@@ -136,7 +136,7 @@ void ActionResetX();
 void ActionResetY(); 
 void ActionAxeXPos(); 
 void ActionAxeYPos(); 
-void SetReadOnlyMotorFunctions(boolean state); // true = Read only
+void FctViewMotorM1Parameters(boolean state); // true = view
 void ActionUseMotor(); 
 void ActionChangeMotorMode(); 
 void ActionMotorStopMin(); 
@@ -488,7 +488,7 @@ void setupMenu()
   // Add menu page to menu and set it as current
   menu.setMenuPageCurrent(menuPageMain);
   //Set read only because it's OFF
-  SetReadOnlyMotorFunctions(true);
+  FctViewMotorM1Parameters(true);
 }
 void loop() {
   // This loop turn when i'm in the menu !
@@ -1267,19 +1267,19 @@ void ActionChangeRelativeMode()
 void ActionChangeTool()
 {    
 }
-void SetReadOnlyMotorFunctions(boolean state)
+void FctViewMotorM1Parameters(boolean state)
 {
-  menuItemMotorMode.setReadonly(state);  
-  menuItemMotorStopMin.setReadonly(state);
-  menuItemMotorStopMax.setReadonly(state);
-  menuItemUseMotorEndLimit.setReadonly(state);
-  menuItemMotorCurrentPos.setReadonly(state);
-  menuItemMotorSpeed.setReadonly(state);
-  menuItemButtonSetPosToMax.setReadonly(state);
-  menuItemButtonSetPosToMin.setReadonly(state);
-  menuItemButtonResetCurrentPos.setReadonly(state);
-  menuItemThreadParameters.setReadonly(state);
-  menuItemProfil.setReadonly(state);
+  menuItemMotorMode.hide(state);  
+  menuItemMotorStopMin.hide(state);
+  menuItemMotorStopMax.hide(state);
+  menuItemUseMotorEndLimit.hide(state);
+  menuItemMotorCurrentPos.hide(state);
+  menuItemMotorSpeed.hide(state);
+  menuItemButtonSetPosToMax.hide(state);
+  menuItemButtonSetPosToMin.hide(state);
+  menuItemButtonResetCurrentPos.hide(state);
+  menuItemThreadParameters.hide(state);
+  menuItemProfil.hide(state);
 }
 void ActionUseMotor()
 {
@@ -1296,7 +1296,7 @@ void ActionUseMotor()
     eMS_Thread = MS_THREAD_IDLE;
     eMS_Profil = MS_PROFIL_IDLE;
     eScreenChoose = SCREEN_MOT1;
-    SetReadOnlyMotorFunctions(false); 
+    FctViewMotorM1Parameters(false); 
   }
   else
   {
@@ -1306,7 +1306,7 @@ void ActionUseMotor()
     eMS_Thread = MS_THREAD_IDLE;
     eMS_Profil = MS_PROFIL_IDLE;
     eScreenChoose = SCREEN_DRO; 
-    SetReadOnlyMotorFunctions(true);   
+    FctViewMotorM1Parameters(true);   
   }     
 }
 void ActionUseMotorEndLimit()
