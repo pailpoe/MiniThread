@@ -851,8 +851,8 @@ void Fct_UsbSerial_Pos()
   if(Serial.isConnected() && sGeneralConf.UseUSBFunctions)
   {
 
-if ( eMS_Profil == MS_PROFIL_IN_PROFIL)
-{
+//if ( eMS_Profil == MS_PROFIL_IN_PROFIL)
+//{
     sprintf(bufferChar,"X%0.3f:",fAxeXPos); 
     Serial.print(bufferChar);
     sprintf(bufferChar,"Y%0.3f:",fAxeYPos); 
@@ -861,13 +861,8 @@ if ( eMS_Profil == MS_PROFIL_IN_PROFIL)
     Serial.print(bufferChar);
     sprintf(bufferChar,"M%0.3f",fMotorCurrentPos); 
     Serial.print(bufferChar);
-    Serial.print("\n");    
-  
-  
-}
-
-    
- 
+    Serial.print("\n");     
+//}
   }
 }
 // ***************************************************************************************
