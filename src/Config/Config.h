@@ -68,6 +68,7 @@ typedef struct
   int  thread_M1;
   float Accel_M1;
   int Speed_M1;
+  float Backlash_M1;
   byte Lang;
   boolean UseUSBFunctions;
 } tsConfigDro; 
@@ -84,13 +85,14 @@ typedef enum
 //Profil machine state
 typedef enum
 {
-  MS_PROFIL_IDLE = 0,           // Idle
-  MS_PROFIL_WAIT_THE_START = 1, // Wait the button to start
-  MS_PROFIL_IN_PROFIL = 3,      // In Profil
-  MS_PROFIL_END_PROFIL = 4,     // Wait the button to return
-  MS_PROFIL_IN_RETURN = 5,      // In return
-    MS_PROFIL_BACKASH = 6,      // Backlash conpensation
-  MS_PROFIL_END = 7             // End
+  MS_PROFIL_IDLE = 0,             // Idle
+  MS_PROFIL_WAIT_START_CYCLE = 1, // Wait start cycle with "OK"
+  MS_PROFIL_WAIT_THE_START = 2,   // Wait the button to start
+  MS_PROFIL_IN_PROFIL = 3,        // In Profil
+  MS_PROFIL_END_PROFIL = 4,       // Wait the button to return
+  MS_PROFIL_IN_RETURN = 5,        // In return
+  MS_PROFIL_BACKASH = 6,          // Backlash conpensation
+  MS_PROFIL_END = 7               // End
 } teMS_ProfilMode;
 
 //Struct for the thread mode
@@ -111,6 +113,7 @@ typedef struct
   long StartPositionX;
   long EndPositionX;
   long BackLashPosX;
+  long Passe; //sur le rayon !
   unsigned int Count;
   long Numerator;
   long Denominator;

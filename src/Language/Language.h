@@ -69,6 +69,7 @@ typedef enum
     Id_Msg_TEXT_MENU_PROFIL_RAYON = 58, 
     Id_Msg_TEXT_MENU_PROFIL_LENGHT = 59,
     Id_Msg_TEXT_MENU_PROFIL_PASSE = 60,
+    Id_Msg_TEXT_MENU_SETTINGS_BACKM1 = 61,
 }teMsgId;
 
 typedef struct
@@ -200,6 +201,8 @@ const tsLang sLangData[] =
       "Longueur"},   
     { "Deep",//Id_Msg_TEXT_MENU_PROFIL_PASSE
       "Passe"},      
+    { "M1 back",//Id_Msg_TEXT_MENU_SETTINGS_BACKM1
+      "M1 jeu"},  
 
   }; 
 
