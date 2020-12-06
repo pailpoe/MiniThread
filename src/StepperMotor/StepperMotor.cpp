@@ -370,6 +370,14 @@ float StepperMotor::GetPositionReal()
 {
   return (float)_AbsoluteCounter/(float)_Resolution;    
 }
+float StepperMotor::GetStopPositionMin()
+{
+  return (float)_StopPositionMin/(float)_Resolution;  
+}
+float StepperMotor::GetStopPositionMax()
+{
+  return (float)_StopPositionMax/(float)_Resolution;  
+}
 void StepperMotor::ChangeParameter(unsigned int  Resolution , boolean Sens)
 {
   _Resolution = Resolution;

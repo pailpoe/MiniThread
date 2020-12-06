@@ -57,6 +57,8 @@ public:
 	boolean AreYouAtMinPos(); 
   long    GetStopPositionMinStep();
   long    GetStopPositionMaxStep();
+  float   GetStopPositionMin();
+  float   GetStopPositionMax();
 
   //Change the max speed in step/s
 	void 		     ChangeMaxSpeed (float MaxSpeed);
