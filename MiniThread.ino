@@ -82,7 +82,7 @@ void CalcMotorParameterOffsetForThread();
 void CalcMotorMaxSpeedForThread();
 
 void Fct_PROFIL_InitParameter();
-void Fct_PROFIL_CalcNewPasse(); 
+boolean Fct_PROFIL_CalcNewPasse(); 
 void Fct_PROFIL_CalcNewTarget(); 
 
 
@@ -369,7 +369,7 @@ void setup()
 
   //Fct_PROFIL_InitParameter();
 
-
+  //
 
   //Display start screen
   Display_StartScreen(); 
@@ -1066,7 +1066,7 @@ void Display_Extra_Informations()
         u8g2.drawStr(30,54,"|IN RETURN");
       break;
       case MS_PROFIL_END:
-        u8g2.drawStr(30,54,"|END");
+        u8g2.drawStr(30,54,"|CHOOSE");
       break;       
     }
   } 
@@ -1755,10 +1755,18 @@ void WorkingSreenContextLoop_Profil(char key)
           if ( Motor1.AreYouAtMaxPos() )
           {
             //At Start position
-            Fct_PROFIL_CalcNewPasse();
-            eMS_Profil = MS_PROFIL_WAIT_THE_START;
-            Motor1.ChangeMaxSpeed(iMotorSpeed);
-            Motor1.ChangeTheMode(StepperMotor::PositionMode);    
+            if( Fct_PROFIL_CalcNewPasse() == true)
+            {
+              //On a finit !  
+              eMS_Profil = MS_PROFIL_END;
+              MyMsg.DisplayMsg(GetTxt(Id_Msg_INFO_END_PROFIL),Msg::Info,6000); 
+            }
+            else
+            {
+              eMS_Profil = MS_PROFIL_WAIT_THE_START;
+              Motor1.ChangeMaxSpeed(iMotorSpeed);
+              Motor1.ChangeTheMode(StepperMotor::PositionMode);     
+            }
           }            
         }
         else
@@ -1766,14 +1774,36 @@ void WorkingSreenContextLoop_Profil(char key)
           if ( Motor1.AreYouAtMinPos() )
           {
             //At Start position
-            Fct_PROFIL_CalcNewPasse();
-            eMS_Profil = MS_PROFIL_WAIT_THE_START;
-            Motor1.ChangeMaxSpeed(iMotorSpeed);
-            Motor1.ChangeTheMode(StepperMotor::PositionMode);    
+            if( Fct_PROFIL_CalcNewPasse() == true)
+            {
+              //On a finit !  
+              eMS_Profil = MS_PROFIL_END;
+              MyMsg.DisplayMsg(GetTxt(Id_Msg_INFO_END_PROFIL),Msg::Info,6000); 
+            }
+            else
+            {
+              eMS_Profil = MS_PROFIL_WAIT_THE_START;
+              Motor1.ChangeMaxSpeed(iMotorSpeed);
+              Motor1.ChangeTheMode(StepperMotor::PositionMode);     
+            }  
           }                
         }      
       break;
       case MS_PROFIL_END:
+        if(key == GEM_KEY_OK)
+        {
+          //On relance le cycle de la derniere passe
+          eMS_Profil = MS_PROFIL_WAIT_THE_START;
+          Motor1.ChangeMaxSpeed(iMotorSpeed);
+          Motor1.ChangeTheMode(StepperMotor::PositionMode);  
+        }
+        if(key == GEM_KEY_UP)
+        {
+          //On sort en mode manuel
+          bMotorMode = MOTOR_MODE_MANUAL;
+          ActionChangeMotorMode();
+          
+        }
       break;
     }
  }  
@@ -1933,8 +1963,11 @@ void Fct_PROFIL_CalcNewTarget()
   //Change the motor target
   Motor1.ChangeTargetPositionStep (lMotorPos);    
 }
-void Fct_PROFIL_CalcNewPasse()
+boolean Fct_PROFIL_CalcNewPasse()
 {
+  boolean btEnd = false;
+  //On arrête le mode en cours du moteur
+  Motor1.ChangeTheMode(StepperMotor::NoMode); 
   if(sProfilData.LastPasse == false)
   {
     sProfilData.Count ++;
@@ -1959,6 +1992,7 @@ void Fct_PROFIL_CalcNewPasse()
   }else
   {
     //On repasse sur la dernière passe mais on peut !
+    btEnd = true;
   }
   //End limit
   bUseMotorEndLimit = true;
@@ -1972,7 +2006,8 @@ void Fct_PROFIL_CalcNewPasse()
   {
     Motor1.ChangeStopPositionMinStep(sProfilData.EndPositionX);
     Motor1.ChangeStopPositionMaxStep(sProfilData.StartPositionX);       
-  }  
+  }
+  return btEnd;   
 }
 boolean Fct_PROFIL_AreYouOKtoStartThePasse()
 {
