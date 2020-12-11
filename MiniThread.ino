@@ -70,6 +70,7 @@ float       fProfilDiameterReturn = 22.0;
 float       fProfilAngle = 45.0;
 float       fProfilLenght = 5.0;
 float       fProfilRayon = 5.0;
+boolean     bConcave = 0 ;
 
 teMS_ThreadingMode eMS_Thread = MS_THREAD_IDLE;
 teMS_ProfilMode eMS_Profil = MS_PROFIL_IDLE;
@@ -168,6 +169,7 @@ void ActionProfilDiameterReturn();
 void ActionProfilAngle();
 void ActionProfilLenght();
 void ActionProfilRayon();
+void ActionProfilConcave();
 
 void ActionScreenMode(); 
 void ActionChangeScreen();
@@ -284,6 +286,7 @@ GEMItem menuItemProfilDiameterReturn("", fProfilDiameterReturn,ActionProfilDiame
 GEMItem menuItemProfilAngle("", fProfilAngle,ActionProfilAngle);
 GEMItem menuItemProfilLenght("", fProfilLenght,ActionProfilLenght);
 GEMItem menuItemProfilRayon("", fProfilRayon,ActionProfilRayon);
+GEMItem menuItemProfilConcave("", bConcave,ActionProfilConcave);
 
 SelectOptionByte selectScreenOptions[] = {{"DroXYC", SCREEN_DRO}, {"Mot1", SCREEN_MOT1}, {"Debug", SCREEN_DEBUG}};
 GEMSelect selectScreenMode(sizeof(selectScreenOptions)/sizeof(SelectOptionByte), selectScreenOptions);
@@ -426,6 +429,7 @@ void setupMenu()
   menuPageProfilParameters.addMenuItem(menuItemProfilPosition);
   menuPageProfilParameters.addMenuItem(menuItemProfilPasse);
   menuItemProfilPasse.setPrecision(2);
+  menuPageProfilParameters.addMenuItem(menuItemProfilConcave);
   menuPageProfilParameters.addMenuItem(menuItemProfilDiameter);
   menuItemProfilDiameter.setPrecision(2);
   menuPageProfilParameters.addMenuItem(menuItemProfilDiameterReturn);
@@ -1654,6 +1658,7 @@ void FctUpdateMenuTitle()
   menuItemProfilLenght.setTitle(GetTxt(Id_Msg_TEXT_MENU_PROFIL_LENGHT));
   menuItemProfilRayon.setTitle(GetTxt(Id_Msg_TEXT_MENU_PROFIL_RAYON));
   menuItemProfilPasse.setTitle(GetTxt(Id_Msg_TEXT_MENU_PROFIL_PASSE)); 
+  menuItemProfilConcave.setTitle(GetTxt(Id_Msg_TEXT_MENU_PROFIL_CONCAVE));
 }
 
 //Profil *********************************************************
@@ -1793,6 +1798,7 @@ void WorkingSreenContextLoop_Profil(char key)
         if(key == GEM_KEY_OK)
         {
           //On relance le cycle de la derniere passe
+          eScreenChoose = SCREEN_MOT1;
           eMS_Profil = MS_PROFIL_WAIT_THE_START;
           Motor1.ChangeMaxSpeed(iMotorSpeed);
           Motor1.ChangeTheMode(StepperMotor::PositionMode);  
@@ -1907,7 +1913,8 @@ void Fct_PROFIL_CalcNewTarget()
       Deltad =(lposy - sProfilData.DiamInProfilY) / 2;
       if( eProfilChoose == PROFIL_MODE_SPHERE ) 
       {
-        Offset = (DeltaR - sqrt( (DeltaR*DeltaR)- (Deltad*Deltad)));   
+        if(bConcave == 0) Offset = (DeltaR - sqrt( (DeltaR*DeltaR) - (Deltad*Deltad))); //Convexe
+        else Offset = sqrt( (DeltaR*DeltaR) - (DeltaR-Deltad)*(DeltaR-Deltad)); //Concave           
       }
       if( eProfilChoose == PROFIL_MODE_CONE ) 
       {
@@ -2063,4 +2070,7 @@ void ActionProfilLenght()
 void ActionProfilRayon()
 {
   if(fProfilRayon < 0) fProfilRayon = 0; 
+}
+void ActionProfilConcave()
+{ 
 }

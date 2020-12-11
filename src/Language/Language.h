@@ -71,6 +71,7 @@ typedef enum
     Id_Msg_TEXT_MENU_PROFIL_PASSE = 60,
     Id_Msg_TEXT_MENU_SETTINGS_BACKM1 = 61,
     Id_Msg_INFO_END_PROFIL = 62,
+    Id_Msg_TEXT_MENU_PROFIL_CONCAVE = 63,
 }teMsgId;
 
 typedef struct
@@ -205,7 +206,11 @@ const tsLang sLangData[] =
     { "M1 back",//Id_Msg_TEXT_MENU_SETTINGS_BACKM1
       "M1 jeu"},
     { "End of the profil\nUP : Exit\nOK : new passe",//Id_Msg_INFO_END_PROFIL
-      "Fin du profil\nHAUT : fin\nOK : nouvelle passe"},       
+      "Fin du profil\nHAUT : fin\nOK : nouvelle passe"},   
+    { "Concave",//Id_Msg_TEXT_MENU_PROFIL_CONCAVE
+      "Concave"},  
+
+      
   }; 
 
 
