@@ -1,8 +1,5 @@
 /*********************************************************************
 Project Name    :   MiniThread
-Hard revision   :   V1.0
-Soft revision   :   1.1.0
-Description     :   
 Chip            :   STM32F103CBT6
 freq uc         :   72Mhz (use 8Mhz external oscillator with PLL ) 
 Compiler        :   Arduino IDE 1.8.3
@@ -223,7 +220,7 @@ GEMItem menuItemButtonRestoreSettings("", ActionRestoreSettingsInFlash);
 GEMItem menuItemButtonSaveSettings("", ActionSaveSettingsInFlash);
 GEMItem menuItemButtonSnakeGame("Snake game !", ActionLaunchSnakeGame);
 GEMItem menuItemButtonDro("", ActionLaunchWorkingScreen);
-GEMPage menuPageMain(TEXT_MAIN_MENU_TITLE);
+GEMPage menuPageMain(TEXT_MAIN_MENU_TITLE,ActionLaunchWorkingScreen);
 GEMPage menuPageDebug(""); // Debug submenu
 GEMItem menuItemDebug("", menuPageDebug);
 GEMItem menuItemButtonDebug("Debug screen", ActionDebug);
@@ -1941,7 +1938,10 @@ void Fct_PROFIL_CalcNewTarget()
       Deltad =(sProfilData.DiamInProfilY - lposy) / 2;
       if( eProfilChoose == PROFIL_MODE_SPHERE ) 
       {
-        Offset = (DeltaR - sqrt( (DeltaR*DeltaR)- (Deltad*Deltad)));   
+        if(bConcave == 0) Offset = (DeltaR - sqrt( (DeltaR*DeltaR) - (Deltad*Deltad))); //Convexe
+        else Offset = sqrt( (DeltaR*DeltaR) - (DeltaR-Deltad)*(DeltaR-Deltad)); //Concave        
+        
+        //Offset = (DeltaR - sqrt( (DeltaR*DeltaR)- (Deltad*Deltad)));   
       }
       if( eProfilChoose == PROFIL_MODE_CONE ) 
       {
