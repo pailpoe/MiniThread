@@ -1,8 +1,5 @@
 /*********************************************************************
 Project Name    :   MiniThread
-Hard revision   :   V1.0
-Soft revision   :   1.1.0
-Description     :   
 Chip            :   STM32F103CBT6
 freq uc         :   72Mhz (use 8Mhz external oscillator with PLL ) 
 Compiler        :   Arduino IDE 1.8.3
@@ -70,6 +67,7 @@ float       fProfilDiameterReturn = 22.0;
 float       fProfilAngle = 45.0;
 float       fProfilLenght = 5.0;
 float       fProfilRayon = 5.0;
+boolean     bConcave = 0 ;
 
 teMS_ThreadingMode eMS_Thread = MS_THREAD_IDLE;
 teMS_ProfilMode eMS_Profil = MS_PROFIL_IDLE;
@@ -82,7 +80,7 @@ void CalcMotorParameterOffsetForThread();
 void CalcMotorMaxSpeedForThread();
 
 void Fct_PROFIL_InitParameter();
-void Fct_PROFIL_CalcNewPasse(); 
+boolean Fct_PROFIL_CalcNewPasse(); 
 void Fct_PROFIL_CalcNewTarget(); 
 
 
@@ -168,6 +166,7 @@ void ActionProfilDiameterReturn();
 void ActionProfilAngle();
 void ActionProfilLenght();
 void ActionProfilRayon();
+void ActionProfilConcave();
 
 void ActionScreenMode(); 
 void ActionChangeScreen();
@@ -221,7 +220,7 @@ GEMItem menuItemButtonRestoreSettings("", ActionRestoreSettingsInFlash);
 GEMItem menuItemButtonSaveSettings("", ActionSaveSettingsInFlash);
 GEMItem menuItemButtonSnakeGame("Snake game !", ActionLaunchSnakeGame);
 GEMItem menuItemButtonDro("", ActionLaunchWorkingScreen);
-GEMPage menuPageMain(TEXT_MAIN_MENU_TITLE);
+GEMPage menuPageMain(TEXT_MAIN_MENU_TITLE,ActionLaunchWorkingScreen);
 GEMPage menuPageDebug(""); // Debug submenu
 GEMItem menuItemDebug("", menuPageDebug);
 GEMItem menuItemButtonDebug("Debug screen", ActionDebug);
@@ -284,6 +283,7 @@ GEMItem menuItemProfilDiameterReturn("", fProfilDiameterReturn,ActionProfilDiame
 GEMItem menuItemProfilAngle("", fProfilAngle,ActionProfilAngle);
 GEMItem menuItemProfilLenght("", fProfilLenght,ActionProfilLenght);
 GEMItem menuItemProfilRayon("", fProfilRayon,ActionProfilRayon);
+GEMItem menuItemProfilConcave("", bConcave,ActionProfilConcave);
 
 SelectOptionByte selectScreenOptions[] = {{"DroXYC", SCREEN_DRO}, {"Mot1", SCREEN_MOT1}, {"Debug", SCREEN_DEBUG}};
 GEMSelect selectScreenMode(sizeof(selectScreenOptions)/sizeof(SelectOptionByte), selectScreenOptions);
@@ -369,7 +369,7 @@ void setup()
 
   //Fct_PROFIL_InitParameter();
 
-
+  //
 
   //Display start screen
   Display_StartScreen(); 
@@ -426,6 +426,7 @@ void setupMenu()
   menuPageProfilParameters.addMenuItem(menuItemProfilPosition);
   menuPageProfilParameters.addMenuItem(menuItemProfilPasse);
   menuItemProfilPasse.setPrecision(2);
+  menuPageProfilParameters.addMenuItem(menuItemProfilConcave);
   menuPageProfilParameters.addMenuItem(menuItemProfilDiameter);
   menuItemProfilDiameter.setPrecision(2);
   menuPageProfilParameters.addMenuItem(menuItemProfilDiameterReturn);
@@ -1066,7 +1067,7 @@ void Display_Extra_Informations()
         u8g2.drawStr(30,54,"|IN RETURN");
       break;
       case MS_PROFIL_END:
-        u8g2.drawStr(30,54,"|END");
+        u8g2.drawStr(30,54,"|CHOOSE");
       break;       
     }
   } 
@@ -1654,6 +1655,7 @@ void FctUpdateMenuTitle()
   menuItemProfilLenght.setTitle(GetTxt(Id_Msg_TEXT_MENU_PROFIL_LENGHT));
   menuItemProfilRayon.setTitle(GetTxt(Id_Msg_TEXT_MENU_PROFIL_RAYON));
   menuItemProfilPasse.setTitle(GetTxt(Id_Msg_TEXT_MENU_PROFIL_PASSE)); 
+  menuItemProfilConcave.setTitle(GetTxt(Id_Msg_TEXT_MENU_PROFIL_CONCAVE));
 }
 
 //Profil *********************************************************
@@ -1755,10 +1757,18 @@ void WorkingSreenContextLoop_Profil(char key)
           if ( Motor1.AreYouAtMaxPos() )
           {
             //At Start position
-            Fct_PROFIL_CalcNewPasse();
-            eMS_Profil = MS_PROFIL_WAIT_THE_START;
-            Motor1.ChangeMaxSpeed(iMotorSpeed);
-            Motor1.ChangeTheMode(StepperMotor::PositionMode);    
+            if( Fct_PROFIL_CalcNewPasse() == true)
+            {
+              //On a finit !  
+              eMS_Profil = MS_PROFIL_END;
+              MyMsg.DisplayMsg(GetTxt(Id_Msg_INFO_END_PROFIL),Msg::Info,6000); 
+            }
+            else
+            {
+              eMS_Profil = MS_PROFIL_WAIT_THE_START;
+              Motor1.ChangeMaxSpeed(iMotorSpeed);
+              Motor1.ChangeTheMode(StepperMotor::PositionMode);     
+            }
           }            
         }
         else
@@ -1766,14 +1776,37 @@ void WorkingSreenContextLoop_Profil(char key)
           if ( Motor1.AreYouAtMinPos() )
           {
             //At Start position
-            Fct_PROFIL_CalcNewPasse();
-            eMS_Profil = MS_PROFIL_WAIT_THE_START;
-            Motor1.ChangeMaxSpeed(iMotorSpeed);
-            Motor1.ChangeTheMode(StepperMotor::PositionMode);    
+            if( Fct_PROFIL_CalcNewPasse() == true)
+            {
+              //On a finit !  
+              eMS_Profil = MS_PROFIL_END;
+              MyMsg.DisplayMsg(GetTxt(Id_Msg_INFO_END_PROFIL),Msg::Info,6000); 
+            }
+            else
+            {
+              eMS_Profil = MS_PROFIL_WAIT_THE_START;
+              Motor1.ChangeMaxSpeed(iMotorSpeed);
+              Motor1.ChangeTheMode(StepperMotor::PositionMode);     
+            }  
           }                
         }      
       break;
       case MS_PROFIL_END:
+        if(key == GEM_KEY_OK)
+        {
+          //On relance le cycle de la derniere passe
+          eScreenChoose = SCREEN_MOT1;
+          eMS_Profil = MS_PROFIL_WAIT_THE_START;
+          Motor1.ChangeMaxSpeed(iMotorSpeed);
+          Motor1.ChangeTheMode(StepperMotor::PositionMode);  
+        }
+        if(key == GEM_KEY_UP)
+        {
+          //On sort en mode manuel
+          bMotorMode = MOTOR_MODE_MANUAL;
+          ActionChangeMotorMode();
+          
+        }
       break;
     }
  }  
@@ -1877,7 +1910,8 @@ void Fct_PROFIL_CalcNewTarget()
       Deltad =(lposy - sProfilData.DiamInProfilY) / 2;
       if( eProfilChoose == PROFIL_MODE_SPHERE ) 
       {
-        Offset = (DeltaR - sqrt( (DeltaR*DeltaR)- (Deltad*Deltad)));   
+        if(bConcave == 0) Offset = (DeltaR - sqrt( (DeltaR*DeltaR) - (Deltad*Deltad))); //Convexe
+        else Offset = sqrt( (DeltaR*DeltaR) - (DeltaR-Deltad)*(DeltaR-Deltad)); //Concave           
       }
       if( eProfilChoose == PROFIL_MODE_CONE ) 
       {
@@ -1904,7 +1938,10 @@ void Fct_PROFIL_CalcNewTarget()
       Deltad =(sProfilData.DiamInProfilY - lposy) / 2;
       if( eProfilChoose == PROFIL_MODE_SPHERE ) 
       {
-        Offset = (DeltaR - sqrt( (DeltaR*DeltaR)- (Deltad*Deltad)));   
+        if(bConcave == 0) Offset = (DeltaR - sqrt( (DeltaR*DeltaR) - (Deltad*Deltad))); //Convexe
+        else Offset = sqrt( (DeltaR*DeltaR) - (DeltaR-Deltad)*(DeltaR-Deltad)); //Concave        
+        
+        //Offset = (DeltaR - sqrt( (DeltaR*DeltaR)- (Deltad*Deltad)));   
       }
       if( eProfilChoose == PROFIL_MODE_CONE ) 
       {
@@ -1933,8 +1970,11 @@ void Fct_PROFIL_CalcNewTarget()
   //Change the motor target
   Motor1.ChangeTargetPositionStep (lMotorPos);    
 }
-void Fct_PROFIL_CalcNewPasse()
+boolean Fct_PROFIL_CalcNewPasse()
 {
+  boolean btEnd = false;
+  //On arrête le mode en cours du moteur
+  Motor1.ChangeTheMode(StepperMotor::NoMode); 
   if(sProfilData.LastPasse == false)
   {
     sProfilData.Count ++;
@@ -1959,6 +1999,7 @@ void Fct_PROFIL_CalcNewPasse()
   }else
   {
     //On repasse sur la dernière passe mais on peut !
+    btEnd = true;
   }
   //End limit
   bUseMotorEndLimit = true;
@@ -1972,7 +2013,8 @@ void Fct_PROFIL_CalcNewPasse()
   {
     Motor1.ChangeStopPositionMinStep(sProfilData.EndPositionX);
     Motor1.ChangeStopPositionMaxStep(sProfilData.StartPositionX);       
-  }  
+  }
+  return btEnd;   
 }
 boolean Fct_PROFIL_AreYouOKtoStartThePasse()
 {
@@ -2028,4 +2070,7 @@ void ActionProfilLenght()
 void ActionProfilRayon()
 {
   if(fProfilRayon < 0) fProfilRayon = 0; 
+}
+void ActionProfilConcave()
+{ 
 }

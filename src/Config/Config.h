@@ -2,9 +2,9 @@
 #define Config_h   
 #include <Arduino.h>
 
-#define TEXT_MAIN_MENU_TITLE "MiniThread 1.2.0"
+#define TEXT_MAIN_MENU_TITLE "MiniThread 1.3.0"
 #define TEXT_AUTHOR_SOFT "Pailpoe"
-#define TEXT_VERSION_SOFT "1.2.0"
+#define TEXT_VERSION_SOFT "1.3.0"
 
 // IO def ( for quad decoder, define in class !)
 #define PIN_RES_SCR    PB9
